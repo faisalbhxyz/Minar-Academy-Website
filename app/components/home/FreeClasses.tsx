@@ -1,23 +1,28 @@
 "use client";
 
+import Image from "next/image";
 import React, { useState } from "react";
 
 const classes = [
   {
     id: 1,
     title: "ক্লাস ৬,৭,৮",
+    image: "/images/icon.png",
   },
   {
     id: 2,
     title: "ক্লাস ৯,১০",
+    image: "/images/icon.png",
   },
   {
     id: 3,
     title: "SSC ২৫",
+    image: "/images/icon.png",
   },
   {
     id: 4,
     title: "HSC ২৫, ২৬",
+    image: "/images/icon.png",
   },
 ];
 
@@ -39,12 +44,13 @@ export default function FreeClasses() {
             <div
               key={item.id}
               onClick={() => setSelectedClass(item.id)}
-              className={`cursor-pointer p-6 rounded-2xl border-2 transition duration-300 ${
+              className={`cursor-pointer flex flex-col items-center gap-5 p-6 rounded-2xl border-2 transition duration-300 ${
                 selectedClass === item.id
                   ? "bg-primary border-primary text-white"
                   : "bg-slate-800 border-slate-600"
               }`}
             >
+              <Image src={item.image} alt="icon" width={100} height={100} />
               <p className="text-xl font-semibold text-center">{item.title}</p>
             </div>
           ))}
