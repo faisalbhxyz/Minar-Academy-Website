@@ -3,13 +3,20 @@ import Link from "next/link";
 import { FaFacebookF } from "react-icons/fa";
 import { FaYoutube } from "react-icons/fa";
 import { FaLinkedinIn } from "react-icons/fa";
+import Image from "next/image";
 
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-white px-6 py-10">
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
         <div>
-          <h3 className="text-xl font-semibold mb-2">Logo</h3>
+          <Image
+            src={"/images/minar-academy-logo.png"}
+            alt={"logo"}
+            width={200}
+            height={100}
+            className="w-32 -ml-3"
+          />
           <p>Minar Academy</p>
         </div>
         <div>
