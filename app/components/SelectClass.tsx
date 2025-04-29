@@ -5,7 +5,7 @@ import { IoIosArrowDown } from "react-icons/io";
 export default function SelectClass() {
   return (
     <Menu>
-      <MenuButton className="flex items-center gap-1 outline-none">
+      <MenuButton className="w-[110px] flex items-center gap-1 outline-none">
         ক্লাস ৬-১২
         <IoIosArrowDown />
       </MenuButton>

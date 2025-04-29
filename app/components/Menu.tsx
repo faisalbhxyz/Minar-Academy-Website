@@ -32,7 +32,7 @@ const menu = [
 
 export default function Menu() {
   return (
-    <nav className="flex space-x-6">
+    <nav className="flex space-x-6 w-[370px]">
       {menu.map((item, index) => (
         <div key={index} className="relative group">
           <div className="flex items-center gap-1">
