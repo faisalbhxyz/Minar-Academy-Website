@@ -3,14 +3,16 @@ import React from "react";
 const sampleData = [
   {
     id: 1,
-    title: "বছর জুড়ে অনলাইন ব্যাচে কী কী থাকছে?",
-    description: "description",
+    title: "সারা বছরে কী কী হচ্ছে অনলাইন ব্যাচে?",
+    description:
+      "এক্সপার্ট টিচারদের লাইভ ক্লাস, গোছানো মাস্টারবুক, ও মডেল টেস্ট দিয়ে ঘরে বসেই ৬ষ্ঠ-১০ম শ্রেণির পড়াশোনার কমপ্লিট প্রিপারেশন!",
     image: "/images/pexels-pixabay-267885.jpg",
   },
   {
     id: 2,
-    title: "বছর জুড়ে অনলাইন ব্যাচে কী কী থাকছে?",
-    description: "description",
+    title: "সারা বছরে কী কী হচ্ছে অনলাইন ব্যাচে?",
+    description:
+      "এক্সপার্ট টিচারদের লাইভ ক্লাস, গোছানো মাস্টারবুক, ও মডেল টেস্ট দিয়ে ঘরে বসেই ৬ষ্ঠ-১০ম শ্রেণির পড়াশোনার কমপ্লিট প্রিপারেশন!",
     image: "/images/pexels-pixabay-267885.jpg",
   },
 ];
@@ -19,9 +21,15 @@ export default function MoreTips() {
   return (
     <div>
       <div className="max-w-7xl mx-auto px-10 rounded-3xl py-14 mt-10">
-        <p className="text-center text-5xl font-bold mb-10">
-          বছর জুড়ে অনলাইন ব্যাচে কী কী থাকছে?
-        </p>
+        <div className="mb-10 space-y-3">
+          <p className="text-center text-5xl font-bold">
+            বছর জুড়ে অনলাইন ব্যাচে কী কী থাকছে?
+          </p>
+          <p className="text-center">
+            সেরা শিক্ষকদের পরিচর্যায় দেশের যেকোন প্রান্ত থেকে অব্যাহত থাকুক
+            পড়াশুনার অগ্রযাত্রা
+          </p>
+        </div>
         <div className="grid md:grid-cols-2 gap-10">
           {sampleData.map((item) => (
             <div
