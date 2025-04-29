@@ -41,8 +41,8 @@ export default function MinarAcademy() {
       <p className="text-center text-5xl font-bold mb-10">
         Minar Academy-তে যা যা থাকছে
       </p>
-      <div className="flex gap-10">
-        <div className="w-1/2 space-y-3">
+      <div className="flex flex-col lg:flex-row gap-10">
+        <div className="w-full lg:w-1/2 space-y-3">
           {accordingData?.map((according, index) => (
             <article
               key={index}
@@ -78,7 +78,7 @@ export default function MinarAcademy() {
             ফ্রি ক্লাসসমূহ
           </button>
         </div>
-        <div className="w-1/2">
+        <div className="w-full lg:w-1/2">
           {isAccordingOpen !== null && (
             <Image
               src={accordingData[isAccordingOpen].image}
