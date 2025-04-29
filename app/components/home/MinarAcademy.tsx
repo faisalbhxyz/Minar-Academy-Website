@@ -6,25 +6,37 @@ import { HiOutlineCube } from "react-icons/hi";
 
 const accordingData = [
   {
-    title: "What is the purpose of wireframing in design?",
+    title: "লাইভ এবং রেকর্ডেড ক্লাস",
     description:
       "Wireframing outlines the basic structure and layout of a design, serving as a visual guide before detailed development.",
     image: "/images/pexels-godisable-jacob-226636-901964.jpg",
   },
   {
-    title: "Why is user-centered design important?",
+    title: "প্র্যাকটিস MCQ টেস্ট",
     description:
       "User-centered design ensures products meet the needs and preferences of the end-users, enhancing usability and satisfaction.",
     image: "/images/pexels-pixabay-267885.jpg",
   },
   {
-    title: "What is the purpose of wireframing in design?",
+    title: "লাইভ MCQ টেস্ট",
     description:
       "Wireframing outlines the basic structure and layout of a design, serving as a visual guide before detailed development.",
     image: "/images/pexels-godisable-jacob-226636-901964.jpg",
   },
   {
-    title: "Why is user-centered design important?",
+    title: "ক্লাস নোট",
+    description:
+      "User-centered design ensures products meet the needs and preferences of the end-users, enhancing usability and satisfaction.",
+    image: "/images/pexels-pixabay-267885.jpg",
+  },
+  {
+    title: "স্মার্ট নোট",
+    description:
+      "User-centered design ensures products meet the needs and preferences of the end-users, enhancing usability and satisfaction.",
+    image: "/images/pexels-pixabay-267885.jpg",
+  },
+  {
+    title: "রিপোর্ট কার্ড",
     description:
       "User-centered design ensures products meet the needs and preferences of the end-users, enhancing usability and satisfaction.",
     image: "/images/pexels-pixabay-267885.jpg",
@@ -74,9 +86,6 @@ export default function MinarAcademy() {
               </div>
             </article>
           ))}
-          <button className="bg-primary text-white border border-primary px-5 py-2 rounded-full">
-            ফ্রি ক্লাসসমূহ
-          </button>
         </div>
         <div className="w-full lg:w-1/2">
           {isAccordingOpen !== null && (

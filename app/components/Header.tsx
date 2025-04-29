@@ -4,11 +4,12 @@ import { BsFillTelephoneFill } from "react-icons/bs";
 import SelectClass from "./SelectClass";
 import Image from "next/image";
 import Link from "next/link";
+import { FiSearch } from "react-icons/fi";
 
 export default function Header() {
   return (
     <header className="shadow">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-3 py-2 bg-white">
+      <div className="max-w-[1400px] mx-auto flex items-center justify-between px-3 py-2 bg-white">
         <div className="md:w-1/2 text-xl font-bold text-gray-800">
           <Image
             src={"/images/minar-academy-logo.png"}
@@ -18,7 +19,15 @@ export default function Header() {
             className="w-40"
           />
         </div>
-        <div className="w-1/2 items-center justify-center gap-5 hidden md:flex">
+        <div className="w-full items-center justify-center gap-5 hidden md:flex">
+          <div className="relative border focus-within:border-primary rounded-md flex items-center px-2">
+            <FiSearch className="text-gray-500" />
+            <input
+              type="text"
+              placeholder="Search"
+              className="ml-2 py-1.5 text-sm outline-none"
+            />
+          </div>
           <SelectClass />
           <Menu />
         </div>
