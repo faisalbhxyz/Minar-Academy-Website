@@ -4,6 +4,7 @@ import Course from "../components/home/Course";
 import FreeClasses from "../components/home/FreeClasses";
 import MinarAcademy from "../components/home/MinarAcademy";
 import NewsLetter from "../components/home/NewsLetter";
+import MoreTips from "../components/home/MoreTips";
 
 export default function HomePage() {
   return (
@@ -13,6 +14,7 @@ export default function HomePage() {
       <FreeClasses />
       <MinarAcademy />
       <NewsLetter />
+      <MoreTips />
     </>
   );
 }
