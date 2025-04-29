@@ -25,7 +25,7 @@ export default function FreeClasses() {
   const [selectedClass, setSelectedClass] = useState<number | null>(null);
 
   return (
-    <div className="py-20 mt-10 bg-slate-900 text-white">
+    <div className="py-20 mt-10 bg-slate-900 text-white px-3">
       <div className="relative max-w-7xl mx-auto px-10 bg-primary/20 border rounded-3xl py-14">
         <span className="absolute left-1/2 transform -translate-x-1/2 -top-5 bg-primary border border-primary px-5 py-2 rounded-full">
           ফ্রি ক্লাসসমূহ
