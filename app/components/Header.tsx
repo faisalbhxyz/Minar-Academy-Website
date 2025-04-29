@@ -7,7 +7,7 @@ export default function Header() {
   return (
     <header className="flex items-center justify-between px-6 py-4 bg-white shadow">
       <div className="w-1/2 text-xl font-bold text-gray-800">Minar</div>
-      <div className="w-1/2 flex items-center justify-center gap-5">
+      <div className="w-1/2 items-center justify-center gap-5 hidden md:flex">
         <SelectClass />
         <Menu />
       </div>
