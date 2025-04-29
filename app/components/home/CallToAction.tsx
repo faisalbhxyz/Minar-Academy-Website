@@ -16,7 +16,7 @@ export default function CallToAction() {
         </div>
         <Link
           href="tel:01886929763"
-          className="flex items-center gap-2 bg-primary text-white border border-primary px-6 py-2 rounded-lg hover:bg-opacity-90 transition"
+          className="flex w-fit items-center gap-2 bg-primary text-white border border-primary px-6 py-2 rounded-lg hover:bg-opacity-90 transition"
         >
           <BsFillTelephoneFill /> 01886929763
         </Link>
