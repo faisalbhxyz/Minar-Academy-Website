@@ -7,7 +7,7 @@ import { FaLinkedinIn } from "react-icons/fa";
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-white px-6 py-10">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+      <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
         <div>
           <h3 className="text-xl font-semibold mb-2">Logo</h3>
           <p>Minar Academy</p>
@@ -54,7 +54,7 @@ export default function Footer() {
           </div>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto border-t border-gray-700 pt-4 flex flex-col md:flex-row items-center justify-between text-sm">
+      <div className="max-w-[1400px] mx-auto border-t border-gray-700 pt-4 flex flex-col md:flex-row items-center justify-between text-sm">
         <div className="space-x-3">
           <Link href="/terms">
             <span className="hover:underline">Terms & Conditions</span>

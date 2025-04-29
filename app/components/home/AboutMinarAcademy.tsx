@@ -3,8 +3,8 @@ import CallToAction from "./CallToAction";
 
 export default function AboutMinarAcademy() {
   return (
-    <div className="px-3 py-10 mb-40">
-      <div className="relative p-6 md:p-10 max-w-7xl h-[42rem] md:h-96 mx-auto bg-primary text-white rounded-3xl flex flex-col lg:flex-row items-start lg:justify-between gap-8">
+    <div className="px-3 py-10 mb-80 md:mb-40">
+      <div className="relative p-6 md:p-10 max-w-[1400px] h-[42rem] md:h-96 mx-auto bg-primary text-white rounded-3xl flex flex-col lg:flex-row items-start lg:justify-between gap-8">
         <div className="w-full lg:w-5/12">
           <p className="text-3xl md:text-4xl font-semibold">
             কেন Shikho-তে আস্থা রাখবে?

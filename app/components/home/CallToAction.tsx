@@ -3,7 +3,7 @@ import { BsFillTelephoneFill } from "react-icons/bs";
 
 export default function CallToAction() {
   return (
-    <div className="absolute left-1/2 transform -translate-x-1/2 bottom-36 md:-bottom-32 w-9/12 bg-white shadow-lg p-3 rounded-xl">
+    <div className="absolute left-1/2 transform -translate-x-1/2 -bottom-72 md:-bottom-32 w-10/12 md:w-9/12 bg-white shadow-lg p-3 rounded-xl">
       <div className="bg-primary/20 rounded-lg text-primary p-3">
         <p className="text-2xl mb-2">যেকোনো প্রয়োজনে কল করো এখনই</p>
         <p className="text-sm w-5/12">
