@@ -7,7 +7,8 @@ export default function CallToAction() {
       <div className="bg-primary/20 rounded-lg text-primary p-3">
         <p className="text-2xl mb-2">যেকোনো প্রয়োজনে কল করো এখনই</p>
         <p className="text-sm w-5/12">
-          শিখো'র কোর্স, তোমার পড়াশোনা, প্রোমো কোড অথবা যেকোনো জিজ্ঞাসায় কল করো
+          শিখো&apos;র কোর্স, তোমার পড়াশোনা, প্রোমো কোড অথবা যেকোনো জিজ্ঞাসায়
+          কল করো
         </p>
         <div className="border-l-4 border-orange-500 pl-2 my-5">
           <p>সকাল ৯ টা - রাত ১০ টা</p>

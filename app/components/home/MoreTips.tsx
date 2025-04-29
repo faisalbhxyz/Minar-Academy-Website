@@ -1,3 +1,4 @@
+import Image from "next/image";
 import React from "react";
 
 const sampleData = [
@@ -35,9 +36,11 @@ export default function MoreTips() {
             key={item.id}
             className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden p-3"
           >
-            <img
+            <Image
               src={item.image}
               alt={item.title}
+              width={300}
+              height={300}
               className="w-full h-64 object-cover rounded-lg"
             />
             <div className="p-6">
