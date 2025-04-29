@@ -29,7 +29,9 @@ export default function Footer() {
         <div>
           <h3 className="text-xl font-semibold mb-2">যোগাযোগ</h3>
           <p>Email: info@minaracademy.com</p>
-          <p>Phone: +1 234 567 890</p>
+          <p>
+            Phone: <Link href="tel:01886929763">01886929763</Link>
+          </p>
         </div>
         <div>
           <h3 className="text-xl font-semibold mb-2">
