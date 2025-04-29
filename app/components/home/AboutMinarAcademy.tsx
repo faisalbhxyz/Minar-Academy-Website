@@ -7,12 +7,12 @@ export default function AboutMinarAcademy() {
       <div className="relative p-6 md:p-10 max-w-[1400px] h-[42rem] md:h-96 mx-auto bg-primary text-white rounded-3xl flex flex-col lg:flex-row items-start lg:justify-between gap-8">
         <div className="w-full lg:w-5/12">
           <p className="text-3xl md:text-4xl font-semibold">
-            কেন Shikho-তে আস্থা রাখবে?
+            কেন Minar Academy-তে আস্থা রাখবে?
           </p>
           <p className="mt-4 md:mt-5 text-lg md:text-xl">
-            সেরা মেন্টর ও সর্বাধুনিক প্রযুক্তির সাথে সারাদেশের ১০ লক্ষ+
-            শিক্ষার্থীর মানসম্মত পড়ালেখা ও পরীক্ষা প্রস্তুতির নির্ভরযোগ্য
-            প্রতিষ্ঠান Shikho!
+            সেরা মেন্টর ও সর্বাধুনিক প্রযুক্তির সাথে সারাদেশের মাদরাসা
+            শিক্ষার্থীদের মানসম্মত পড়ালেখা ও পরীক্ষা প্রস্তুতির নির্ভরযোগ্য
+            প্রতিষ্ঠান Minar Academy!
           </p>
         </div>
 

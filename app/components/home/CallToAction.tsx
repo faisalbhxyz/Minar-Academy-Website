@@ -1,3 +1,4 @@
+import Link from "next/link";
 import React from "react";
 import { BsFillTelephoneFill } from "react-icons/bs";
 
@@ -13,9 +14,12 @@ export default function CallToAction() {
         <div className="border-l-4 border-orange-500 pl-2 my-5">
           <p>সকাল ৯ টা - রাত ১০ টা</p>
         </div>
-        <button className="flex items-center gap-2 bg-primary text-white border border-primary px-6 py-2 rounded-lg hover:bg-opacity-90 transition">
-          <BsFillTelephoneFill /> 16910
-        </button>
+        <Link
+          href="tel:01886929763"
+          className="flex items-center gap-2 bg-primary text-white border border-primary px-6 py-2 rounded-lg hover:bg-opacity-90 transition"
+        >
+          <BsFillTelephoneFill /> 01886929763
+        </Link>
         <p className="text-sm mt-1">* যেকোনো নাম্বার থেকে সাধারণ কল রেট *</p>
       </div>
     </div>
