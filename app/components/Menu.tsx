@@ -5,7 +5,7 @@ import { IoIosArrowDown } from "react-icons/io";
 const menu = [
   {
     name: "সকল কোর্স",
-    link: "/sokol-course",
+    link: "/courses",
   },
   {
     name: "আমাদের সম্পর্কে",

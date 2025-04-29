@@ -1,14 +1,14 @@
 import React from "react";
-import Header from "../components/Header";
 import Banner from "../components/home/Banner";
 import Course from "../components/home/Course";
+import FreeClasses from "../components/home/FreeClasses";
 
 export default function HomePage() {
   return (
-    <div>
-      <Header />
+    <>
       <Banner />
       <Course />
-    </div>
+      <FreeClasses />
+    </>
   );
 }
