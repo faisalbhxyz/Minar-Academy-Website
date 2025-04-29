@@ -32,7 +32,7 @@ const courses = [
 
 export default function Course() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10 mt-10">
+    <div className="max-w-7xl mx-auto px-3 py-10 mt-10">
       <p className="text-center text-5xl font-bold mb-10">
         অনলাইন ব্যাচে সকল কোর্সে ভর্তি চলছে!
       </p>

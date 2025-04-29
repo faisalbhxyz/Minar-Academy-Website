@@ -20,7 +20,7 @@ const sampleData = [
 export default function MoreTips() {
   return (
     <div>
-      <div className="max-w-7xl mx-auto px-10 rounded-3xl py-14 mt-10">
+      <div className="max-w-7xl mx-auto rounded-3xl py-14 mt-10">
         <div className="mb-10 space-y-3">
           <p className="text-center text-5xl font-bold">
             বছর জুড়ে অনলাইন ব্যাচে কী কী থাকছে?
