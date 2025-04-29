@@ -35,7 +35,7 @@ export default function FreeClasses() {
         <span className="absolute left-1/2 transform -translate-x-1/2 -top-5 bg-primary border border-primary px-5 py-2 rounded-full">
           ফ্রি ক্লাসসমূহ
         </span>
-        <p className="text-center text-5xl font-bold mb-10">
+        <p className="text-center text-4xl md:text-5xl font-bold mb-10">
           ফ্রি ক্লাস করতে এখনই তোমার ক্লাসটি বেছে নাও
         </p>
 

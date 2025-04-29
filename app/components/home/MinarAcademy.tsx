@@ -50,7 +50,7 @@ export default function MinarAcademy() {
     setIsAccordingOpen((prevIndex) => (prevIndex === index ? null : index));
   return (
     <div className="max-w-[1400px] mx-auto rounded-3xl px-3 py-14 mt-10">
-      <p className="text-center text-5xl font-bold mb-10">
+      <p className="text-center text-4xl md:text-5xl font-bold mb-10">
         Minar Academy-তে যা যা থাকছে
       </p>
       <div className="flex flex-col lg:flex-row gap-10">
