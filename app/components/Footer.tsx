@@ -9,7 +9,7 @@ import { SiTiktok } from "react-icons/si";
 
 export default function Footer() {
   return (
-    <footer className="bg-sky-100 px-6 py-10">
+    <footer className="bg-sky-100 py-10">
       <div className="wrapper">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
