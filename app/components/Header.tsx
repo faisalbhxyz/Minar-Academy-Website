@@ -10,15 +10,16 @@ import { FiSearch } from "react-icons/fi";
 import { RiSearchLine } from "react-icons/ri";
 import { AiOutlineMenu } from "react-icons/ai";
 import useToggleStore from "@/hooks/useToggle";
+import { RxCross2 } from "react-icons/rx";
 
 export default function Header() {
   const { toggle } = useToggleStore();
   const [isSearch, setIsSearch] = useState(false);
 
   return (
-    <div className="sticky top-0 z-50">
+    <div className="sticky top-0 z-50 bg-white">
       <header className="shadow">
-        <div className="max-w-[1400px] mx-auto flex items-center justify-between px-3 py-2 bg-white">
+        <div className="max-w-[1400px] mx-auto flex items-center justify-between px-3 py-2">
           <Link href="/" className="text-xl font-bold text-gray-800">
             <Image
               src={"/images/minar-academy-logo.png"}
@@ -45,7 +46,7 @@ export default function Header() {
               onClick={() => setIsSearch((prev) => !prev)}
               className="p-2 text-gray-500 md:hidden"
             >
-              <RiSearchLine size={22} />
+              {isSearch ? <RxCross2 size={22} /> : <RiSearchLine size={22} />}
             </button>
             <Link
               href="tel:01886929763"
