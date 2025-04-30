@@ -32,9 +32,12 @@ export default function CallToAction() {
             <div className="flex items-center justify-between gap-5 bg-red-200 p-3 rounded-xl">
               <div className="space-y-2">
                 <p>ফ্রি ভিডিও লাইব্রেরি</p>
-                <button className="bg-white px-4 py-2 rounded-md text-sm">
+                <Link
+                  href="https://www.youtube.com/@MinarAcademy"
+                  className="bg-white px-4 py-2 rounded-md text-sm"
+                >
                   ভিডিও দেখো
-                </button>
+                </Link>
               </div>
               <Image
                 src={"/images/youtube.png"}
@@ -47,9 +50,12 @@ export default function CallToAction() {
             <div className="flex items-center justify-between gap-5 bg-sky-200 p-3 rounded-xl">
               <div className="space-y-2">
                 <p>মিনার একাডেমি ফেসবুক গ্রুপ</p>
-                <button className="bg-white px-4 py-2 rounded-md text-sm">
+                <Link
+                  href="https://www.facebook.com/people/Minar-Academy/61574272148754/"
+                  className="bg-white px-4 py-2 rounded-md text-sm"
+                >
                   গ্রুপে যুক্ত হও
-                </button>
+                </Link>
               </div>
               <Image
                 src={"/images/facebook.png"}
