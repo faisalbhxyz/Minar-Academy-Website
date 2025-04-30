@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import React, { useState } from "react";
-import { HiOutlineCube } from "react-icons/hi";
 import { RiLiveLine } from "react-icons/ri";
 import { PiExamBold } from "react-icons/pi";
 import { LuNotepadText } from "react-icons/lu";
