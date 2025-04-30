@@ -76,7 +76,7 @@ export default function Footer() {
               </span>
             </Link>
             <Link href="https://www.tiktok.com/@minar.academy">
-              <span className="bg-white w-9 h-9 rounded-md text-sky-600 flex items-center justify-center">
+              <span className="bg-white w-9 h-9 rounded-md text-black flex items-center justify-center">
                 <SiTiktok size={22} />
               </span>
             </Link>

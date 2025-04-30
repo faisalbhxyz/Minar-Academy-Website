@@ -3,6 +3,11 @@
 import Image from "next/image";
 import React, { useState } from "react";
 import { HiOutlineCube } from "react-icons/hi";
+import { RiLiveLine } from "react-icons/ri";
+import { PiExamBold } from "react-icons/pi";
+import { LuNotepadText } from "react-icons/lu";
+import { TbReportAnalytics } from "react-icons/tb";
+import { LuNotebookPen } from "react-icons/lu";
 
 const accordingData = [
   {
@@ -10,36 +15,42 @@ const accordingData = [
     description:
       "ইন্ডাস্ট্রি এক্সপার্টদের সাথে লাইভ ক্লাসে যুক্ত হও, আর ইচ্ছে মতো রেকর্ডেড ক্লাস দেখে শেখার সুবিধা নাও।",
     image: "/images/pexels-godisable-jacob-226636-901964.jpg",
+    icon: RiLiveLine,
   },
   {
     title: "প্র্যাকটিস MCQ টেস্ট",
     description:
       "বিভিন্ন টপিক কাভার করতে নিয়মিত প্র্যাকটিস MCQ টেস্ট দিয়ে নিজের প্রস্তুতি যাচাই করো।",
     image: "/images/pexels-pixabay-267885.jpg",
+    icon: PiExamBold,
   },
   {
     title: "লাইভ MCQ টেস্ট",
     description:
       "লাইভ টেস্টে অংশ নিয়ে রিয়েল-টাইম পারফরম্যান্স বুঝে নাও এবং নিজের স্কোর আপগ্রেড করো।",
     image: "/images/pexels-godisable-jacob-226636-901964.jpg",
+    icon: RiLiveLine,
   },
   {
     title: "ক্লাস নোট",
     description:
       "প্রতিটি ক্লাসের প্রয়োজনীয় পয়েন্টস সহজভাবে সাজানো নোটে পেয়ে যাও।",
     image: "/images/pexels-pixabay-267885.jpg",
+    icon: LuNotepadText,
   },
   {
     title: "স্মার্ট নোট",
     description:
       "শর্টকার্ট ট্রিকস আর এক্সট্রা টিপসসহ স্মার্টলি সাজানো নোট, যাতে দ্রুত রিভিশন সম্ভব হয়।",
     image: "/images/pexels-pixabay-267885.jpg",
+    icon: LuNotebookPen,
   },
   {
     title: "রিপোর্ট কার্ড",
     description:
       "নিজের প্রতিটি পরীক্ষার বিস্তারিত রিপোর্ট কার্ডে পারফরম্যান্স এনালাইসিস করো।",
     image: "/images/pexels-pixabay-267885.jpg",
+    icon: TbReportAnalytics,
   },
 ];
 
@@ -55,7 +66,7 @@ export default function MinarAcademy() {
       </p>
       <div className="flex flex-col lg:flex-row gap-10">
         <div className="w-full lg:w-1/2 space-y-3">
-          {accordingData?.map((according, index) => (
+          {accordingData?.map(({ description, icon: Icon, title }, index) => (
             <article
               key={index}
               className={`rounded-lg p-3 ${
@@ -69,8 +80,8 @@ export default function MinarAcademy() {
                 onClick={() => handleClick(index)}
               >
                 <div className="flex items-center gap-2">
-                  <HiOutlineCube size={25} className="text-gray-600" />
-                  <p className="font-[600] text-[1.2rem]">{according.title}</p>
+                  <Icon size={25} className="text-gray-600" />
+                  <p className="font-[600] text-[1.2rem]">{title}</p>
                 </div>
               </div>
               <div
@@ -81,7 +92,7 @@ export default function MinarAcademy() {
                 }`}
               >
                 <div className="text-[#424242] overflow-hidden ml-8">
-                  {according.description}
+                  {description}
                 </div>
               </div>
             </article>
