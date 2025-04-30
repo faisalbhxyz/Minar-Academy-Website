@@ -7,22 +7,22 @@ const classes = [
   {
     id: 1,
     title: "ক্লাস ৬,৭,৮",
-    image: "/images/icon.png",
+    image: "/images/school-bag.png",
   },
   {
     id: 2,
     title: "ক্লাস ৯,১০",
-    image: "/images/icon.png",
+    image: "/images/reading.png",
   },
   {
     id: 3,
     title: "SSC ২৫",
-    image: "/images/icon.png",
+    image: "/images/notepad.png",
   },
   {
     id: 4,
     title: "HSC ২৫, ২৬",
-    image: "/images/icon.png",
+    image: "/images/goal.png",
   },
 ];
 
