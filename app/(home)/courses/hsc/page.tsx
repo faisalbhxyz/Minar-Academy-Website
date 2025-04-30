@@ -1,6 +1,5 @@
-import ProgramCard from "@/app/components/courses/ProgramCard";
-import Image from "next/image";
 import React from "react";
+import ProgramCard from "@/app/components/courses/ProgramCard";
 
 const academicPrograms = [
   {
