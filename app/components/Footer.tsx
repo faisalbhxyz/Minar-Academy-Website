@@ -19,7 +19,10 @@ export default function Footer() {
             height={100}
             className="w-32 -ml-3"
           />
-          <p>Minar Academy</p>
+          <p className="mt-3">
+            Minar Academy – Making Madrasah education smarter and more
+            accessible through technology.
+          </p>
         </div>
         <div>
           <h3 className="text-xl font-semibold mb-2">লিঙ্ক</h3>

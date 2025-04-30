@@ -12,7 +12,7 @@ const slides = ["/images/banner.jpg", "/images/banner-2.jpg"];
 
 export default function Banner() {
   return (
-    <div className="max-w-[1300px] mx-auto h-56 md:h-[500px] w-full overflow-hidden">
+    <div className="max-w-[1300px] mx-auto h-56 md:h-[500px] w-full overflow-hidden mt-5">
       <Swiper
         modules={[Autoplay, Pagination]}
         autoplay={{ delay: 3000 }}
@@ -27,7 +27,7 @@ export default function Banner() {
                 src={src}
                 alt={`Banner ${index + 1}`}
                 fill
-                className="object-cover"
+                className="object-cover rounded-2xl"
                 priority={index === 0}
                 sizes="100vw"
               />

@@ -8,37 +8,37 @@ const accordingData = [
   {
     title: "লাইভ এবং রেকর্ডেড ক্লাস",
     description:
-      "Wireframing outlines the basic structure and layout of a design, serving as a visual guide before detailed development.",
+      "ইন্ডাস্ট্রি এক্সপার্টদের সাথে লাইভ ক্লাসে যুক্ত হও, আর ইচ্ছে মতো রেকর্ডেড ক্লাস দেখে শেখার সুবিধা নাও।",
     image: "/images/pexels-godisable-jacob-226636-901964.jpg",
   },
   {
     title: "প্র্যাকটিস MCQ টেস্ট",
     description:
-      "User-centered design ensures products meet the needs and preferences of the end-users, enhancing usability and satisfaction.",
+      "বিভিন্ন টপিক কাভার করতে নিয়মিত প্র্যাকটিস MCQ টেস্ট দিয়ে নিজের প্রস্তুতি যাচাই করো।",
     image: "/images/pexels-pixabay-267885.jpg",
   },
   {
     title: "লাইভ MCQ টেস্ট",
     description:
-      "Wireframing outlines the basic structure and layout of a design, serving as a visual guide before detailed development.",
+      "লাইভ টেস্টে অংশ নিয়ে রিয়েল-টাইম পারফরম্যান্স বুঝে নাও এবং নিজের স্কোর আপগ্রেড করো।",
     image: "/images/pexels-godisable-jacob-226636-901964.jpg",
   },
   {
     title: "ক্লাস নোট",
     description:
-      "User-centered design ensures products meet the needs and preferences of the end-users, enhancing usability and satisfaction.",
+      "প্রতিটি ক্লাসের প্রয়োজনীয় পয়েন্টস সহজভাবে সাজানো নোটে পেয়ে যাও।",
     image: "/images/pexels-pixabay-267885.jpg",
   },
   {
     title: "স্মার্ট নোট",
     description:
-      "User-centered design ensures products meet the needs and preferences of the end-users, enhancing usability and satisfaction.",
+      "শর্টকার্ট ট্রিকস আর এক্সট্রা টিপসসহ স্মার্টলি সাজানো নোট, যাতে দ্রুত রিভিশন সম্ভব হয়।",
     image: "/images/pexels-pixabay-267885.jpg",
   },
   {
     title: "রিপোর্ট কার্ড",
     description:
-      "User-centered design ensures products meet the needs and preferences of the end-users, enhancing usability and satisfaction.",
+      "নিজের প্রতিটি পরীক্ষার বিস্তারিত রিপোর্ট কার্ডে পারফরম্যান্স এনালাইসিস করো।",
     image: "/images/pexels-pixabay-267885.jpg",
   },
 ];
@@ -80,7 +80,7 @@ export default function MinarAcademy() {
                     : "grid-rows-[0fr] opacity-0"
                 }`}
               >
-                <div className="text-[#424242] text-[0.9rem] overflow-hidden ml-8">
+                <div className="text-[#424242] overflow-hidden ml-8">
                   {according.description}
                 </div>
               </div>
