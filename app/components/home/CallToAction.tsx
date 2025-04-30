@@ -11,7 +11,7 @@ export default function CallToAction() {
           <p className="text-2xl mb-2">যেকোনো প্রয়োজনে কল করো এখনই</p>
           <p className="text-sm w-5/12">যেকোনো জিজ্ঞাসায় কল করো</p>
           <div className="border-l-4 border-orange-500 pl-2 my-5">
-            <p>সকাল ১০ টা</p>
+            <p>সকাল ১০ টা - রাত ১০ টা</p>
           </div>
           <Link
             href="tel:01886929763"
