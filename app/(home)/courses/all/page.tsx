@@ -24,7 +24,7 @@ export default function Page() {
     <>
       <div className="wrapper mt-20 pb-10 border-b border-gray-300">
         <p className="text-3xl font-semibold mb-6">বোর্ড পরীক্ষার প্রস্তুতি</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {boardExams.map((item) => (
             <ProgramCard key={item.id} item={item} />
           ))}
@@ -33,7 +33,7 @@ export default function Page() {
 
       <div className="wrapper mb-20 pt-10">
         <p className="text-3xl font-semibold mb-6">একাডেমিক প্রোগ্রাম</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {academicPrograms.map((item) => (
             <ProgramCard key={item.id} item={item} />
           ))}
