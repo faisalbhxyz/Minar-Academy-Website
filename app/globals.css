@@ -34,6 +34,11 @@ body {
   .border {
     @apply border border-gray-300
   }
+
+  .wrapper {
+    @apply max-w-[1350px] mx-auto px-3
+  }
+
   .ytp-impression-link {
    display: none;
   }

@@ -19,14 +19,14 @@ export default function Header() {
   return (
     <div className="sticky top-0 z-50 bg-white">
       <header className="shadow">
-        <div className="max-w-[1400px] mx-auto flex items-center justify-between px-3 py-2">
+        <div className="wrapper flex items-center justify-between py-2">
           <Link href="/" className="text-xl font-bold text-gray-800">
             <Image
               src={"/images/minar-academy-logo.png"}
               alt={"logo"}
               width={200}
               height={100}
-              className="w-40"
+              className="w-40 -ml-2"
             />
           </Link>
           <div className="items-center justify-center gap-5 hidden md:flex">

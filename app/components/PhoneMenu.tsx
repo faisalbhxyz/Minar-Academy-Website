@@ -9,7 +9,7 @@ import SelectClass from "./SelectClass";
 const menu = [
   {
     name: "সকল কোর্স",
-    link: "/courses",
+    link: "/courses/all",
   },
   {
     name: "আমাদের সম্পর্কে",
