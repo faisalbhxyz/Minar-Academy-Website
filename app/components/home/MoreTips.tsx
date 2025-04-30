@@ -1,4 +1,3 @@
-import Image from "next/image";
 import React from "react";
 
 const sampleData = [
@@ -7,14 +6,14 @@ const sampleData = [
     title: "সারা বছরে কী কী হচ্ছে অনলাইন ব্যাচে?",
     description:
       "এক্সপার্ট টিচারদের লাইভ ক্লাস, গোছানো মাস্টারবুক, ও মডেল টেস্ট দিয়ে ঘরে বসেই ৬ষ্ঠ-১০ম শ্রেণির পড়াশোনার কমপ্লিট প্রিপারেশন!",
-    image: "/images/pexels-pixabay-267885.jpg",
+    video: "https://www.youtube.com/embed/KcbIGEf599c", // Embedded YouTube video
   },
   {
     id: 2,
     title: "সারা বছরে কী কী হচ্ছে অনলাইন ব্যাচে?",
     description:
       "এক্সপার্ট টিচারদের লাইভ ক্লাস, গোছানো মাস্টারবুক, ও মডেল টেস্ট দিয়ে ঘরে বসেই ৬ষ্ঠ-১০ম শ্রেণির পড়াশোনার কমপ্লিট প্রিপারেশন!",
-    image: "/images/pexels-pixabay-267885.jpg",
+    video: "https://www.youtube.com/embed/KcbIGEf599c", // Static image
   },
 ];
 
@@ -30,19 +29,22 @@ export default function MoreTips() {
           পড়াশুনার অগ্রযাত্রা
         </p>
       </div>
+
       <div className="grid md:grid-cols-2 gap-10">
         {sampleData.map((item) => (
           <div
             key={item.id}
             className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden p-3"
           >
-            <Image
-              src={item.image}
-              alt={item.title}
-              width={300}
-              height={300}
-              className="w-full h-64 object-cover rounded-lg"
-            />
+            <div className="w-full aspect-video rounded-lg overflow-hidden">
+              <iframe
+                className="w-full h-full"
+                src={`${item.video}?rel=0&modestbranding=1&controls=1&disablekb=1&fs=0&iv_load_policy=3`}
+                title={item.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
             <div className="p-6">
               <h2 className="text-2xl font-semibold mb-2">{item.title}</h2>
               <p className="text-gray-600">{item.description}</p>

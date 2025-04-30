@@ -34,4 +34,7 @@ body {
   .border {
     @apply border border-gray-300
   }
+  .ytp-impression-link {
+   display: none;
+  }
 }

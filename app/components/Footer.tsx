@@ -41,15 +41,15 @@ export default function Footer() {
         <div>
           <h3 className="text-xl font-semibold mb-2">যোগাযোগ</h3>
           <div className="flex items-center gap-2 mb-3">
-            <MdEmail size={22} />
+            <MdEmail size={22} className="text-teal-700" />
             <span>minaracademy@gmail.com</span>
           </div>
           <div className="flex items-center gap-2 mb-3">
-            <MdPhone size={22} />{" "}
+            <MdPhone size={22} className="text-sky-600" />{" "}
             <Link href="tel:01886929763">01886929763</Link>
           </div>
           <div className="flex items-center gap-2">
-            <span>
+            <span className="text-indigo-600">
               <MdLocationPin size={22} />
             </span>
             <span>Abdullah Khan Lane, Boro Garage, Badurtola, Chittagong</span>
