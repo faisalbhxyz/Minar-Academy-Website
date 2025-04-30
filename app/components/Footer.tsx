@@ -9,7 +9,7 @@ import { SiTiktok } from "react-icons/si";
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-white px-6 py-10">
+    <footer className="bg-sky-100 px-6 py-10">
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
         <div>
           <Image
@@ -40,16 +40,20 @@ export default function Footer() {
         </div>
         <div>
           <h3 className="text-xl font-semibold mb-2">যোগাযোগ</h3>
-          <div className="flex items-center gap-2 mb-3">
-            <MdEmail size={22} className="text-teal-700" />
+          <div className="flex items-center gap-4 mb-3">
+            <span className="w-9 h-9 bg-teal-200 flex items-center justify-center rounded-md">
+              <MdEmail size={22} className="text-teal-600" />
+            </span>
             <span>minaracademy@gmail.com</span>
           </div>
-          <div className="flex items-center gap-2 mb-3">
-            <MdPhone size={22} className="text-sky-600" />{" "}
+          <div className="flex items-center gap-4 mb-3">
+            <span className="w-9 h-9 bg-sky-200 flex items-center justify-center rounded-md">
+              <MdPhone size={22} className="text-sky-600" />
+            </span>
             <Link href="tel:01886929763">01886929763</Link>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-indigo-600">
+          <div className="flex items-center gap-4">
+            <span className="w-9 min-w-9 h-9 bg-indigo-200 text-indigo-600 flex items-center justify-center rounded-md">
               <MdLocationPin size={22} />
             </span>
             <span>Abdullah Khan Lane, Boro Garage, Badurtola, Chittagong</span>
