@@ -2,8 +2,10 @@ import React from "react";
 import Link from "next/link";
 import { FaFacebookF } from "react-icons/fa";
 import { FaYoutube } from "react-icons/fa";
-import { FaLinkedinIn } from "react-icons/fa";
 import Image from "next/image";
+import { MdEmail, MdLocationPin, MdPhone } from "react-icons/md";
+import { GrInstagram } from "react-icons/gr";
+import { SiTiktok } from "react-icons/si";
 
 export default function Footer() {
   return (
@@ -35,29 +37,44 @@ export default function Footer() {
         </div>
         <div>
           <h3 className="text-xl font-semibold mb-2">যোগাযোগ</h3>
-          <p>Email: info@minaracademy.com</p>
-          <p>
-            Phone: <Link href="tel:01886929763">01886929763</Link>
-          </p>
+          <div className="flex items-center gap-2 mb-3">
+            <MdEmail size={22} />
+            <span>minaracademy@gmail.com</span>
+          </div>
+          <div className="flex items-center gap-2 mb-3">
+            <MdPhone size={22} />{" "}
+            <Link href="tel:01886929763">01886929763</Link>
+          </div>
+          <div className="flex items-center gap-2">
+            <span>
+              <MdLocationPin size={22} />
+            </span>
+            <span>Abdullah Khan Lane, Boro Garage, Badurtola, Chittagong</span>
+          </div>
         </div>
         <div>
           <h3 className="text-xl font-semibold mb-2">
             আমাদের সাথে কানেক্টেড থাকো
           </h3>
           <div className="flex space-x-4">
-            <Link href="#">
+            <Link href="https://www.facebook.com/people/Minar-Academy/61574272148754/">
               <span className="bg-white w-9 h-9 rounded-md text-sky-600 flex items-center justify-center">
                 <FaFacebookF size={22} />
               </span>
             </Link>
-            <Link href="#">
+            <Link href="https://www.youtube.com/@MinarAcademy">
               <span className="bg-white w-9 h-9 rounded-md text-red-600 flex items-center justify-center">
                 <FaYoutube size={22} />
               </span>
             </Link>
-            <Link href="#">
+            <Link href="https://www.instagram.com/minaracademy/">
               <span className="bg-white w-9 h-9 rounded-md text-sky-600 flex items-center justify-center">
-                <FaLinkedinIn size={22} />
+                <GrInstagram size={22} />
+              </span>
+            </Link>
+            <Link href="https://www.tiktok.com/@minar.academy">
+              <span className="bg-white w-9 h-9 rounded-md text-sky-600 flex items-center justify-center">
+                <SiTiktok size={22} />
               </span>
             </Link>
           </div>
