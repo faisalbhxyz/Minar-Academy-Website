@@ -12,8 +12,8 @@ export default function SelectClass() {
 
       <MenuItems
         transition
-        anchor="bottom"
-        className="w-52 origin-top rounded-md border bg-white p-1 text-sm transition duration-100 ease-out [--anchor-gap:--spacing(1)] focus:outline-none data-closed:scale-95 data-closed:opacity-0"
+        anchor="bottom start"
+        className="w-52 z-[999] origin-top-left rounded-md border bg-white p-1 text-sm transition duration-100 ease-out [--anchor-gap:--spacing(1)] focus:outline-none data-closed:scale-95 data-closed:opacity-0"
       >
         <MenuItem>
           <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-1.5 data-focus:bg-gray-100">
