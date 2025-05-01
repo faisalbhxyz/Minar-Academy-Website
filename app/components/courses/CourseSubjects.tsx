@@ -81,9 +81,9 @@ export default function CourseSubjects() {
                       : "grid-rows-[0fr] opacity-0"
                   }`}
                 >
-                  <p className="text-[#424242] text-[0.9rem] overflow-hidden">
+                  <div className="text-[#424242] text-[0.9rem] overflow-hidden">
                     {according.description}
-                  </p>
+                  </div>
                 </div>
               </article>
             ))}
@@ -119,9 +119,9 @@ export default function CourseSubjects() {
                       : "grid-rows-[0fr] opacity-0"
                   }`}
                 >
-                  <p className="text-[#424242] text-[0.9rem] overflow-hidden">
+                  <div className="text-[#424242] text-[0.9rem] overflow-hidden">
                     {according.description}
-                  </p>
+                  </div>
                 </div>
               </article>
             ))}
