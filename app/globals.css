@@ -32,7 +32,7 @@ body {
     @apply cursor-pointer
   }
   .border {
-    @apply border border-gray-300
+    @apply border border-gray-200
   }
 
   .wrapper {
