@@ -25,7 +25,7 @@ const menu = [
   },
   {
     name: "শিক্ষক হিসেবে যোগ দিন",
-    link: "/",
+    link: "https://forms.gle/4DG5BjQpV3RoSUS18",
   },
 ];
 
