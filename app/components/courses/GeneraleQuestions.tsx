@@ -16,7 +16,7 @@ const questions = [
 ];
 
 export default function GeneraleQuestions() {
-  const [isPlusAccording, setIsPlusAccording] = useState<number | null>(null);
+  const [isPlusAccording, setIsPlusAccording] = useState<number | null>(0);
 
   const handleBorderClick = (index: number) =>
     setIsPlusAccording((prevIndex) => (prevIndex === index ? null : index));
