@@ -38,9 +38,7 @@ export default function GeneraleQuestions() {
               className="flex gap-2 cursor-pointer items-center justify-between w-full"
               onClick={() => handleBorderClick(index)}
             >
-              <h2 className="text-[#3B9DF8] text-lg font-[600]">
-                {question.title}
-              </h2>
+              <h2 className="text-lg font-[600]">{question.title}</h2>
               <div>
                 <FaPlus
                   className={`text-[1.3rem] text-text transition-all duration-300 text-gray-600 ${
