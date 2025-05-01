@@ -40,7 +40,7 @@ export default function CourseDetails() {
         <p className="text-2xl mt-5">ক্লাস ৬ - SSC &apos;30</p>
 
         {/* Stats */}
-        <div className="flex border rounded-lg mt-5">
+        <div className="flex border rounded-lg mt-5 bg-gray-100">
           {[
             { label: "Students", value: "426" },
             { label: "Hours of Lessons", value: "150+" },
@@ -94,7 +94,7 @@ export default function CourseDetails() {
             )}
             {isActive === 2 && (
               <div>
-                <div className="border flex flex-col items-center p-10 rounded-xl">
+                <div className="bg-gray-100 border flex flex-col items-center p-10 rounded-xl">
                   <p className="text-xl font-semibold">Class Time</p>
                   <div className="max-w-xl w-full flex flex-col md:flex-row items-center justify-between mt-5">
                     <div className="flex items-center gap-2">
@@ -108,7 +108,7 @@ export default function CourseDetails() {
                   </div>
                 </div>
                 <div className="mt-5 flex flex-col md:flex-row gap-5">
-                  <div className="w-full border flex flex-col items-center p-10 rounded-xl">
+                  <div className="bg-gray-100 w-full border flex flex-col items-center p-10 rounded-xl">
                     <p className="text-xl font-semibold">Support Session</p>
                     <div className="flex items-center gap-2 mt-5">
                       <div className="w-3 min-w-3 h-3 rounded-sm bg-primary" />
@@ -118,7 +118,7 @@ export default function CourseDetails() {
                       </p>
                     </div>
                   </div>
-                  <div className="w-full border flex flex-col items-center p-10 rounded-xl">
+                  <div className="bg-gray-100 w-full border flex flex-col items-center p-10 rounded-xl">
                     <p className="text-xl font-semibold">Project Day</p>
                     <div className="flex items-center gap-2 mt-5">
                       <div className="w-3 h-3 rounded-sm bg-primary" />
@@ -157,7 +157,7 @@ export default function CourseDetails() {
               </ul>
             )}
             {isActive === 4 && (
-              <div className="w-full border flex flex-col items-center p-10 rounded-xl">
+              <div className="bg-gray-100 not-last-of-type:w-full border flex flex-col items-center p-10 rounded-xl">
                 <p className="text-xl font-semibold">Data Analysts Forum</p>
                 <button className="mt-5 border border-primary px-5 py-2 rounded-md font-medium text-primary">
                   Join The Group
