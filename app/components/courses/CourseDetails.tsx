@@ -10,6 +10,7 @@ import GeneraleQuestions from "./GeneraleQuestions";
 import { MdOutlineCheckCircle } from "react-icons/md";
 import ProgramPath from "./ProgramPath";
 import ConsultationForm from "./ConsultationForm";
+import Blueprint from "./Blueprint";
 
 export default function CourseDetails() {
   const [isActive, setIsActive] = useState(1);
@@ -195,6 +196,7 @@ export default function CourseDetails() {
         <CourseInstructor />
         <StudentReview />
         <GeneraleQuestions />
+        <Blueprint />
         <ConsultationForm />
       </div>
 
