@@ -7,6 +7,7 @@ import RealLifeProjects from "./RealLifeProjects";
 import CourseInstructor from "./CourseInstructor";
 import StudentReview from "./StudentReview";
 import GeneraleQuestions from "./GeneraleQuestions";
+import { MdOutlineCheckCircle } from "react-icons/md";
 
 export default function CourseDetails() {
   const [isActive, setIsActive] = useState(1);
@@ -78,50 +79,118 @@ export default function CourseDetails() {
           <div className="mt-5">
             {isActive === 1 && (
               <div>
-                <h2 className="text-xl font-semibold mb-2">
-                  ক্যারিয়ার পাথ সম্পর্কে
-                </h2>
                 <p>
-                  এই ক্যারিয়ার পাথে আপনি যা শিখবেন এবং কিভাবে এগিয়ে যেতে
-                  পারবেন তা বিস্তারিতভাবে ব্যাখ্যা করা হয়েছে।
+                  📌 ডেটা অ্যানালিটিক্স অ্যান্ড পাওয়ার বিআই ক্যারিয়ার পাথের ৩টি
+                  ব্যাচের অভাবনীয় সাফল্যের পরে আমরা নিয়ে এসেছি এই ক্যারিয়ার
+                  পাথের ৪র্থ ব্যাচ। নতুন করে আরও অ্যাডভান্সড আর আউটপুট ফোকাসড
+                  আউটলাইন নিয়ে।
+                </p>
+                <p className="mt-5">
+                  📌 চলছে স্পেশাল ২৮% ডিসকাউন্ট। এনরোল করার সময়ে অ্যাপ্লাই করুন
+                  “UPSKILL28” আর ৬০০০ টাকার এই ক্যারিয়ার পাথ পেয়ে যাবেন মাত্র
+                  ৪৩২০ টাকায়।{" "}
                 </p>
               </div>
             )}
             {isActive === 2 && (
               <div>
-                <h2 className="text-xl font-semibold mb-2">ক্লাস শিডিউল</h2>
-                <p>
-                  ক্লাসের সময়সূচি এবং মডিউল ভিত্তিক শেখার পরিকল্পনা এখানে
-                  পাবেন।
-                </p>
+                <div className="border flex flex-col items-center p-10 rounded-xl">
+                  <p className="text-xl font-semibold">Class Time</p>
+                  <div className="max-w-xl w-full flex flex-col md:flex-row items-center justify-between mt-5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-sm bg-primary" />
+                      <p className="">Tuesday: 9:30 PM - 11:00 PM</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-sm bg-primary" />
+                      <p>Friday: 9:30 PM - 11:00 PM</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-5 flex flex-col md:flex-row gap-5">
+                  <div className="w-full border flex flex-col items-center p-10 rounded-xl">
+                    <p className="text-xl font-semibold">Support Session</p>
+                    <div className="flex items-center gap-2 mt-5">
+                      <div className="w-3 min-w-3 h-3 rounded-sm bg-primary" />
+                      <p className="">
+                        Saturday, Monday, Wednesday, Thursday: 8:30 PM & 10:45
+                        PM and Tuesday 8:30 PM
+                      </p>
+                    </div>
+                  </div>
+                  <div className="w-full border flex flex-col items-center p-10 rounded-xl">
+                    <p className="text-xl font-semibold">Project Day</p>
+                    <div className="flex items-center gap-2 mt-5">
+                      <div className="w-3 h-3 rounded-sm bg-primary" />
+                      <p className="">Sunday 8.30 PM -10 PM</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
             {isActive === 3 && (
-              <div>
-                <h2 className="text-xl font-semibold mb-2">শিখবেন যা যা</h2>
-                <p>
-                  এই কোর্সে আপনি গণিত, বিজ্ঞান সহ বিভিন্ন বিষয়ের উপর গভীর জ্ঞান
-                  অর্জন করবেন।
-                </p>
-              </div>
+              <ul className="space-y-3">
+                <li className="flex items-center gap-3">
+                  <span className="text-primary">
+                    <MdOutlineCheckCircle size={22} />
+                  </span>
+                  <p>Database Fundamentals and Data Analysis with SQL</p>
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="text-primary">
+                    <MdOutlineCheckCircle size={22} />
+                  </span>
+                  <p>Database Fundamentals and Data Analysis with SQL</p>
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="text-primary">
+                    <MdOutlineCheckCircle size={22} />
+                  </span>
+                  <p>Database Fundamentals and Data Analysis with SQL</p>
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="text-primary">
+                    <MdOutlineCheckCircle size={22} />
+                  </span>
+                  <p>Database Fundamentals and Data Analysis with SQL</p>
+                </li>
+              </ul>
             )}
             {isActive === 4 && (
-              <div>
-                <h2 className="text-xl font-semibold mb-2">কমিউনিটি</h2>
-                <p>
-                  শিক্ষার্থী, মেন্টর এবং প্যারেন্টদের নিয়ে একটি সক্রিয়
-                  কমিউনিটি থাকবে যেখানে সবাই একে অপরকে সহযোগিতা করবে।
-                </p>
+              <div className="w-full border flex flex-col items-center p-10 rounded-xl">
+                <p className="text-xl font-semibold">Data Analysts Forum</p>
+                <button className="mt-5 border border-primary px-5 py-2 rounded-md font-medium text-primary">
+                  Join The Group
+                </button>
               </div>
             )}
             {isActive === 5 && (
-              <div>
-                <h2 className="text-xl font-semibold mb-2">যাদের জন্য</h2>
-                <p>
-                  এই কোর্স তাদের জন্য যারা SSC 2030 টার্গেট করে পড়াশোনা শুরু
-                  করতে চায়।
-                </p>
-              </div>
+              <ul className="space-y-3">
+                <li className="flex items-center gap-3">
+                  <span className="text-primary">
+                    <MdOutlineCheckCircle size={22} />
+                  </span>
+                  <p>Business Analysts</p>
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="text-primary">
+                    <MdOutlineCheckCircle size={22} />
+                  </span>
+                  <p>Data Analyst</p>
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="text-primary">
+                    <MdOutlineCheckCircle size={22} />
+                  </span>
+                  <p>Business Analysts</p>
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="text-primary">
+                    <MdOutlineCheckCircle size={22} />
+                  </span>
+                  <p>Data Analyst</p>
+                </li>
+              </ul>
             )}
           </div>
         </div>
