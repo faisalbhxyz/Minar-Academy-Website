@@ -38,10 +38,7 @@ function StudentReview() {
       <p className="text-3xl font-semibold text-center mb-8">স্টুডেন্ট রিভিউ</p>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {studentReviews.map((review) => (
-          <div
-            key={review.id}
-            className="bg-gray-100 shadow-md rounded-2xl p-6"
-          >
+          <div key={review.id} className="bg-gray-100 shadow-md rounded-xl p-6">
             <div className="flex items-center gap-3">
               <Image
                 src={review.image}
