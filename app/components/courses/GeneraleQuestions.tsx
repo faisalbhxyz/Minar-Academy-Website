@@ -28,10 +28,10 @@ export default function GeneraleQuestions() {
           <article
             key={index}
             className={cn(
-              "rounded-xl p-3",
+              "rounded-xl p-3 border",
               isPlusAccording === index
-                ? "border border-[#e5eaf2] bg-gray-100"
-                : ""
+                ? "border-[#e5eaf2] bg-gray-100"
+                : "border-transparent"
             )}
           >
             <div

@@ -19,8 +19,8 @@ export default function CoursesMenu() {
   const pathname = usePathname();
 
   return (
-    <div className="shadow bg-white">
-      <div className="wrapper flex flex-wrap gap-5">
+    <div className="shadow bg-white overflow-x-auto">
+      <div className="wrapper min-w-3xl flex gap-10">
         {links.map((link) => {
           const isActive = pathname === link.href;
           return (

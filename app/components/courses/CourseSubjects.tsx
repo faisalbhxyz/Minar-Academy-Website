@@ -32,7 +32,7 @@ export default function CourseSubjects() {
   return (
     <div className="mt-10">
       <p className="text-3xl font-semibold text-center">কোর্সের বিষয়বস্তু</p>
-      <ul className="flex items-center justify-center gap-3 mt-10">
+      <ul className="flex items-center justify-center flex-wrap gap-3 mt-10">
         {[
           { id: 1, label: "রেকর্ডেড ক্লাস" },
           { id: 2, label: "লাইভ ক্লাস" },

@@ -34,7 +34,7 @@ const studentReviews = [
 
 function StudentReview() {
   return (
-    <div className="mt-10 px-4">
+    <div className="mt-10">
       <p className="text-3xl font-semibold text-center mb-8">স্টুডেন্ট রিভিউ</p>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {studentReviews.map((review) => (
