@@ -1,3 +1,4 @@
+import { cn } from "@/lib/cn";
 import React, { useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 
@@ -26,7 +27,12 @@ export default function GeneraleQuestions() {
         {questions?.map((question, index) => (
           <article
             key={index}
-            className="border border-[#e5eaf2] rounded p-3 bg-gray-100"
+            className={cn(
+              "rounded-xl p-3",
+              isPlusAccording === index
+                ? "border border-[#e5eaf2] bg-gray-100"
+                : ""
+            )}
           >
             <div
               className="flex gap-2 cursor-pointer items-center justify-between w-full"
