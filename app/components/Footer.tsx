@@ -45,7 +45,7 @@ export default function Footer() {
               <span className="w-9 h-9 bg-teal-200 flex items-center justify-center rounded-md">
                 <MdEmail size={22} className="text-teal-600" />
               </span>
-              <span>minaracademy@gmail.com</span>
+              <span>contactminaracademy@gmail.com</span>
             </div>
             <div className="flex items-center gap-4 mb-3">
               <span className="w-9 h-9 bg-sky-200 flex items-center justify-center rounded-md">

@@ -51,7 +51,7 @@ export default function CallToAction() {
               <div className="space-y-2">
                 <p>মিনার একাডেমি ফেসবুক গ্রুপ</p>
                 <Link
-                  href="https://www.facebook.com/people/Minar-Academy/61574272148754/"
+                  href="https://www.facebook.com/groups/972895251593688/"
                   className="bg-white px-4 py-2 rounded-md text-sm"
                 >
                   গ্রুপে যুক্ত হও

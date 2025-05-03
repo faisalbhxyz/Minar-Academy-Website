@@ -3,17 +3,19 @@ import React from "react";
 const sampleData = [
   {
     id: 1,
-    title: "সারা বছরে কী কী হচ্ছে অনলাইন ব্যাচে?",
+    title:
+      "মাদ্রাসার স্টুডেন্টদের জন্য প্রথম ডিজিটাল লার্নিং প্ল্যাটফর্ম! সফলতা অর্জন করো মিনার একাডেমির সাথে!",
     description:
       "এক্সপার্ট টিচারদের লাইভ ক্লাস, গোছানো মাস্টারবুক, ও মডেল টেস্ট দিয়ে ঘরে বসেই ৬ষ্ঠ-১০ম শ্রেণির পড়াশোনার কমপ্লিট প্রিপারেশন!",
-    video: "https://www.youtube.com/embed/KcbIGEf599c", // Embedded YouTube video
+    videoId: "KcbIGEf599c", // Embedded YouTube video
   },
   {
     id: 2,
-    title: "সারা বছরে কী কী হচ্ছে অনলাইন ব্যাচে?",
+    title:
+      "যদি বিশ্বাস করেন নিজের স্কিলের শক্তিতে,আজই যুক্ত হোন আমাদের সঙ্গে। ( এখনই কমেন্টের ফর্মটি পূরণ করুন)",
     description:
       "এক্সপার্ট টিচারদের লাইভ ক্লাস, গোছানো মাস্টারবুক, ও মডেল টেস্ট দিয়ে ঘরে বসেই ৬ষ্ঠ-১০ম শ্রেণির পড়াশোনার কমপ্লিট প্রিপারেশন!",
-    video: "https://www.youtube.com/embed/KcbIGEf599c", // Static image
+    videoId: "iXrTcdNYCHg", // Static image
   },
 ];
 
@@ -39,7 +41,7 @@ export default function MoreTips() {
             <div className="w-full aspect-video rounded-lg overflow-hidden">
               <iframe
                 className="w-full h-full"
-                src={`${item.video}?rel=0&modestbranding=1&controls=1&disablekb=1&fs=0&iv_load_policy=3`}
+                src={`https://www.youtube.com/embed/${item.videoId}?rel=0&modestbranding=1&controls=1&disablekb=1&fs=0&iv_load_policy=3`}
                 title={item.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -47,7 +49,7 @@ export default function MoreTips() {
             </div>
             <div className="p-6">
               <h2 className="text-2xl font-semibold mb-2">{item.title}</h2>
-              <p className="text-gray-600">{item.description}</p>
+              {/* <p className="text-gray-600">{item.description}</p> */}
             </div>
           </div>
         ))}
