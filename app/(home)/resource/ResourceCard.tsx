@@ -9,6 +9,7 @@ type CourseItem = {
   name: string;
   sheet: number;
   image: string;
+  link: string;
 };
 
 type SectionProps = {
@@ -30,7 +31,7 @@ export default function ResourceCard({ title, items, link }: SectionProps) {
         {items.map((item) => (
           <Link
             key={item.id}
-            href={`/resource/academic/hsc`}
+            href={`${link}/${item.link}`}
             className="flex items-center gap-5 border hover:border-primary p-5 rounded-lg"
           >
             <Image

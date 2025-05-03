@@ -6,12 +6,14 @@ const bangla = [
   {
     id: 1,
     name: "Bangla 1st Paper",
+    link: "",
     sheet: 12,
     image: "/images/1st_paper_1741761344396.jpeg",
   },
   {
     id: 2,
     name: "Bangla 2nd Paper",
+    link: "",
     sheet: 12,
     image: "/images/2nd_paper_1741761356238.jpeg",
   },
@@ -21,12 +23,14 @@ const english = [
   {
     id: 1,
     name: "English 1st Paper",
+    link: "",
     sheet: 12,
     image: "/images/1st_paper_1741761344396.jpeg",
   },
   {
     id: 2,
     name: "English 2nd Paper",
+    link: "",
     sheet: 12,
     image: "/images/2nd_paper_1741761356238.jpeg",
   },

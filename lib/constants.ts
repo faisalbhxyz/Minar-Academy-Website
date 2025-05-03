@@ -1,0 +1,42 @@
+export const resources = [
+  {
+    id: 1,
+    name: "HSC",
+    link: "hsc",
+    sheet: 88,
+    image: "/images/HSC_1741760933388.jpeg",
+    tag: "academic",
+  },
+  {
+    id: 2,
+    name: "৯ম-১০ম শ্রেণি",
+    link: "ssc",
+    sheet: 44,
+    image: "/images/icon_ssc.jpeg",
+    tag: "academic",
+  },
+  {
+    id: 3,
+    name: "৮ম শ্রেণি",
+    link: "c8",
+    sheet: 51,
+    image: "/images/icon_class8.jpeg",
+    tag: "academic",
+  },
+  {
+    id: 4,
+    name: "৭ম শ্রেণি",
+    link: "c7",
+    sheet: 51,
+    image: "/images/icon_class7.jpeg",
+    tag: "academic",
+  },
+  {
+    id: 5,
+    name: "৬ষ্ঠ শ্রেণি",
+    link: "c6",
+    sheet: 21,
+    image: "/images/icon_class6.jpeg",
+    tag: "academic",
+  },
+];

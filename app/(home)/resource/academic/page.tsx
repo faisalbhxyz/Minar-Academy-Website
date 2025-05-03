@@ -6,18 +6,21 @@ const hscSubjects = [
   {
     id: 1,
     name: "Biology",
+    link: "",
     sheet: 12,
     image: "/images/Biology_1741761052406.jpeg",
   },
   {
     id: 2,
     name: "Higher Math",
+    link: "",
     sheet: 12,
     image: "/images/HM_1741761398850.jpeg",
   },
   {
     id: 3,
     name: "Chemistry",
+    link: "",
     sheet: 12,
     image: "/images/HM_1741761398850.jpeg",
   },
@@ -26,6 +29,7 @@ const nineTen = [
   {
     id: 2,
     name: "সাধারণ গণিত",
+    link: "",
     sheet: 12,
     image: "/images/HM_1741761398850.jpeg",
   },
@@ -34,6 +38,7 @@ const eight = [
   {
     id: 2,
     name: "গণিত",
+    link: "",
     sheet: 12,
     image: "/images/HM_1741761398850.jpeg",
   },
@@ -42,6 +47,7 @@ const seven = [
   {
     id: 2,
     name: "গণিত",
+    link: "",
     sheet: 12,
     image: "/images/HM_1741761398850.jpeg",
   },
@@ -50,6 +56,7 @@ const six = [
   {
     id: 2,
     name: "গণিত",
+    link: "",
     sheet: 12,
     image: "/images/HM_1741761398850.jpeg",
   },
