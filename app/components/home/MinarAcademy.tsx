@@ -68,9 +68,9 @@ export default function MinarAcademy() {
           {accordingData?.map(({ description, icon: Icon, title }, index) => (
             <article
               key={index}
-              className={`rounded-lg p-3 ${
+              className={`rounded-lg p-3 border ${
                 isAccordingOpen === index
-                  ? "border"
+                  ? "bg-gray-100"
                   : "border border-transparent"
               }`}
             >
