@@ -36,7 +36,7 @@ export default function page() {
       <ResourceCard
         title="বিসিএস প্রিলি কোর্স"
         items={preliCourse}
-        link="/resource/academic/hsc"
+        link="/resource/jobs/bcs-preli-course"
       />
     </>
   );
