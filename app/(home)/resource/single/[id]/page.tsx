@@ -6,7 +6,7 @@ export default function page() {
   return (
     <>
       <div className="wrapper flex gap-2 py-3">
-        <Link href="/resource" className="text-primary">
+        <Link href="/" className="text-primary">
           Home
         </Link>
         <span>›</span>
