@@ -5,20 +5,28 @@ import { BsFillTelephoneFill } from "react-icons/bs";
 
 export default function CallToAction() {
   return (
-    <div className="absolute left-1/2 transform -translate-x-1/2 -bottom-[45rem] md:-bottom-32 w-11/12 md:w-9/12 bg-white shadow-lg p-3 rounded-2xl">
+    <div className="absolute left-1/2 transform -translate-x-1/2 -bottom-[45rem] md:-bottom-32 w-11/12 md:w-10/12 bg-white shadow-lg p-3 rounded-2xl">
       <div className="bg-primary/20 md:h-52 rounded-lg text-primary p-3 flex flex-col md:flex-row items-center justify-between gap-5">
         <div className="">
           <p className="text-2xl mb-2">যেকোনো প্রয়োজনে কল করো এখনই</p>
-          <p className="text-sm">যেকোনো জিজ্ঞাসায় কল করো</p>
           <div className="border-l-4 border-orange-500 pl-2 my-5">
             <p>সকাল ১০ টা - রাত ১০ টা</p>
           </div>
-          <Link
-            href="tel:01886929763"
-            className="flex w-fit items-center gap-2 bg-primary text-white border border-primary px-6 py-2 rounded-lg hover:bg-opacity-90 transition"
-          >
-            <BsFillTelephoneFill /> 01886929763
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="tel:01886929763"
+              className="flex w-fit items-center gap-2 bg-primary text-white border border-primary px-6 py-2 rounded-lg hover:bg-opacity-90 transition"
+            >
+              <BsFillTelephoneFill /> 01886929763
+            </Link>
+            <span>অথবা</span>
+            <Link
+              href="https://forms.gle/3bLfPPnyFfYvgRQP6"
+              className="flex w-fit items-center gap-2  text-primary border border-primary px-6 py-2 rounded-lg hover:bg-opacity-90 transition"
+            >
+              নম্বর দিন, আমরা কল করবো
+            </Link>
+          </div>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-6 h-full">
           <Image

@@ -1,4 +1,7 @@
-import React from "react";
+"use client";
+
+import Image from "next/image";
+import React, { useState } from "react";
 
 const sampleData = [
   {
@@ -19,6 +22,13 @@ const sampleData = [
   },
 ];
 
+type VideoItem = {
+  id: number;
+  title: string;
+  description: string;
+  videoId: string;
+};
+
 export default function MoreTips() {
   return (
     <div className="wrapper rounded-3xl py-14 mt-10">
@@ -34,25 +44,61 @@ export default function MoreTips() {
 
       <div className="grid md:grid-cols-2 gap-10">
         {sampleData.map((item) => (
+          <VideoCard key={item.id} item={item} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+type VideoCardProps = {
+  item: VideoItem;
+};
+
+function VideoCard({ item }: VideoCardProps) {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden p-3">
+      <div className="w-full aspect-video rounded-lg overflow-hidden relative">
+        {isPlaying ? (
+          <iframe
+            className="w-full h-full"
+            src={`https://www.youtube.com/embed/${item.videoId}?autoplay=1&rel=0&modestbranding=1&controls=1&disablekb=1&fs=0&iv_load_policy=3`}
+            title={item.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        ) : (
           <div
-            key={item.id}
-            className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden p-3"
+            className="w-full h-full bg-black cursor-pointer relative"
+            onClick={() => setIsPlaying(true)}
           >
-            <div className="w-full aspect-video rounded-lg overflow-hidden">
-              <iframe
-                className="w-full h-full"
-                src={`https://www.youtube.com/embed/${item.videoId}?rel=0&modestbranding=1&controls=1&disablekb=1&fs=0&iv_load_policy=3`}
-                title={item.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-            <div className="p-6">
-              <h2 className="text-2xl font-semibold mb-2">{item.title}</h2>
-              {/* <p className="text-gray-600">{item.description}</p> */}
+            <Image
+              src={`https://img.youtube.com/vi/${item.videoId}/hqdefault.jpg`}
+              alt={item.title}
+              width={500}
+              height={400}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <div className="bg-white/50 rounded-full p-4">
+                <button className="w-16 h-16 bg-white/90 rounded-full shadow-lg flex items-center justify-center">
+                  <svg
+                    className="w-8 h-8 text-red-500"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
-        ))}
+        )}
+      </div>
+      <div className="p-6">
+        <h2 className="text-2xl font-semibold mb-2">{item.title}</h2>
       </div>
     </div>
   );

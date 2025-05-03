@@ -17,32 +17,22 @@ export default function SelectClass() {
       >
         <MenuItem>
           <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-1.5 data-focus:bg-gray-100">
-            এইসএসসি
+            আলিম/HSC ১ম বর্ষ
           </button>
         </MenuItem>
         <MenuItem>
           <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-1.5 data-focus:bg-gray-100">
-            দশম শ্রেণী
+            আলিম/HSC ২য় বর্ষ
           </button>
         </MenuItem>
         <MenuItem>
           <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-1.5 data-focus:bg-gray-100">
-            নবম শ্রেণী
+            দাখিল/SSC ৯ম শ্রেণি
           </button>
         </MenuItem>
         <MenuItem>
           <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-1.5 data-focus:bg-gray-100">
-            অষ্টম শ্রেণী
-          </button>
-        </MenuItem>
-        <MenuItem>
-          <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-1.5 data-focus:bg-gray-100">
-            সপ্তম শ্রেণী
-          </button>
-        </MenuItem>
-        <MenuItem>
-          <button className="group flex w-full items-center gap-2 rounded-lg px-3 py-1.5 data-focus:bg-gray-100">
-            ষষ্ঠ শ্রেণী
+            দাখিল/SSC ১০ম শ্রেণি
           </button>
         </MenuItem>
       </MenuItems>
