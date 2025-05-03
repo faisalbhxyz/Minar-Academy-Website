@@ -38,7 +38,7 @@ export default function ResourceCard({ title, items, link }: SectionProps) {
               alt="image"
               width={200}
               height={200}
-              className="size-16"
+              className="size-16 object-cover"
             />
             <div>
               <p className="text-xl font-semibold">{item.name}</p>

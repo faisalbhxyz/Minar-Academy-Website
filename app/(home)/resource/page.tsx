@@ -1,8 +1,4 @@
-import Image from "next/image";
-import Link from "next/link";
 import React from "react";
-import { GoDotFill } from "react-icons/go";
-import { HiOutlineArrowRight } from "react-icons/hi";
 import ResourceCard from "./ResourceCard";
 
 const academicClasses = [
