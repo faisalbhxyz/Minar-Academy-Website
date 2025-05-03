@@ -5,7 +5,7 @@ export default function NewsLetter() {
   return (
     <div className="px-3">
       <div className="w-full wrapper p-6 sm:p-10 bg-black text-white my-20 flex flex-col md:flex-row items-center justify-between rounded-3xl gap-10">
-        <div className="w-full md:w-6/12 text-center md:text-left">
+        <div className="w-full text-center md:text-left">
           <p className="text-2xl sm:text-4xl mb-5 leading-snug">
             সেরা শিক্ষকের তৈরি ক্লাস নোট এবং লেকচার সিট প্রয়োজন?
           </p>
@@ -13,13 +13,13 @@ export default function NewsLetter() {
             ফ্রি ডাউনলোড করুন
           </button>
         </div>
-        <div className="w-full md:w-5/12">
+        <div className="">
           <Image
-            src="/images/pexels-pixabay-315791-note.jpg"
+            src="/images/752326.png"
             alt="image"
             width={500}
             height={500}
-            className="rounded-xl w-full h-auto object-cover"
+            className="w-80 rounded-xl h-auto object-cover"
           />
         </div>
       </div>
