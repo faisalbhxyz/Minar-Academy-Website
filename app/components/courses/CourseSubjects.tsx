@@ -62,14 +62,12 @@ export default function CourseSubjects() {
                   className="flex gap-2 cursor-pointer items-center justify-between w-full"
                   onClick={() => handleBorderClick(index)}
                 >
-                  <h2 className="text-[#3B9DF8] text-lg font-medium">
-                    {according.title}
-                  </h2>
+                  <h2 className="text-lg font-medium">{according.title}</h2>
                   <p>
                     <FaPlus
                       className={`text-[1.3rem] text-text transition-all duration-300 ${
                         isPlusAccording === index &&
-                        "rotate-[45deg] !text-[#3B9DF8]"
+                        "rotate-[45deg] text-secondary"
                       }`}
                     />
                   </p>
@@ -100,14 +98,12 @@ export default function CourseSubjects() {
                   className="flex gap-2 cursor-pointer items-center justify-between w-full"
                   onClick={() => handleBorderClick(index)}
                 >
-                  <h2 className="text-[#3B9DF8] text-lg font-medium">
-                    {according.title}
-                  </h2>
+                  <h2 className="text-lg font-medium">{according.title}</h2>
                   <p>
                     <FaPlus
                       className={`text-[1.3rem] text-text transition-all duration-300 ${
                         isPlusAccording === index &&
-                        "rotate-[45deg] !text-[#3B9DF8]"
+                        "rotate-[45deg] text-secondary"
                       }`}
                     />
                   </p>

@@ -39,7 +39,7 @@ export default function ProgramPath() {
             Apply
           </button>
         </div>
-        <button className="w-full px-6 py-2 bg-gray-800 text-white rounded">
+        <button className="w-full px-6 py-2 bg-secondary text-white rounded">
           এনরোল করুন
         </button>
         <button className="w-full px-6 py-2 border border-gray-800 text-gray-800 rounded mt-3">
