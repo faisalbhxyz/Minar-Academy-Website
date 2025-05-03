@@ -11,6 +11,7 @@ import { RiSearchLine } from "react-icons/ri";
 import { AiOutlineMenu } from "react-icons/ai";
 import useToggleStore from "@/hooks/useToggle";
 import { RxCross2 } from "react-icons/rx";
+import SearchIcon from "@/public/icons/SearchIcon";
 
 export default function Header() {
   const { toggle } = useToggleStore();
@@ -31,7 +32,9 @@ export default function Header() {
           </Link>
           <div className="items-center justify-center gap-5 hidden md:flex">
             <div className="relative w-full max-w-72 border focus-within:border-primary rounded-md flex items-center px-2">
-              <FiSearch className="text-gray-500" />
+              <span>
+                <SearchIcon />
+              </span>
               <input
                 type="text"
                 placeholder="Search"
