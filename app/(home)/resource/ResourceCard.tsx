@@ -30,7 +30,7 @@ export default function ResourceCard({ title, items, link }: SectionProps) {
         {items.map((item) => (
           <Link
             key={item.id}
-            href=""
+            href={`/resource/academic/hsc`}
             className="flex items-center gap-5 border hover:border-primary p-5 rounded-lg"
           >
             <Image
