@@ -80,7 +80,7 @@ export default function page() {
       <ResourceCard
         title="৯ম-১০ম শ্রেণি"
         items={nineTen}
-        link="/resource/academic/9-10"
+        link="/resource/academic/ssc"
       />
       <ResourceCard
         title="৮ম শ্রেণি"

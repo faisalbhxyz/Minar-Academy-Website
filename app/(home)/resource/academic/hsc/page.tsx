@@ -6,14 +6,14 @@ const bangla = [
   {
     id: 1,
     name: "Bangla 1st Paper",
-    link: "",
+    link: "bangla-1st-paper",
     sheet: 12,
     image: "/images/1st_paper_1741761344396.jpeg",
   },
   {
     id: 2,
     name: "Bangla 2nd Paper",
-    link: "",
+    link: "bangla-2st-paper",
     sheet: 12,
     image: "/images/2nd_paper_1741761356238.jpeg",
   },
