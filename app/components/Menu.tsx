@@ -45,7 +45,7 @@ export default function Menu() {
             {item.submenu && <IoIosArrowDown />}
           </div>
           {item.submenu && (
-            <div className="absolute left-0 mt-2 w-48 bg-white border rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:translate-y-1 transition-all duration-200 z-10 overflow-hidden">
+            <div className="absolute left-0 mt-2 w-48 bg-white rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:translate-y-1 transition-all duration-200 z-10 overflow-hidden">
               {item.submenu.map((subItem, subIndex) => (
                 <Link
                   key={subIndex}
