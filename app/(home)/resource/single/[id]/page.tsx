@@ -5,7 +5,7 @@ import React from "react";
 export default function page() {
   return (
     <>
-      <div className="wrapper flex gap-2 py-3">
+      <div className="wrapper flex flex-wrap gap-2 py-3">
         <Link href="/" className="text-primary">
           Home
         </Link>
