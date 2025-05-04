@@ -21,7 +21,7 @@ export default function Header() {
     <div className="sticky top-0 z-50 bg-white">
       <header className="shadow">
         <div className="wrapper flex items-center justify-between py-2">
-          <Link href="/" className="text-xl font-bold text-gray-800">
+          <Link href="/dashboard" className="text-xl font-bold text-gray-800">
             <Image
               src={"/images/minar-academy-logo.png"}
               alt={"logo"}
