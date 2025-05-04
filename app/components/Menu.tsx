@@ -45,12 +45,12 @@ export default function Menu() {
             {item.submenu && <IoIosArrowDown />}
           </div>
           {item.submenu && (
-            <div className="absolute left-0 mt-2 w-48 bg-white rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:translate-y-1 transition-all duration-200 z-10 overflow-hidden">
+            <div className="absolute left-0 mt-2 p-2 w-52 bg-white rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:translate-y-1 transition-all duration-200 z-10 overflow-hidden">
               {item.submenu.map((subItem, subIndex) => (
                 <Link
                   key={subIndex}
                   href={subItem.link}
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  className="block px-4 rounded-md py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
                   {subItem.name}
                 </Link>
