@@ -17,7 +17,7 @@ const menu = [
   },
   {
     name: "ফ্রি নোটস ও গাইড",
-    link: "/free-nots-guide",
+    link: "/resource",
   },
   {
     name: "সার্টিফিকেট ভেরিফাই করুন",
