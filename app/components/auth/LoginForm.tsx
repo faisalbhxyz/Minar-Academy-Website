@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MdArrowBack } from "react-icons/md";
 import OtpInput from "react-otp-input";
+import { toast } from "sonner";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -18,14 +19,14 @@ export default function LoginForm() {
   const handleNext = () => {
     if (step === 1) {
       if (!inputValue.trim()) {
-        alert("মোবাইল নাম্বার/ ইমেইল দিন");
+        toast.error("মোবাইল নাম্বার/ ইমেইল দিন");
         return;
       }
       setStep(2);
     } else if (step === 2) {
       if (!authUser) {
         if (otp.length !== 4) {
-          alert("৪ সংখ্যার OTP দিন");
+          toast.error("৪ সংখ্যার OTP দিন");
           return;
         }
         setStep(3);
