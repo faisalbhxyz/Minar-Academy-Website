@@ -54,12 +54,15 @@ export default function Header() {
               href="tel:01886929763"
               className="p-2 text-primary flex items-center gap-1"
             >
-              <BsFillTelephoneFill />{" "}
+              <BsFillTelephoneFill />
               <span className="hidden md:block">01886929763</span>
             </Link>
-            <button className="hidden md:block px-6 py-2 text-white bg-primary rounded">
+            <Link
+              href="/auth/login"
+              className="hidden md:block px-6 py-2 text-white bg-primary rounded"
+            >
               লগ-ইন
-            </button>
+            </Link>
             <button onClick={toggle} className="md:hidden">
               <AiOutlineMenu size={22} />
             </button>
