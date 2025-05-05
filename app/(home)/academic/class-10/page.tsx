@@ -95,7 +95,7 @@ export default function page() {
                 alt={item.title}
                 width={400}
                 height={400}
-                className="rounded-xl w-52 h-52 object-cover"
+                className="rounded-xl md:w-52 h-52 object-cover"
               />
             </Link>
           ))}
