@@ -77,9 +77,9 @@ export default function page() {
             <Link
               key={item.id}
               href=""
-              className="bg-white border flex items-center justify-between rounded-2xl shadow-md p-4 hover:shadow-lg transition"
+              className="bg-white border flex flex-col-reverse md:flex-row items-center justify-between rounded-2xl shadow-md p-4 hover:shadow-lg transition"
             >
-              <div>
+              <div className="w-full">
                 <h3 className="text-lg font-bold mt-4">{item.title}</h3>
                 <ul className="mt-2 list-disc list-inside text-sm text-gray-700 space-y-1">
                   {item.topics.map((topic, idx) => (
@@ -95,7 +95,7 @@ export default function page() {
                 alt={item.title}
                 width={400}
                 height={400}
-                className="rounded-xl w-52 h-52 object-cover"
+                className="rounded-xl md:w-52 h-52 object-cover"
               />
             </Link>
           ))}
