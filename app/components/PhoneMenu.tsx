@@ -1,10 +1,11 @@
 "use client";
 
 import React from "react";
-import Link from "next/link"; // If using Next.js
+import Link from "next/link";
 import useToggleStore from "@/hooks/useToggle";
 import Image from "next/image";
 import SelectClass from "./SelectClass";
+import { useRouter } from "next/navigation";
 
 const menu = [
   {
@@ -30,7 +31,14 @@ const menu = [
 ];
 
 export default function PhoneMenu() {
+  const router = useRouter();
+
   const { isShow, set } = useToggleStore();
+
+  const handleLogin = () => {
+    set(false);
+    router.push("/auth/login");
+  };
 
   return (
     <div
@@ -69,7 +77,7 @@ export default function PhoneMenu() {
         ))}
       </nav>
       <button
-        onClick={() => set(false)}
+        onClick={handleLogin}
         className="px-6 py-2 text-white bg-primary rounded"
       >
         লগ-ইন
