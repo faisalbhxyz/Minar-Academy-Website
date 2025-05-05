@@ -6,6 +6,7 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { BsCalendarWeek } from "react-icons/bs";
 import PopularActivity from "./PopularActivity";
+import Shortcuts from "./Shortcuts";
 
 // Reusable tab button
 const TabButton = ({
@@ -78,86 +79,27 @@ export default function Dashboard() {
     <div className="wrapper flex flex-col-reverse lg:flex-row items-start my-5 gap-5">
       <div className="w-full">
         <div className="border p-5 rounded-lg overflow-x-auto">
-          <div className="min-w-2xl flex items-center justify-between">
-            <div className="flex flex-col items-center gap-3">
-              <Image
-                src="/images/ROUTIN_1736923809981.jpeg"
-                alt="image"
-                width={100}
-                height={100}
-                className="w-10 h-10"
-              />
-              <p>আমার কোর্সসমূহ</p>
-            </div>
-            <div className="flex flex-col items-center gap-3">
-              <Image
-                src="/images/Routine_Icon_1736923492164.jpeg"
-                alt="image"
-                width={100}
-                height={100}
-                className="w-10 h-10"
-              />
-              <p>রুটিন</p>
-            </div>
-            <div className="flex flex-col items-center gap-3">
-              <Image
-                src="/images/Free_Class_Icon_1736923659825.jpeg"
-                alt="image"
-                width={100}
-                height={100}
-                className="w-10 h-10"
-              />
-              <p>ফ্রি ক্লাসসমূহ</p>
-            </div>
-            <div className="flex flex-col items-center gap-3">
-              <Image
-                src="/images/Learning_Report_Icon_1736923528959.jpeg"
-                alt="image"
-                width={100}
-                height={100}
-                className="w-10 h-10"
-              />
-              <p>লার্নিং রিপোর্ট</p>
-            </div>
-            <div className="flex flex-col items-center gap-3">
-              <Image
-                src="/images/Subscription_Icon_1736923546656.jpeg"
-                alt="image"
-                width={100}
-                height={100}
-                className="w-10 h-10"
-              />
-              <p>সাবস্ক্রিপশন</p>
-            </div>
-            <div className="flex flex-col items-center gap-3">
-              <Image
-                src="/images/Call_16910_Icon_1736923567865.jpeg"
-                alt="image"
-                width={100}
-                height={100}
-                className="w-10 h-10"
-              />
-              <p>কল 16910</p>
-            </div>
-          </div>
+          <Shortcuts />
         </div>
         {/* Class Section */}
         <div className="border mt-5 rounded-lg p-5">
-          <div className="flex items-center justify-between border-b border-gray-200">
-            <div className="flex space-x-4">
-              {classTabs.map((tab) => (
-                <TabButton
-                  key={tab.key}
-                  label={tab.label}
-                  isActive={classTab === tab.key}
-                  onClick={() => setClassTab(tab.key)}
-                />
-              ))}
+          <div className="overflow-x-auto">
+            <div className="min-w-md flex items-center justify-between border-b border-gray-200">
+              <div className="flex space-x-4">
+                {classTabs.map((tab) => (
+                  <TabButton
+                    key={tab.key}
+                    label={tab.label}
+                    isActive={classTab === tab.key}
+                    onClick={() => setClassTab(tab.key)}
+                  />
+                ))}
+              </div>
+              <Link href="#" className="text-primary flex items-center gap-2">
+                <BsCalendarWeek />
+                ফুল রুটিন দেখুন
+              </Link>
             </div>
-            <Link href="#" className="text-primary flex items-center gap-2">
-              <BsCalendarWeek />
-              ফুল রুটিন দেখুন
-            </Link>
           </div>
           <div className="mt-4">{renderClassContent()}</div>
         </div>
@@ -165,15 +107,17 @@ export default function Dashboard() {
         {/* Resource Section */}
         <div className="border mt-5 rounded-lg p-5">
           <p className="text-2xl font-semibold mb-2">আমার পড়াশুনা</p>
-          <div className="flex space-x-4 border-b border-gray-200">
-            {resourceTabs.map((tab) => (
-              <TabButton
-                key={tab.key}
-                label={tab.label}
-                isActive={resourceTab === tab.key}
-                onClick={() => setResourceTab(tab.key)}
-              />
-            ))}
+          <div className="overflow-x-auto">
+            <div className="min-w-lg flex space-x-4 border-b border-gray-200">
+              {resourceTabs.map((tab) => (
+                <TabButton
+                  key={tab.key}
+                  label={tab.label}
+                  isActive={resourceTab === tab.key}
+                  onClick={() => setResourceTab(tab.key)}
+                />
+              ))}
+            </div>
           </div>
           <div className="mt-4">{renderResourceContent()}</div>
         </div>

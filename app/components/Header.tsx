@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import Menu from "./Menu";
 import { BsFillTelephoneFill } from "react-icons/bs";
-import SelectClass from "./SelectClass";
 import Image from "next/image";
 import Link from "next/link";
 import { FiSearch } from "react-icons/fi";
@@ -41,7 +40,7 @@ export default function Header() {
                 className="ml-2 py-1.5 w-full text-sm outline-none"
               />
             </div>
-            <SelectClass />
+            {/* <SelectClass /> */}
             <Menu />
           </div>
           <div className="flex items-center justify-end gap-3 md:gap-10">
