@@ -1,4 +1,3 @@
-import ClassNine from "@/app/components/academics/ClassNine";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -63,10 +62,7 @@ const sampleLiveCourse = [
 export default function page() {
   return (
     <div className="wrapper py-10">
-      <div className="max-w-3xl">
-        <ClassNine />
-      </div>
-      <div className="mt-20">
+      <div className="">
         <p className="text-2xl font-semibold">অনলাইন ব্যাচ</p>
         <p>
           দেশের যেকোনো প্রান্ত থেকে ঘরে বসেই দেশ সেরা শিক্ষকদের সাথে নাও
