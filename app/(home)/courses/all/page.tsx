@@ -6,7 +6,7 @@ const boardExams = [
     id: 1,
     title: "লক্ষ্য GPA-5 SSC '25 মডেল টেস্ট (বিজ্ঞান)",
     price: "৩০০০",
-    image: "/images/20250303_LGPA5_SSC25_Course-Card_1040x584_cavkam.webp",
+    image: "/images/IMG_20250513_141238.jpg",
   },
 ];
 

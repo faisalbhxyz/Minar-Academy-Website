@@ -47,6 +47,10 @@ const menu = [
         name: "শিক্ষক হিসেবে যোগ দিন",
         link: "https://forms.gle/4DG5BjQpV3RoSUS18",
       },
+      {
+        name: "শিক্ষকবৃন্দ",
+        link: "/teachers",
+      },
     ],
   },
 ];
