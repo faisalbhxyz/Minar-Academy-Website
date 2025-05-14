@@ -4,28 +4,28 @@ import React from "react";
 const teachers = [
   {
     id: 1,
+    name: "মঈনুদ্দিন হাসান",
+    image: "/images/DSC06813.JPG",
+  },
+  {
+    id: 2,
     name: "আনাস",
     image: "/images/C20250512_9186T01.JPG",
   },
   {
-    id: 2,
+    id: 3,
     name: "আরিফুল ইসলাম মানিক",
     image: "/images/DSC05872.JPG",
   },
   {
-    id: 3,
+    id: 4,
     name: "হেলাল মাহমুদ",
     image: "/images/DSC06315.JPG",
   },
   {
-    id: 4,
+    id: 5,
     name: "জাসেদুল ইসলাম রিয়াদ",
     image: "/images/image-2025-05-13-at-18.20.12_fb64652e.jpg",
-  },
-  {
-    id: 5,
-    name: "মঈনুদ্দিন হাসান",
-    image: "/images/DSC06813.JPG",
   },
   {
     id: 6,
