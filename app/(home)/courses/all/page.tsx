@@ -1,42 +1,23 @@
 import ProgramCard from "@/app/components/courses/ProgramCard";
 import React from "react";
 import CoursesMenu from "../CoursesMenu";
-
-const boardExams = [
-  {
-    id: 1,
-    title: "English Basic Spoken Course",
-    price: "৯৯৯",
-    image: "/images/IMG_20250513_141238.jpg",
-  },
-];
-
-const academicPrograms = [
-  {
-    id: 1,
-    title: "ক্লাস ৬ - SSC '30",
-    price: "৩০০০",
-    image: "/images/sgfoxkd0w3zfrf2r7y0s.jpeg",
-  },
-];
+import { courses } from "@/lib/constants";
 
 export default function Page() {
+  const boardExams = courses.filter((course) => course.category === "Board");
+  // const academicPrograms = courses.filter(
+  //   (course) => course.category === "Academic"
+  // );
+
+  // console.log(academicPrograms);
+
   return (
     <>
       <CoursesMenu />
-      <div className="wrapper mt-20 pb-10 border-b border-gray-300">
-        <p className="text-3xl font-semibold mb-6">বোর্ড পরীক্ষার প্রস্তুতি</p>
+
+      <div className="wrapper my-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {boardExams.map((item) => (
-            <ProgramCard key={item.id} item={item} />
-          ))}
-        </div>
-      </div>
-
-      <div className="wrapper mb-20 pt-10">
-        <p className="text-3xl font-semibold mb-6">একাডেমিক প্রোগ্রাম</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {academicPrograms.map((item) => (
             <ProgramCard key={item.id} item={item} />
           ))}
         </div>

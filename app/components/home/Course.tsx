@@ -106,7 +106,7 @@ export default function Course() {
       <div className="max-w-96 mx-auto bg-white border rounded-2xl shadow hover:shadow-lg transition flex flex-col justify-between h-full">
         <Link href={""}>
           <Image
-            src={"/images/thumbnail.png"}
+            src={"/images/IMG_20250513_141238.jpg"}
             alt={"বিএস প্রশ্ন সমাধান"}
             width={300}
             height={200}
@@ -115,10 +115,10 @@ export default function Course() {
         </Link>
         <div className="p-4 flex flex-col justify-between">
           <Link href="" className="text-xl font-semibold">
-            বিএস প্রশ্ন সমাধান
+            English Basic Spoken Course
           </Link>
           <div className="mt-5 space-y-3">
-            <p className="text-gray-600 text-sm">By Akib Chowdhuri</p>
+            <p className="text-gray-600 text-sm">By আরিফুল ইসলাম মানিক</p>
             <Link href={""} className="text-primary text-sm flex items-center">
               বিস্তারিত <HiMiniArrowSmallRight size={22} />
             </Link>

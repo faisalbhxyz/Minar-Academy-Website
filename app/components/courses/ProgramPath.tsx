@@ -1,6 +1,10 @@
 import React from "react";
 
-export default function ProgramPath() {
+export default function ProgramPath({
+  course,
+}: {
+  course: Course | undefined;
+}) {
   const careerPath = [
     "১৫০+ প্রিরেকর্ডেড ভিডিও",
     "৪০+ লাইভ ক্লাস",
@@ -26,8 +30,8 @@ export default function ProgramPath() {
           ))}
         </ul>
         <div className="flex items-center gap-5 mt-5">
-          <p className="text-3xl font-semibold">৳6000.00</p>
-          <p className="line-through text-gray-500">৳6000.00</p>
+          <p className="text-3xl font-semibold">৳{course?.price}</p>
+          <p className="line-through text-gray-500">৳{course?.listPrice}.00</p>
         </div>
         <div className="flex items-center gap-3 h-10 my-3">
           <input

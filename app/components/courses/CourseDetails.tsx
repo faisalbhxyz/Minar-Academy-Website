@@ -12,8 +12,16 @@ import ProgramPath from "./ProgramPath";
 import ConsultationForm from "./ConsultationForm";
 import Blueprint from "./Blueprint";
 
-export default function CourseDetails() {
+export default function CourseDetails({
+  course,
+}: {
+  course: Course | undefined;
+}) {
   const [isActive, setIsActive] = useState(1);
+
+  if (!course) {
+    return <p className="text-red-500">Course not found.</p>;
+  }
 
   return (
     <div className="flex items-start my-10 gap-10">
@@ -21,7 +29,7 @@ export default function CourseDetails() {
         {/* Course Image */}
         <div className="w-full h-[28rem] rounded-xl overflow-hidden">
           <Image
-            src="/images/20250303_LGPA5_SSC25_Course-Card_1040x584_cavkam.webp"
+            src={course.image}
             alt="image"
             width={800}
             height={500}
@@ -30,7 +38,7 @@ export default function CourseDetails() {
         </div>
 
         {/* Course Title */}
-        <p className="text-2xl mt-5">ক্লাস ৬ - SSC &apos;30</p>
+        <p className="text-2xl mt-5">{course.title}</p>
 
         {/* Stats */}
         <div className="flex border rounded-lg mt-5 bg-gray-100">
@@ -46,7 +54,7 @@ export default function CourseDetails() {
           ))}
         </div>
         <div className="lg:hidden mt-5">
-          <ProgramPath />
+          <ProgramPath course={course} />
         </div>
         {/* Tabs */}
         <div className="mt-10">
@@ -202,7 +210,7 @@ export default function CourseDetails() {
 
       {/* Sticky Sidebar */}
       <div className="w-96 min-w-96 hidden lg:block sticky top-24">
-        <ProgramPath />
+        <ProgramPath course={course} />
       </div>
     </div>
   );

@@ -82,17 +82,16 @@ function VideoCard({ item }: VideoCardProps) {
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-              <div className="bg-white/50 rounded-full p-4">
-                <button className="w-16 h-16 bg-white/90 rounded-full shadow-lg flex items-center justify-center">
-                  <svg
-                    className="w-8 h-8 text-red-500"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </button>
-              </div>
+              <div className="bg-white/50 rounded-full w-16 h-16 animate-ping"></div>
+              <button className="absolute w-16 h-16 bg-white/90 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform duration-300">
+                <svg
+                  className="w-8 h-8 text-red-500"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </button>
             </div>
           </div>
         )}

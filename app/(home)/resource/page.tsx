@@ -3,7 +3,7 @@ import ResourceCard from "./ResourceCard";
 import { resources } from "@/lib/constants";
 
 export default function Page() {
-  const academic = resources.filter((item) => item.tag === "academic");
+  const academic = resources.filter((item) => item.category === "academic");
 
   return (
     <>
