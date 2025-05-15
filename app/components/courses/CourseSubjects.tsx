@@ -11,7 +11,15 @@ const recordedClasses = [
     description: <div>Hello</div>,
   },
   {
-    title: "Introduce yourself",
+    title: "Introduce yourself 1",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Introduce yourself 2",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Introduce yourself 3",
     description: <div>Hello</div>,
   },
   {
@@ -43,7 +51,11 @@ const recordedClasses = [
     description: <div>Hello</div>,
   },
   {
-    title: "Formal and informal words",
+    title: "Formal and informal words 1",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Formal and informal words 2",
     description: <div>Hello</div>,
   },
   {
@@ -63,27 +75,55 @@ const recordedClasses = [
     description: <div>Hello</div>,
   },
   {
-    title: "Common translation",
+    title: "Common translation 1",
     description: <div>Hello</div>,
   },
   {
-    title: "Translate English into Bangla",
+    title: "Common translation 2",
     description: <div>Hello</div>,
   },
   {
-    title: "Translate Bangla into English",
+    title: "Common translation 3",
     description: <div>Hello</div>,
   },
   {
-    title: "Situational expression",
+    title: "Translate English into Bangla 1",
     description: <div>Hello</div>,
   },
   {
-    title: "Common words correct pronunciation",
+    title: "Translate English into Bangla 2",
     description: <div>Hello</div>,
   },
   {
-    title: "Daily expression",
+    title: "Translate Bangla into English 1",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Translate Bangla into English 2",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Situational expression 1",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Situational expression 2",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Common words correct pronunciation 1",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Common words correct pronunciation 2",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Daily expression 1",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Daily expression 2",
     description: <div>Hello</div>,
   },
   {
@@ -135,7 +175,15 @@ const recordedClasses = [
     description: <div>Hello</div>,
   },
   {
-    title: "Listening BBC news and English podcast",
+    title: "Listening BBC news and English podcast 1",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Listening BBC news and English podcast 2",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Listening BBC news and English podcast 3",
     description: <div>Hello</div>,
   },
   {
@@ -168,7 +216,11 @@ const recordedClasses = [
     description: <div>Hello</div>,
   },
   {
-    title: "Silent sound",
+    title: "Silent sound 1",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Silent sound 2",
     description: <div>Hello</div>,
   },
   {
@@ -180,7 +232,11 @@ const recordedClasses = [
     description: <div>Hello</div>,
   },
   {
-    title: "Previous class practice",
+    title: "Previous class practice 1",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Previous class practice 2",
     description: <div>Hello</div>,
   },
 ];
