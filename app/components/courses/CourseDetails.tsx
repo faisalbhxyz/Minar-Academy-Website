@@ -25,13 +25,13 @@ export default function CourseDetails({
     <div className="flex items-start my-10 gap-10">
       <div className="w-full">
         {/* Course Image */}
-        <div className="w-full h-[28rem] rounded-xl overflow-hidden">
+        <div className="w-full rounded-xl overflow-hidden">
           <Image
             src={course.image}
             alt="image"
             width={800}
             height={500}
-            className="w-full h-full object-cover"
+            className="w-full h-auto object-cover"
           />
         </div>
 
@@ -39,7 +39,7 @@ export default function CourseDetails({
         <p className="text-2xl mt-5">{course.title}</p>
 
         {/* Stats */}
-        <div className="flex border rounded-lg mt-5 bg-gray-100">
+        <div className="flex flex-col md:flex-row border rounded-lg mt-5 bg-gray-100">
           {[
             { label: "Students", value: "426" },
             { label: "Hours of Lessons", value: "150+" },
