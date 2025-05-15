@@ -4,7 +4,7 @@ import React from "react";
 export default function NewsLetter() {
   return (
     <div className="px-3">
-      <div className="w-full wrapper p-6 sm:p-10 bg-black text-white my-20 flex flex-col md:flex-row items-center justify-between rounded-3xl gap-10">
+      <div className="w-full wrapper p-6 sm:p-10 bg-slate-900 text-white my-20 flex flex-col md:flex-row items-center justify-between rounded-3xl gap-10">
         <div className="w-full text-center md:text-left">
           <p className="text-2xl sm:text-4xl mb-5 leading-snug">
             সেরা শিক্ষকের তৈরি ক্লাস নোট এবং লেকচার সিট প্রয়োজন?
