@@ -9,30 +9,47 @@ import GeneraleQuestions from "./GeneraleQuestions";
 import { MdOutlineCheckCircle } from "react-icons/md";
 import ProgramPath from "./ProgramPath";
 import Blueprint from "./Blueprint";
+import useAppStore from "@/hooks/useAppStore";
+import YtVideoPlay from "../YtVideoPlay";
+import { teachers } from "@/lib/constants";
 
 export default function CourseDetails({
   course,
 }: {
   course: Course | undefined;
 }) {
+  const { isVideoPlay } = useAppStore();
   const [isActive, setIsActive] = useState(1);
 
   if (!course) {
     return <p className="text-red-500">Course not found.</p>;
   }
+  const instructor = teachers.find(
+    (teacher) => teacher.name === course.authorized
+  );
+  if (!instructor) {
+    return <div>Instructor not found</div>;
+  }
+  console.log(instructor.demoVideoId);
 
   return (
     <div className="flex items-start my-10 gap-10">
       <div className="w-full">
         {/* Course Image */}
         <div className="w-full rounded-xl overflow-hidden">
-          <Image
-            src={course.image}
-            alt="image"
-            width={800}
-            height={500}
-            className="w-full h-auto object-cover"
-          />
+          {isVideoPlay && instructor.demoVideoId ? (
+            <div className="w-full aspect-video rounded-lg overflow-hidden relative">
+              <YtVideoPlay videoId={instructor.demoVideoId} />
+            </div>
+          ) : (
+            <Image
+              src={course.image}
+              alt="image"
+              width={800}
+              height={500}
+              className="w-full h-auto object-cover"
+            />
+          )}
         </div>
 
         {/* Course Title */}

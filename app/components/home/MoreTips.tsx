@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import React, { useState } from "react";
+import YtVideoPlay from "../YtVideoPlay";
 
 const sampleData = [
   {
@@ -61,13 +62,7 @@ function VideoCard({ item }: VideoCardProps) {
     <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden p-3">
       <div className="w-full aspect-video rounded-lg overflow-hidden relative">
         {isPlaying ? (
-          <iframe
-            className="w-full h-full"
-            src={`https://www.youtube.com/embed/${item.videoId}?autoplay=1&rel=0&modestbranding=1&controls=1&disablekb=1&fs=0&iv_load_policy=3`}
-            title={item.title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
+          <YtVideoPlay videoId={item.videoId} />
         ) : (
           <div
             className="w-full h-full bg-black cursor-pointer relative"

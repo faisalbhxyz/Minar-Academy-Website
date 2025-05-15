@@ -1,3 +1,4 @@
+import useAppStore from "@/hooks/useAppStore";
 import React from "react";
 
 export default function ProgramPath({
@@ -5,6 +6,7 @@ export default function ProgramPath({
 }: {
   course: Course | undefined;
 }) {
+  const { isVideoPlay, toggleVideoPlay } = useAppStore();
   const careerPath = [
     "১৫০+ প্রিরেকর্ডেড ভিডিও",
     "৪০+ লাইভ ক্লাস",
@@ -48,8 +50,11 @@ export default function ProgramPath({
         <button className="w-full px-6 py-2 bg-secondary text-white rounded">
           এনরোল করুন
         </button>
-        <button className="w-full px-6 py-2 border border-gray-800 text-gray-800 rounded mt-3">
-          Watch Demo Video
+        <button
+          onClick={toggleVideoPlay}
+          className="w-full px-6 py-2 border border-gray-800 text-gray-800 rounded mt-3"
+        >
+          {isVideoPlay ? "Watching..." : "Watch Demo Video"}
         </button>
       </div>
     </>
