@@ -15,7 +15,12 @@ export default function ProgramCard({ item }: ProgramCardProps) {
       <Image src={item.image} alt={item.title} width={800} height={500} />
       <div className="p-4 space-y-3">
         <p className="mt-2 text-lg font-medium">{item.title}</p>
-        <p className="text-sm text-gray-600">মাত্র ৳{item.price}</p>
+        <div className="flex items-center gap-4 mt-5">
+          <p className="text-xl font-semibold">মাত্র ৳{item?.price}</p>
+          <p className="line-through text-lg text-gray-500">
+            ৳{item?.listPrice}
+          </p>
+        </div>
       </div>
     </Link>
   );

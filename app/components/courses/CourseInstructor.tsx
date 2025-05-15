@@ -5,7 +5,7 @@ import React from "react";
 function CourseInstructor({ name }: { name: string }) {
   const instructor = teachers.find((teacher) => teacher.name === name);
   if (!instructor) {
-    return <div>No any instructor</div>;
+    return <div>Instructor not found</div>;
   }
 
   return (

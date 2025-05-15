@@ -29,9 +29,11 @@ export default function ProgramPath({
             </li>
           ))}
         </ul>
-        <div className="flex items-center gap-5 mt-5">
+        <div className="flex items-center gap-4 mt-5">
           <p className="text-3xl font-semibold">৳{course?.price}</p>
-          <p className="line-through text-gray-500">৳{course?.listPrice}.00</p>
+          <p className="line-through text-xl text-gray-500">
+            ৳{course?.listPrice}
+          </p>
         </div>
         <div className="flex items-center gap-3 h-10 my-3">
           <input

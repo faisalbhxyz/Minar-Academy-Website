@@ -111,7 +111,7 @@ export const courses = [
     title: "English Basic Spoken Course",
     authorized: "আরিফুল ইসলাম মানিক",
     price: "৯৯৯",
-    listPrice: "১২৩৩",
+    listPrice: "১০০০০",
     image: "/images/IMG_20250513_141238.jpg",
     category: "Board",
     tag: [],

@@ -10,6 +10,126 @@ const recordedClasses = [
     title: "Pronunciation (Alphabets,7 days,12 months, cardinal number)",
     description: <div>Hello</div>,
   },
+  {
+    title: "Introduce yourself",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Introduce yourself",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "The magic of correct pronunciation",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "The correct pronunciation of p k t",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Assimilation",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "How to talk waiter in the restaurant",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "How to talk doctor in the hospital",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Contraction",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Formal and informal words",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "British vs American (spelling differences)",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "British vs American (grammar differences)",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "British vs American (vocabulary differences)",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "British vs American (pronunciation)",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Common translation",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Translate English into Bangla",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Translate Bangla into English",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Situational expression",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Common words correct pronunciation",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Daily expression",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Make sentences using auxiliary verb",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Freehand writing class(climate change)",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Freehand writing class(reading newspaper)",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Freehand writing class(Teaching)",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Listening",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Phrase and idioms",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Intonation and accent",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Daily routine",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Hobbies, travel, food and family",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Group discussion",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Chat and movie club",
+    description: <div>Hello</div>,
+  },
 ];
 
 export default function CourseSubjects() {
