@@ -1,5 +1,6 @@
 import React from "react";
 import ProgramCard from "@/app/components/courses/ProgramCard";
+import CoursesMenu from "../CoursesMenu";
 
 const academicPrograms = [
   {
@@ -33,6 +34,7 @@ const others = [
 export default function Page() {
   return (
     <>
+      <CoursesMenu />
       <div className="wrapper mt-20 pb-10 border-b border-gray-300">
         <p className="text-3xl font-semibold mb-6">একাডেমিক প্রোগ্রাম</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">

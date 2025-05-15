@@ -1,11 +1,12 @@
 import ProgramCard from "@/app/components/courses/ProgramCard";
 import React from "react";
+import CoursesMenu from "../CoursesMenu";
 
 const boardExams = [
   {
     id: 1,
-    title: "লক্ষ্য GPA-5 SSC '25 মডেল টেস্ট (বিজ্ঞান)",
-    price: "৩০০০",
+    title: "English Basic Spoken Course",
+    price: "৯৯৯",
     image: "/images/IMG_20250513_141238.jpg",
   },
 ];
@@ -22,6 +23,7 @@ const academicPrograms = [
 export default function Page() {
   return (
     <>
+      <CoursesMenu />
       <div className="wrapper mt-20 pb-10 border-b border-gray-300">
         <p className="text-3xl font-semibold mb-6">বোর্ড পরীক্ষার প্রস্তুতি</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
