@@ -1,3 +1,62 @@
+export const teachers = [
+  {
+    id: 1,
+    name: "মঈনুদ্দিন হাসান",
+    image: "/images/DSC06813.JPG",
+    role: "",
+    bio: "",
+  },
+  {
+    id: 2,
+    name: "আনাস",
+    image: "/images/C20250512_9186T01.JPG",
+    role: "",
+    bio: "",
+  },
+  {
+    id: 3,
+    name: "আরিফুল ইসলাম মানিক",
+    image: "/images/DSC05872.JPG",
+    role: "English",
+    bio: "He is a english teacher.",
+  },
+  {
+    id: 4,
+    name: "হেলাল মাহমুদ",
+    image: "/images/DSC06315.JPG",
+    role: "",
+    bio: "",
+  },
+  {
+    id: 5,
+    name: "জাসেদুল ইসলাম রিয়াদ",
+    image: "/images/image-2025-05-13-at-18.20.12_fb64652e.jpg",
+    role: "",
+    bio: "",
+  },
+  {
+    id: 6,
+    name: "মহসিন বিন রফিক",
+    image: "/images/DSC06806.JPG",
+    role: "",
+    bio: "",
+  },
+  {
+    id: 7,
+    name: "মুরাদ অভি",
+    image: "/images/DSC06735.JPG",
+    role: "",
+    bio: "",
+  },
+  {
+    id: 8,
+    name: "সাইদ",
+    image: "/images/DSC06324.JPG",
+    role: "",
+    bio: "",
+  },
+];
+
 export const resources = [
   {
     id: 1,

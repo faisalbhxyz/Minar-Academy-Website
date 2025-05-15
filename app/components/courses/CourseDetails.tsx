@@ -3,7 +3,6 @@
 import Image from "next/image";
 import React, { useState } from "react";
 import CourseSubjects from "./CourseSubjects";
-import RealLifeProjects from "./RealLifeProjects";
 import CourseInstructor from "./CourseInstructor";
 import StudentReview from "./StudentReview";
 import GeneraleQuestions from "./GeneraleQuestions";
@@ -200,8 +199,7 @@ export default function CourseDetails({
           </div>
         </div>
         <CourseSubjects />
-        <RealLifeProjects />
-        <CourseInstructor />
+        <CourseInstructor name={course.authorized} />
         <StudentReview />
         <GeneraleQuestions />
         <Blueprint />

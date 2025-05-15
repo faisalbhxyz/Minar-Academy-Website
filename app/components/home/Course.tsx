@@ -77,7 +77,7 @@ export default function Course() {
           key={item.id}
           className="max-w-96 mx-auto bg-white border rounded-2xl shadow hover:shadow-lg transition flex flex-col justify-between h-full"
         >
-          <Link href={""}>
+          <Link href={`/courses/${item.id}`}>
             <Image
               src={"/images/IMG_20250513_141238.jpg"}
               alt={"বিএস প্রশ্ন সমাধান"}
@@ -87,7 +87,10 @@ export default function Course() {
             />
           </Link>
           <div className="p-4 flex flex-col justify-between">
-            <Link href="" className="text-xl font-semibold">
+            <Link
+              href={`/courses/${item.id}`}
+              className="text-xl font-semibold"
+            >
               English Basic Spoken Course
             </Link>
             <div className="mt-5 space-y-3">
