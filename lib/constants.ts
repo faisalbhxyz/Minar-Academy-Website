@@ -50,6 +50,7 @@ export const courses = [
   {
     id: 1,
     title: "English Basic Spoken Course",
+    authorized: "আরিফুল ইসলাম মানিক",
     price: "৯৯৯",
     listPrice: "১২৩৩",
     image: "/images/IMG_20250513_141238.jpg",
@@ -59,6 +60,7 @@ export const courses = [
   {
     id: 2,
     title: "ক্লাস ৬ - SSC '30",
+    authorized: "আরিফুল ইসলাম মানিক",
     price: "৩০০০",
     listPrice: "৩৯৯৯",
     image: "/images/sgfoxkd0w3zfrf2r7y0s.jpeg",
@@ -68,6 +70,7 @@ export const courses = [
   {
     id: 3,
     title: "ক্লাস ৬ - SSC '30",
+    authorized: "আরিফুল ইসলাম মানিক",
     price: "৩০০০",
     listPrice: "৩৯৯৯",
     image: "/images/sgfoxkd0w3zfrf2r7y0s.jpeg",
@@ -77,6 +80,7 @@ export const courses = [
   {
     id: 4,
     title: "ক্লাস ৬ - SSC '30",
+    authorized: "আরিফুল ইসলাম মানিক",
     price: "৩০০০",
     listPrice: "৩৯৯৯",
     image: "/images/sgfoxkd0w3zfrf2r7y0s.jpeg",
@@ -86,6 +90,7 @@ export const courses = [
   {
     id: 5,
     title: "ক্লাস ৬ - SSC '30",
+    authorized: "আরিফুল ইসলাম মানিক",
     price: "৩০০০",
     listPrice: "৩৯৯৯",
     image: "/images/sgfoxkd0w3zfrf2r7y0s.jpeg",
@@ -95,6 +100,7 @@ export const courses = [
   {
     id: 6,
     title: "ক্লাস ৬ - SSC '30",
+    authorized: "আরিফুল ইসলাম মানিক",
     price: "৩০০০",
     listPrice: "৩৯৯৯",
     image: "/images/sgfoxkd0w3zfrf2r7y0s.jpeg",
@@ -104,6 +110,7 @@ export const courses = [
   {
     id: 7,
     title: "ক্লাস ৬ - SSC '30",
+    authorized: "আরিফুল ইসলাম মানিক",
     price: "৩০০০",
     listPrice: "৩৯৯৯",
     image: "/images/sgfoxkd0w3zfrf2r7y0s.jpeg",
@@ -113,6 +120,7 @@ export const courses = [
   {
     id: 8,
     title: "ক্লাস ৬ - SSC '30",
+    authorized: "আরিফুল ইসলাম মানিক",
     price: "৩০০০",
     listPrice: "৩৯৯৯",
     image: "/images/sgfoxkd0w3zfrf2r7y0s.jpeg",
@@ -122,6 +130,7 @@ export const courses = [
   {
     id: 9,
     title: "ক্লাস ৬ - SSC '30",
+    authorized: "আরিফুল ইসলাম মানিক",
     price: "৩০০০",
     listPrice: "৩৯৯৯",
     image: "/images/sgfoxkd0w3zfrf2r7y0s.jpeg",
