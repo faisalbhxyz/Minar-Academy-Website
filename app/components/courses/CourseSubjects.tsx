@@ -130,6 +130,59 @@ const recordedClasses = [
     title: "Chat and movie club",
     description: <div>Hello</div>,
   },
+  {
+    title: "Listening and speaking test",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Listening BBC news and English podcast",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Speaking practice with partner in the classroom",
+    description: <div>Hello</div>,
+  },
+  {
+    title:
+      "Reading newspaper like the daily star,the new York times and business standard",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "How to talk to friend in English",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "How to talk over phone in English",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "How to introduce with anyone in English",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "How to talk to students after entering in the classroom",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "IPA (international phonetics alphabets)",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Silent sound",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Tell something about your school",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Telling time in English",
+    description: <div>Hello</div>,
+  },
+  {
+    title: "Previous class practice",
+    description: <div>Hello</div>,
+  },
 ];
 
 export default function CourseSubjects() {
