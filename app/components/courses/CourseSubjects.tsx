@@ -1,247 +1,11 @@
 import React, { useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 
-const recordedClasses = [
-  {
-    title: "How to improve in English : 5 tips",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Pronunciation (Alphabets,7 days,12 months, cardinal number)",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Introduce yourself 1",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Introduce yourself 2",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Introduce yourself 3",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Introduce yourself",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "The magic of correct pronunciation",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "The correct pronunciation of p k t",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Assimilation",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "How to talk waiter in the restaurant",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "How to talk doctor in the hospital",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Contraction",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Formal and informal words 1",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Formal and informal words 2",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "British vs American (spelling differences)",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "British vs American (grammar differences)",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "British vs American (vocabulary differences)",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "British vs American (pronunciation)",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Common translation 1",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Common translation 2",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Common translation 3",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Translate English into Bangla 1",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Translate English into Bangla 2",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Translate Bangla into English 1",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Translate Bangla into English 2",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Situational expression 1",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Situational expression 2",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Common words correct pronunciation 1",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Common words correct pronunciation 2",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Daily expression 1",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Daily expression 2",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Make sentences using auxiliary verb",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Freehand writing class(climate change)",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Freehand writing class(reading newspaper)",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Freehand writing class(Teaching)",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Listening",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Phrase and idioms",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Intonation and accent",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Daily routine",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Hobbies, travel, food and family",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Group discussion",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Chat and movie club",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Listening and speaking test",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Listening BBC news and English podcast 1",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Listening BBC news and English podcast 2",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Listening BBC news and English podcast 3",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Speaking practice with partner in the classroom",
-    description: <div>Hello</div>,
-  },
-  {
-    title:
-      "Reading newspaper like the daily star,the new York times and business standard",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "How to talk to friend in English",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "How to talk over phone in English",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "How to introduce with anyone in English",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "How to talk to students after entering in the classroom",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "IPA (international phonetics alphabets)",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Silent sound 1",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Silent sound 2",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Tell something about your school",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Telling time in English",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Previous class practice 1",
-    description: <div>Hello</div>,
-  },
-  {
-    title: "Previous class practice 2",
-    description: <div>Hello</div>,
-  },
-];
-
-export default function CourseSubjects() {
+export default function CourseSubjects({
+  chapters,
+}: {
+  chapters: CourseChapter[];
+}) {
   const [courseSub, setCourseSub] = useState(1);
   const [isPlusAccording, setIsPlusAccording] = useState<number | null>(null);
 
@@ -268,7 +32,7 @@ export default function CourseSubjects() {
       <div className="mt-10">
         {courseSub === 1 && (
           <div className="space-y-3">
-            {recordedClasses?.map((according, index) => (
+            {chapters?.map((according, index) => (
               <article
                 key={index}
                 className="bg-gray-100 border border-[#e5eaf2] rounded p-3"
@@ -295,7 +59,17 @@ export default function CourseSubjects() {
                   }`}
                 >
                   <div className="text-[#424242] text-[0.9rem] overflow-hidden">
-                    {according.description}
+                    {according.course_lessons?.map((lesson, index) => (
+                      <div>
+                        <p key={index}>{lesson.title}</p>
+                        <div
+                          className="w-full aspect-video"
+                          dangerouslySetInnerHTML={{
+                            __html: lesson.source.data,
+                          }}
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
               </article>

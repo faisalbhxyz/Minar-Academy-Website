@@ -16,7 +16,7 @@ import { teachers } from "@/lib/constants";
 export default function CourseDetails({
   course,
 }: {
-  course: Course | undefined;
+  course: CourseDetails | undefined;
 }) {
   const { isVideoPlay } = useAppStore();
   const [isActive, setIsActive] = useState(1);
@@ -24,32 +24,35 @@ export default function CourseDetails({
   if (!course) {
     return <p className="text-red-500">Course not found.</p>;
   }
-  const instructor = teachers.find(
-    (teacher) => teacher.name === course.authorized
-  );
-  if (!instructor) {
-    return <div>Instructor not found</div>;
-  }
-  console.log(instructor.demoVideoId);
+  // const instructor = teachers.find(
+  //   (teacher) => teacher.name === course.authorized
+  // );
+  // if (!instructor) {
+  //   return <div>Instructor not found</div>;
+  // }
+  // console.log(instructor.demoVideoId);
 
   return (
     <div className="flex items-start my-10 gap-10">
       <div className="w-full">
         {/* Course Image */}
         <div className="w-full rounded-xl overflow-hidden">
-          {isVideoPlay && instructor.demoVideoId ? (
+          {/* {isVideoPlay && instructor.demoVideoId ? (
             <div className="w-full aspect-video rounded-lg overflow-hidden relative">
               <YtVideoPlay videoId={instructor.demoVideoId} />
             </div>
-          ) : (
-            <Image
-              src={course.image}
-              alt="image"
-              width={800}
-              height={500}
-              className="w-full h-auto object-cover"
-            />
-          )}
+          ) : ( */}
+          <Image
+            src={
+              course.featured_image
+                ? course.featured_image
+                : "/images/placeholder.svg"
+            }
+            alt="image"
+            width={800}
+            height={500}
+            className="w-full h-auto object-cover"
+          />
         </div>
 
         {/* Course Title */}
@@ -58,9 +61,18 @@ export default function CourseDetails({
         {/* Stats */}
         <div className="flex flex-col md:flex-row border rounded-lg mt-5 bg-gray-100">
           {[
-            { label: "Students", value: "426" },
-            { label: "Hours of Lessons", value: "150+" },
-            { label: "Total Lessons", value: "101" },
+            { label: "Students", value: 0 },
+            {
+              label: "Hours of Lessons",
+              value: course.general_settings.duration,
+            },
+            {
+              label: "Total Lessons",
+              value: course.course_chapters.reduce(
+                (a, b) => a + b.course_lessons.length,
+                0
+              ),
+            },
           ].map((item, i) => (
             <div key={i} className="w-full flex flex-col items-center p-5">
               <p className="text-3xl">{item.value}</p>
@@ -75,13 +87,7 @@ export default function CourseDetails({
         <div className="mt-10">
           <div className="overflow-x-auto">
             <ul className="min-w-4xl flex items-center gap-5 border-b border-gray-300">
-              {[
-                { id: 1, label: "ক্যারিয়ার পাথ সম্পর্কে জানুন" },
-                { id: 2, label: "ক্লাস শিডিউল" },
-                { id: 3, label: "যা যা শিখবেন" },
-                { id: 4, label: "কমিউনিটি" },
-                { id: 5, label: "যাদের জন্য" },
-              ].map((tab) => (
+              {[{ id: 1, label: "কোর্স বর্ণনা" }].map((tab) => (
                 <li
                   key={tab.id}
                   className={`${
@@ -98,127 +104,17 @@ export default function CourseDetails({
           {/* Tab Content */}
           <div className="mt-5">
             {isActive === 1 && (
-              <div>
-                <p>
-                  📌 ডেটা অ্যানালিটিক্স অ্যান্ড পাওয়ার বিআই ক্যারিয়ার পাথের ৩টি
-                  ব্যাচের অভাবনীয় সাফল্যের পরে আমরা নিয়ে এসেছি এই ক্যারিয়ার
-                  পাথের ৪র্থ ব্যাচ। নতুন করে আরও অ্যাডভান্সড আর আউটপুট ফোকাসড
-                  আউটলাইন নিয়ে।
-                </p>
-                <p className="mt-5">
-                  📌 চলছে স্পেশাল ২৮% ডিসকাউন্ট। এনরোল করার সময়ে অ্যাপ্লাই করুন
-                  “UPSKILL28” আর ৬০০০ টাকার এই ক্যারিয়ার পাথ পেয়ে যাবেন মাত্র
-                  ৪৩২০ টাকায়।{" "}
-                </p>
-              </div>
-            )}
-            {isActive === 2 && (
-              <div>
-                <div className="bg-gray-100 border flex flex-col items-center p-10 rounded-xl">
-                  <p className="text-xl font-semibold">Class Time</p>
-                  <div className="max-w-xl w-full flex flex-col md:flex-row items-center justify-between mt-5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-sm bg-primary" />
-                      <p className="">Tuesday: 9:30 PM - 11:00 PM</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-sm bg-primary" />
-                      <p>Friday: 9:30 PM - 11:00 PM</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-5 flex flex-col md:flex-row gap-5">
-                  <div className="bg-gray-100 w-full border flex flex-col items-center p-10 rounded-xl">
-                    <p className="text-xl font-semibold">Support Session</p>
-                    <div className="flex items-center gap-2 mt-5">
-                      <div className="w-3 min-w-3 h-3 rounded-sm bg-primary" />
-                      <p className="">
-                        Saturday, Monday, Wednesday, Thursday: 8:30 PM & 10:45
-                        PM and Tuesday 8:30 PM
-                      </p>
-                    </div>
-                  </div>
-                  <div className="bg-gray-100 w-full border flex flex-col items-center p-10 rounded-xl">
-                    <p className="text-xl font-semibold">Project Day</p>
-                    <div className="flex items-center gap-2 mt-5">
-                      <div className="w-3 h-3 rounded-sm bg-primary" />
-                      <p className="">Sunday 8.30 PM -10 PM</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            {isActive === 3 && (
-              <ul className="space-y-3">
-                <li className="flex items-center gap-3">
-                  <span className="text-primary">
-                    <MdOutlineCheckCircle size={22} />
-                  </span>
-                  <p>Database Fundamentals and Data Analysis with SQL</p>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-primary">
-                    <MdOutlineCheckCircle size={22} />
-                  </span>
-                  <p>Database Fundamentals and Data Analysis with SQL</p>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-primary">
-                    <MdOutlineCheckCircle size={22} />
-                  </span>
-                  <p>Database Fundamentals and Data Analysis with SQL</p>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-primary">
-                    <MdOutlineCheckCircle size={22} />
-                  </span>
-                  <p>Database Fundamentals and Data Analysis with SQL</p>
-                </li>
-              </ul>
-            )}
-            {isActive === 4 && (
-              <div className="bg-gray-100 not-last-of-type:w-full border flex flex-col items-center p-10 rounded-xl">
-                <p className="text-xl font-semibold">Data Analysts Forum</p>
-                <button className="mt-5 border border-primary px-5 py-2 rounded-md font-medium text-primary">
-                  Join The Group
-                </button>
-              </div>
-            )}
-            {isActive === 5 && (
-              <ul className="space-y-3">
-                <li className="flex items-center gap-3">
-                  <span className="text-primary">
-                    <MdOutlineCheckCircle size={22} />
-                  </span>
-                  <p>Business Analysts</p>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-primary">
-                    <MdOutlineCheckCircle size={22} />
-                  </span>
-                  <p>Data Analyst</p>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-primary">
-                    <MdOutlineCheckCircle size={22} />
-                  </span>
-                  <p>Business Analysts</p>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-primary">
-                    <MdOutlineCheckCircle size={22} />
-                  </span>
-                  <p>Data Analyst</p>
-                </li>
-              </ul>
+              <div
+                dangerouslySetInnerHTML={{ __html: course.description || "" }}
+              ></div>
             )}
           </div>
         </div>
-        <CourseSubjects />
-        <CourseInstructor name={course.authorized} />
+        <CourseSubjects chapters={course.course_chapters} />
+        <CourseInstructor instructors={course.course_instructors} />
         <StudentReview />
         <GeneraleQuestions />
-        <Blueprint />
+        {/* <Blueprint /> */}
         {/* <ConsultationForm /> */}
       </div>
 

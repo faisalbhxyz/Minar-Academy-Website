@@ -4,25 +4,16 @@ import React from "react";
 export default function ProgramPath({
   course,
 }: {
-  course: Course | undefined;
+  course: CourseDetails | undefined;
 }) {
   const { isVideoPlay, toggleVideoPlay } = useAppStore();
-  const careerPath = [
-    "১৫০+ প্রিরেকর্ডেড ভিডিও",
-    "৪০+ লাইভ ক্লাস",
-    "২৪+ কনসেপচুয়াল লাইভ ক্লাস",
-    "ইন্ডাস্ট্রি স্ট্যান্ডার্ড প্রজেক্টস",
-    "ডেইলি ২টি সাপোর্ট সেশন",
-    "মক ইন্টারভিউ",
-    "লাইফটাইম অ্যাকসেস",
-  ];
 
   return (
     <>
       <div className="p-5 border rounded-xl sticky top-20">
         <p className="text-xl">কী কী থাকছে এই ক্যারিয়ার পাথে</p>
         <ul className="space-y-4 mt-5">
-          {careerPath.map((path, idx) => (
+          {course?.overview.map((path: string, idx: number) => (
             <li key={idx} className="flex items-center gap-3">
               <div className="border w-6 h-6 rounded-full flex items-center justify-center">
                 {idx + 1}
@@ -32,9 +23,9 @@ export default function ProgramPath({
           ))}
         </ul>
         <div className="flex items-center gap-4 mt-5">
-          <p className="text-3xl font-semibold">৳{course?.price}</p>
+          <p className="text-3xl font-semibold">৳{course?.sale_price}</p>
           <p className="line-through text-xl text-gray-500">
-            ৳{course?.listPrice}
+            ৳{course?.regular_price}
           </p>
         </div>
         <div className="flex items-center gap-3 h-10 my-3">
