@@ -1,0 +1,10 @@
+services:
+  web:
+    container_name: minar
+    build:
+      context: .
+    env_file:
+      - ./.env
+    ports:
+      - "3005:3000"
+
