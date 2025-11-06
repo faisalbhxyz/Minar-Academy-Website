@@ -16,7 +16,7 @@ function CourseInstructor({
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 relative rounded-full overflow-hidden">
                 <Image
-                  src={"/images/avatar.png"}
+                  src={ instructor.instructor.image || "/images/avatar.png"}
                   alt={`${instructor.instructor.email} profile`}
                   fill
                   className="object-cover"
@@ -24,7 +24,7 @@ function CourseInstructor({
               </div>
               <div>
                 <p className="text-lg font-semibold">{`${instructor.instructor.first_name} ${instructor.instructor.last_name}`}</p>
-                <p className="text-sm text-gray-500">Instructor</p>
+                <p className="text-sm text-gray-500">{instructor.instructor.role}</p>
               </div>
             </div>
             {/* <p className="text-sm text-gray-600 mt-4">{instructor.description}</p> */}

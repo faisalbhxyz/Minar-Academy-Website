@@ -19,13 +19,13 @@ const classes = [
   },
   {
     id: 3,
-    title: "আলিম/HSC (ক্লাস ৯,১০)",
+    title: "আলিম/HSC (ক্লাস ১১,১২)",
     image: "/images/notepad.png",
     link: "https://forms.gle/Ugns2dtHQQ3g7FrW8",
   },
   {
     id: 4,
-    title: "আলিম/HSC -২৫",
+    title: "আলিম/HSC - ২৬",
     image: "/images/goal.png",
     link: "https://forms.gle/UFxATrRCKjSVt9tp6",
   },
@@ -42,16 +42,24 @@ export default function FreeClasses() {
           ফ্রি ক্লাস করতে এখনই তোমার ক্লাসটি বেছে নাও
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 gap-4 md:gap-4 md:grid-cols-4">
           {classes.map((item) => (
             <Link
               key={item.id}
               href={item.link}
-              className="cursor-pointer flex flex-col items-center gap-5 p-6 rounded-2xl border-2 transition duration-300 
-                  bg-slate-800 border-slate-600"
+              className="cursor-pointer flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition duration-300 
+        bg-slate-800 border-slate-600 min-w-[80px]"
             >
-              <Image src={item.image} alt="icon" width={100} height={100} />
-              <p className="text-xl font-semibold text-center">{item.title}</p>
+              <Image
+                src={item.image}
+                alt="icon"
+                width={64}
+                height={64}
+                className="w-12 h-12 md:w-24 md:h-24"
+              />
+              <p className="text-sm md:text-xl font-semibold text-center">
+                {item.title}
+              </p>
             </Link>
           ))}
         </div>

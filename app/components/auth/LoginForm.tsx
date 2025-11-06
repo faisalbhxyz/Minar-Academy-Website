@@ -1,13 +1,37 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MdArrowBack } from "react-icons/md";
 import OtpInput from "react-otp-input";
 import { toast } from "sonner";
+import Link from "next/link";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { doCretendentialLogin } from "@/app/actions";
+import ValidationErrorMsg from "../ValidationErrorMsg";
+import { LuLoaderCircle } from "react-icons/lu";
+
+const LoginSchema = z.object({
+  email: z
+    .string({ required_error: "Email is required" })
+    .email({ message: "Invalid email address" })
+    .trim(),
+  password: z
+    .string()
+    .trim()
+    .min(1, { message: "Password is required." })
+    .min(6, { message: "Password must be at least 6 characters" }),
+});
+
+type TLoginSchema = z.infer<typeof LoginSchema>;
 
 export default function LoginForm() {
   const router = useRouter();
+  const params = useSearchParams();
+
+  const [loading, setLoading] = useState(false);
 
   const [step, setStep] = useState(1);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -15,6 +39,14 @@ export default function LoginForm() {
   const [otp, setOtp] = useState("");
 
   const authUser = false; // Replace with actual auth logic
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<TLoginSchema>({
+    resolver: zodResolver(LoginSchema),
+  });
 
   const handleNext = () => {
     if (step === 1) {
@@ -50,6 +82,22 @@ export default function LoginForm() {
     setIsForgotPassword(true);
   };
 
+  const handleOnSubmit = async (data: TLoginSchema) => {
+    setLoading(true);
+    const result = await doCretendentialLogin(data.email, data.password);
+
+    if (result?.error) {
+      toast.error(result.error);
+      setLoading(false);
+    } else {
+      toast.success("Redirecting...");
+      if (params.get("redirect") === "checkout") {
+        return router.push("/checkout");
+      }
+      router.push("/user/dashboard");
+    }
+  };
+
   const renderOtpInput = () => (
     <>
       <p className="font-medium mb-1">
@@ -79,15 +127,15 @@ export default function LoginForm() {
   );
 
   return (
-    <div className="w-full max-w-sm">
+    <form onSubmit={handleSubmit(handleOnSubmit)} className="w-full max-w-sm">
       {step > 1 && (
-        <button onClick={handlePrev} className="mb-5">
+        <button type="button" onClick={handlePrev} className="mb-5">
           <MdArrowBack size={24} />
         </button>
       )}
 
       {/* Step 1: Enter Email/Phone */}
-      {step === 1 && (
+      {/* {step === 1 && (
         <>
           <p className="text-xl font-semibold mb-10">
             মোবাইল নাম্বার/ ইমেইল দিয়ে এগিয়ে যান
@@ -101,10 +149,10 @@ export default function LoginForm() {
             className="border w-full rounded-md p-3 outline-none focus:border-primary"
           />
         </>
-      )}
+      )} */}
 
       {/* Step 2: Password or OTP */}
-      {step === 2 && (
+      {/* {step === 2 && (
         <>
           {isForgotPassword || !authUser ? (
             renderOtpInput()
@@ -131,44 +179,50 @@ export default function LoginForm() {
             </div>
           )}
         </>
-      )}
+      )} */}
 
       {/* Step 3: Registration Form */}
-      {step === 3 && !authUser && (
+      {step === 1 && !authUser && (
         <div className="space-y-5">
           <p className="text-xl font-semibold mb-10">আপনার তথ্য দিন</p>
           <input
             type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="মোবাইল নাম্বার/ ইমেইল"
+            placeholder="ইমেইল"
             className="border w-full rounded-md p-3 outline-none focus:border-primary"
+            {...register("email")}
           />
-          <input
-            type="text"
-            placeholder="আপনার নাম লিখুন"
-            className="border w-full rounded-md p-3 outline-none focus:border-primary"
-          />
+          <ValidationErrorMsg error={errors.email?.message} />
           <input
             type="password"
             placeholder="পাসওয়ার্ড লিখুন"
             className="border w-full rounded-md p-3 outline-none focus:border-primary"
+            {...register("password")}
           />
-          <input
-            type="password"
-            placeholder="পাসওয়ার্ড কনফার্ম করুন"
-            className="border w-full rounded-md p-3 outline-none focus:border-primary"
-          />
+          <ValidationErrorMsg error={errors.password?.message} />
         </div>
       )}
 
       {/* Submit Button */}
       <button
-        onClick={handleNext}
-        className="w-full bg-gray-600 text-white mt-5 p-3 rounded-md"
+        type="submit"
+        className="w-full bg-gray-600 text-white mt-5 p-3 rounded-md flex justify-center"
       >
-        সাবমিট করুন
+        {loading ? (
+          <LuLoaderCircle size={24} className="animate-spin" />
+        ) : (
+          "লগইন করুন"
+        )}
       </button>
-    </div>
+
+      <div className="mt-4 flex items-center justify-center">
+        <p className="text-sm text-gray-600">আপনি কি নিবন্ধন করেছেন?</p>{" "}
+        <Link
+          href="/auth/register"
+          className="text-sm text-primary underline ml-4"
+        >
+          নিবন্ধন করুন
+        </Link>
+      </div>
+    </form>
   );
 }

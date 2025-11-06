@@ -45,3 +45,7 @@ body {
    display: none;
   }
 }
+
+.ytp-more-videos-view{
+  display: none !important;
+}

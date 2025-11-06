@@ -8,12 +8,10 @@ import Image from "next/image";
 import "swiper/css";
 import "swiper/css/pagination";
 
-const slides = ["/images/banner.jpg", "/images/banner-2.jpg"];
-
-export default function Banner() {
+export default function Banner({ banners }: { banners: Banner[] }) {
   return (
     <div className="px-3 pt-3">
-      <div className="max-w-7xl mx-auto h-56 md:h-[500px] w-full overflow-hidden rounded-2xl">
+      <div className="max-w-7xl mx-auto h-[150px] md:h-[500px] w-full overflow-hidden rounded-md aspect-video">
         <Swiper
           modules={[Autoplay, Pagination]}
           autoplay={{ delay: 3000 }}
@@ -21,14 +19,14 @@ export default function Banner() {
           loop
           className="h-full w-full"
         >
-          {slides.map((src, index) => (
+          {banners.map((banner, index) => (
             <SwiperSlide key={index}>
               <div className="w-full h-full">
                 <Image
-                  src={src}
+                  src={banner.image}
                   alt={`Banner ${index + 1}`}
                   fill
-                  className="object-cover"
+                  className="object-fill"
                   priority={index === 0}
                   sizes="100vw"
                 />

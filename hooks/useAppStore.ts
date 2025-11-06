@@ -1,4 +1,3 @@
-// store/useToggleStore.ts
 import { create } from "zustand";
 
 type State = {

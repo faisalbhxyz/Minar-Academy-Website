@@ -12,6 +12,8 @@ import Blueprint from "./Blueprint";
 import useAppStore from "@/hooks/useAppStore";
 import YtVideoPlay from "../YtVideoPlay";
 import { teachers } from "@/lib/constants";
+import CourseVideoCard from "./CourseVideoCard";
+import LessonVideoCard from "./LessonVideoCard";
 
 export default function CourseDetails({
   course,
@@ -36,22 +38,16 @@ export default function CourseDetails({
     <div className="flex items-start my-10 gap-10">
       <div className="w-full">
         {/* Course Image */}
-        <div className="w-full rounded-xl overflow-hidden">
+        <div className="w-full rounded-lg overflow-hidden">
           {/* {isVideoPlay && instructor.demoVideoId ? (
             <div className="w-full aspect-video rounded-lg overflow-hidden relative">
               <YtVideoPlay videoId={instructor.demoVideoId} />
             </div>
           ) : ( */}
-          <Image
-            src={
-              course.featured_image
-                ? course.featured_image
-                : "/images/placeholder.svg"
-            }
-            alt="image"
-            width={800}
-            height={500}
-            className="w-full h-auto object-cover"
+          <CourseVideoCard
+            title={course.title}
+            image={course.featured_image}
+            video={course.intro_video?.data.source}
           />
         </div>
 
@@ -59,7 +55,7 @@ export default function CourseDetails({
         <p className="text-2xl mt-5">{course.title}</p>
 
         {/* Stats */}
-        <div className="flex flex-col md:flex-row border rounded-lg mt-5 bg-gray-100">
+        {/* <div className="flex flex-col md:flex-row border rounded-lg mt-5 bg-gray-100">
           {[
             { label: "Students", value: 0 },
             {
@@ -68,10 +64,11 @@ export default function CourseDetails({
             },
             {
               label: "Total Lessons",
-              value: course.course_chapters.reduce(
-                (a, b) => a + b.course_lessons.length,
-                0
-              ),
+              value:
+                course.course_chapters &&
+                course.course_chapters.reduce((sum, chapter) => {
+                  return sum + (chapter.course_lessons?.length || 0);
+                }, 0),
             },
           ].map((item, i) => (
             <div key={i} className="w-full flex flex-col items-center p-5">
@@ -79,7 +76,7 @@ export default function CourseDetails({
               <p>{item.label}</p>
             </div>
           ))}
-        </div>
+        </div> */}
         <div className="lg:hidden mt-5">
           <ProgramPath course={course} />
         </div>
@@ -104,7 +101,7 @@ export default function CourseDetails({
           {/* Tab Content */}
           <div className="mt-5">
             {isActive === 1 && (
-              <div
+              <div className="px-6"
                 dangerouslySetInnerHTML={{ __html: course.description || "" }}
               ></div>
             )}
@@ -112,10 +109,11 @@ export default function CourseDetails({
         </div>
         <CourseSubjects chapters={course.course_chapters} />
         <CourseInstructor instructors={course.course_instructors} />
-        <StudentReview />
-        <GeneraleQuestions />
+        {/* <StudentReview /> */}
+        {/* <GeneraleQuestions /> */}
         {/* <Blueprint /> */}
         {/* <ConsultationForm /> */}
+        <LessonVideoCard />
       </div>
 
       {/* Sticky Sidebar */}

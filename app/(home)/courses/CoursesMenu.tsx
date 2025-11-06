@@ -4,19 +4,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 
-const links = [
-  { href: "/courses/all", label: "সকল ক্লাস" },
-  { href: "/courses/admission", label: "এডমিশন" },
-  { href: "/courses/hsc", label: "এইচএসসি" },
-  { href: "/courses/c10", label: "ক্লাস ১০" },
-  { href: "/courses/c9", label: "ক্লাস ৯" },
-  { href: "/courses/c8", label: "ক্লাস ৮" },
-  { href: "/courses/c7", label: "ক্লাস ৭" },
-  { href: "/courses/c6", label: "ক্লাস ৬" },
-];
-
-export default function CoursesMenu() {
+export default function CoursesMenu({
+  categories,
+}: {
+  categories: Category[];
+}) {
   const pathname = usePathname();
+
+  const links = [
+    { href: "/courses/all", label: "সকল ক্লাস" },
+    ...categories.map((category) => ({
+      href: `/courses/category/${category.slug}`,
+      label: category.name,
+    })),
+  ];
 
   return (
     <div className="shadow bg-white overflow-x-auto">

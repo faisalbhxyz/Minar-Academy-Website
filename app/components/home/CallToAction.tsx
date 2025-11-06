@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -5,36 +7,37 @@ import { BsFillTelephoneFill } from "react-icons/bs";
 
 export default function CallToAction() {
   return (
-    <div className="absolute left-1/2 transform -translate-x-1/2 -bottom-[45rem] md:-bottom-32 w-11/12 md:w-10/12 bg-white shadow-lg p-3 rounded-2xl">
-      <div className="bg-primary/20 md:h-52 rounded-lg text-primary p-3 flex flex-col md:flex-row items-center justify-between gap-5">
-        <div className="">
+    <div className="bg-white md:shadow-lg px-1 md:p-4 rounded-2xl">
+      <div className="bg-primary/20 md:h-52 rounded-lg text-primary p-4 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
           <p className="text-2xl mb-2">যেকোনো প্রয়োজনে কল করো এখনই</p>
           <div className="border-l-4 border-orange-500 pl-2 my-5">
             <p>সকাল ১০ টা - রাত ১০ টা</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <Link
               href="tel:01886929763"
-              className="flex w-fit items-center gap-2 bg-primary text-white border border-primary px-6 py-2 rounded-lg hover:bg-opacity-90 transition"
+              className="flex items-center gap-2 bg-primary text-white border border-primary px-6 py-2 rounded-lg hover:bg-opacity-90 transition"
             >
               <BsFillTelephoneFill /> 01886929763
             </Link>
             <span>অথবা</span>
             <Link
               href="https://forms.gle/3bLfPPnyFfYvgRQP6"
-              className="flex w-fit items-center gap-2  text-primary border border-primary px-6 py-2 rounded-lg hover:bg-opacity-90 transition"
+              className="flex items-center gap-2 text-primary border border-primary px-6 py-2 rounded-lg hover:bg-opacity-90 transition"
             >
               নম্বর দিন, আমরা কল করবো
             </Link>
           </div>
         </div>
+
         <div className="flex flex-col md:flex-row items-center gap-6 h-full">
           <Image
             src={"/images/minar-acedemy.jpg"}
-            alt={"image"}
+            alt={"Minar Academy"}
             width={300}
             height={300}
-            className="w-full md:w-[12rem] h-full md:h-full rounded-xl"
+            className="w-full md:w-[12rem] rounded-xl"
           />
           <div className="space-y-5 flex flex-col justify-between min-w-72 h-full">
             <div className="flex items-center justify-between gap-5 bg-red-200 p-3 rounded-xl">
@@ -49,7 +52,7 @@ export default function CallToAction() {
               </div>
               <Image
                 src={"/images/youtube.png"}
-                alt={"image"}
+                alt={"YouTube"}
                 width={100}
                 height={100}
                 className="w-12 h-12"
@@ -67,7 +70,7 @@ export default function CallToAction() {
               </div>
               <Image
                 src={"/images/facebook.png"}
-                alt={"image"}
+                alt={"Facebook"}
                 width={100}
                 height={100}
                 className="w-12 h-12"

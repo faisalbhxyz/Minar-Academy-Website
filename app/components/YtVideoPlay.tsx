@@ -1,6 +1,10 @@
 import React from "react";
 
 export default function YtVideoPlay({ videoId }: { videoId: string }) {
+
+  console.log("[YT VIDEO]", videoId);
+  
+
   return (
     <iframe
       className="w-full h-full"

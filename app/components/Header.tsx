@@ -11,8 +11,15 @@ import { AiOutlineMenu } from "react-icons/ai";
 import useToggleStore from "@/hooks/useToggle";
 import { RxCross2 } from "react-icons/rx";
 import SearchIcon from "@/public/icons/SearchIcon";
+import { useSession } from "next-auth/react";
+import { doCretendentialLogout } from "../actions";
+import { usePathname, useRouter } from "next/navigation";
+import { Session } from "next-auth";
+import CourseSearch from "./CourseSearch";
 
-export default function Header() {
+export default function Header({ session }: { session: Session | null }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const { toggle } = useToggleStore();
   const [isSearch, setIsSearch] = useState(false);
 
@@ -20,7 +27,7 @@ export default function Header() {
     <div className="sticky top-0 z-50 bg-white">
       <header className="shadow">
         <div className="wrapper flex items-center justify-between py-2">
-          <Link href="/dashboard" className="text-xl font-bold text-gray-800">
+          <Link href="/" className="text-xl font-bold text-gray-800">
             <Image
               src={"/images/minar-academy-logo.png"}
               alt={"logo"}
@@ -30,16 +37,7 @@ export default function Header() {
             />
           </Link>
           <div className="items-center justify-center gap-5 hidden md:flex">
-            <div className="relative w-full max-w-72 border focus-within:border-primary rounded-md flex items-center px-2">
-              <span>
-                <SearchIcon />
-              </span>
-              <input
-                type="text"
-                placeholder="Search"
-                className="ml-2 py-1.5 w-full text-sm outline-none"
-              />
-            </div>
+            <CourseSearch/>
             {/* <SelectClass /> */}
             <Menu />
           </div>
@@ -57,12 +55,34 @@ export default function Header() {
               <BsFillTelephoneFill />
               <span className="hidden md:block">01886929763</span>
             </Link>
-            <Link
-              href="/auth/login"
-              className="hidden md:block px-6 py-2 text-white bg-primary rounded"
-            >
-              লগ-ইন
-            </Link>
+            {session && session.accessToken ? (
+              <div className="flex items-center gap-2">
+                {pathname !== "/user/dashboard" && (
+                  <button
+                    className="hidden md:block px-6 py-2 text-white bg-secondary rounded"
+                    onClick={async () => router.push("/user/dashboard")}
+                  >
+                    Dashboard
+                  </button>
+                )}
+                <button
+                  className="hidden md:block px-6 py-2 text-white bg-red-500 rounded"
+                  onClick={async () => {
+                    await doCretendentialLogout();
+                    router.push("/");
+                  }}
+                >
+                  লগ-আউট
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="hidden md:block px-6 py-2 text-white bg-primary rounded"
+              >
+                লগ-ইন
+              </Link>
+            )}
             <button onClick={toggle} className="md:hidden">
               <AiOutlineMenu size={22} />
             </button>

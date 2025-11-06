@@ -1,10 +1,9 @@
 services:
   web:
     container_name: minar
-    build:
-      context: .
+    image: hub.nextrike.com/minar-academy:latest
     env_file:
       - ./.env
     ports:
-      - "3005:3000"
+      - "3010:3000"
 

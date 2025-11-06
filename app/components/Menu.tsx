@@ -1,29 +1,12 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { IoIosArrowDown } from "react-icons/io";
+import { getAllCategories } from "../actions";
 
-const menu = [
-  {
-    name: "ক্লাস ৬-১২",
-    submenu: [
-      {
-        name: "আলিম/HSC ১ম বর্ষ",
-        link: "/academic/hsc",
-      },
-      {
-        name: "আলিম/HSC ২য় বর্ষ",
-        link: "/academic/hsc",
-      },
-      {
-        name: "দাখিল/SSC ৯ম শ্রেণি",
-        link: "/academic/class-9",
-      },
-      {
-        name: "দাখিল/SSC ১০ম শ্রেণি",
-        link: "/academic/class-10",
-      },
-    ],
-  },
+// Static items
+const staticMenu = [
   {
     name: "সকল কোর্স",
     link: "/courses/all",
@@ -56,17 +39,48 @@ const menu = [
 ];
 
 export default function Menu() {
+  const [menu, setMenu] = useState(staticMenu);
+
+  useEffect(() => {
+    getAllCategories().then((categories) => {
+      if (!Array.isArray(categories)) return;
+
+      // Find the "classes" category
+      const classCategory = categories.find((cat) => cat.slug === "classes");
+
+      if (
+        classCategory &&
+        classCategory.sub_categories &&
+        classCategory.sub_categories?.length > 0
+      ) {
+        const classMenu = {
+          name: classCategory.name, // Custom display name
+          submenu: classCategory.sub_categories.map((sub) => ({
+            name: sub.name,
+            link: `/courses/${sub.slug}`,
+          })),
+        };
+
+        setMenu((prev) => [classMenu, ...prev]); // Insert at top
+      }
+    });
+  }, []);
+
   return (
     <nav className="flex space-x-6 w-[480px]">
       {menu.map((item, index) => (
         <div key={index} className="relative group">
           <div className="flex items-center gap-1">
-            <Link
-              href={item.link || ""}
-              className="text-gray-800 hover:text-blue-600"
-            >
-              {item.name}
-            </Link>
+            {item.link ? (
+              <Link
+                href={item.link}
+                className="text-gray-800 hover:text-blue-600"
+              >
+                {item.name}
+              </Link>
+            ) : (
+              <span className="text-gray-800 cursor-default">{item.name}</span>
+            )}
             {item.submenu && <IoIosArrowDown />}
           </div>
           {item.submenu && (

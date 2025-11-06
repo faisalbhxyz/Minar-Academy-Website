@@ -1,4 +1,6 @@
 import useAppStore from "@/hooks/useAppStore";
+import useOrderStore from "@/hooks/useOrderStore";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 export default function ProgramPath({
@@ -6,13 +8,31 @@ export default function ProgramPath({
 }: {
   course: CourseDetails | undefined;
 }) {
+  const router = useRouter();
   const { isVideoPlay, toggleVideoPlay } = useAppStore();
+  const { setItem } = useOrderStore();
+
+  const handlePurchase = (course: CourseDetails | null) => {
+    if (course == null) return;
+    setItem({
+      id: course.id,
+      title: course.title,
+      featured_image: course.featured_image,
+      pricing_model: course.pricing_model,
+      regular_price: course.regular_price,
+      sale_price: course.sale_price,
+    });
+    router.push("/checkout");
+  };
 
   return (
     <>
       <div className="p-5 border rounded-xl sticky top-20">
-        <p className="text-xl">কী কী থাকছে এই ক্যারিয়ার পাথে</p>
-        <ul className="space-y-4 mt-5">
+        <p className="text-xl">{course?.title}</p>
+        <p className="text-base font-semibold mt-5 mb-3">
+          কী কী থাকছে এই ক্যারিয়ার পাথে
+        </p>
+        <ul className="space-y-4">
           {course?.overview.map((path: string, idx: number) => (
             <li key={idx} className="flex items-center gap-3">
               <div className="border w-6 h-6 rounded-full flex items-center justify-center">
@@ -38,15 +58,18 @@ export default function ProgramPath({
             Apply
           </button>
         </div>
-        <button className="w-full px-6 py-2 bg-secondary text-white rounded">
+        <button
+          className="w-full px-6 py-2 bg-secondary text-white rounded"
+          onClick={() => handlePurchase(course ?? null)}
+        >
           এনরোল করুন
         </button>
-        <button
+        {/* <button
           onClick={toggleVideoPlay}
           className="w-full px-6 py-2 border border-gray-800 text-gray-800 rounded mt-3"
         >
           {isVideoPlay ? "Watching..." : "Watch Demo Video"}
-        </button>
+        </button> */}
       </div>
     </>
   );

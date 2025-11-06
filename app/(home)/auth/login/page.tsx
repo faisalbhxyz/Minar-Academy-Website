@@ -11,10 +11,10 @@ export default function page() {
       <div className="w-1/2 items-center justify-center hidden md:flex">
         <div className="flex flex-col items-center">
           <p className="text-xl font-semibold">
-            দৈনিক লাইভ ক্লাসে অংশ নিয়ে বজায় রাখুন রুটিনমাফিক পড়াশোনা
+            শেখা থেমে না থাকুক — লাইভ ক্লাসে থাকুন নিয়মিত
           </p>
           <Image
-            src={"/images/routine_1722246136916.svg"}
+            src={"/images/11314645.webp"}
             alt={"image"}
             width={400}
             height={400}

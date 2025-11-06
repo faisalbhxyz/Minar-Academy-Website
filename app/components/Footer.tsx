@@ -9,7 +9,7 @@ import { SiTiktok } from "react-icons/si";
 
 export default function Footer() {
   return (
-    <footer className="bg-sky-100 py-10">
+    <footer className="w-full bg-sky-100 py-10">
       <div className="wrapper">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
@@ -29,13 +29,10 @@ export default function Footer() {
             <h3 className="text-xl font-semibold mb-2">লিঙ্ক</h3>
             <ul className="space-y-1">
               <li>
-                <Link href="/">আমাদের সম্পর্কে</Link>
+                <Link href="/about">আমাদের সম্পর্কে</Link>
               </li>
               <li>
-                <Link href="/about">ক্যারিয়ার</Link>
-              </li>
-              <li>
-                <Link href="/courses">স্কিলস</Link>
+                <Link href="/teachers">শিক্ষক প্যানেল</Link>
               </li>
             </ul>
           </div>
@@ -58,7 +55,7 @@ export default function Footer() {
                 <MdLocationPin size={22} />
               </span>
               <span>
-                Abdullah Khan Lane, Boro Garage, Badurtola, Chittagong
+                5th Floor, Nurul Islam Mansion, East Solo Shohor, Chandgoan, Chittagong
               </span>
             </div>
           </div>

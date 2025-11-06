@@ -41,6 +41,7 @@ interface Source {
 interface CourseDetails {
   id: number;
   title: string;
+  slug: string;
   summary: string;
   description?: string | null;
   visibility: Visibility;
@@ -48,7 +49,7 @@ interface CourseDetails {
   schedule_date?: string | null; // ISO date string
   schedule_time?: string | null; // ISO time string or string format
   featured_image?: string | null;
-  intro_video?: IntroVideo | null;
+  intro_video?: { data: IntroVideo } | null;
   pricing_model: PricingModel;
   regular_price?: number | null;
   sale_price?: number | null;
@@ -75,7 +76,9 @@ interface CourseChapter {
   created_at: string;
   updated_at: string;
   course_id: number;
-  course_lessons: CourseLesson[];
+  course_lessons?: CourseLesson[];
+  assignments?: CourseAssignment[];
+  quizzes?: CourseQuiz[];
 }
 
 interface CourseLesson {
@@ -84,7 +87,7 @@ interface CourseLesson {
   description?: string | null;
   lesson_type: LessonType;
   source_type: LessonSourceType;
-  source: Source;
+  source: { data: Source };
   is_published: boolean;
   is_public: boolean;
   resources?: Record<string, string> | null; // filename, mimetype, url, size
@@ -92,6 +95,57 @@ interface CourseLesson {
   created_at: string;
   updated_at: string;
   chapter_id: number;
+}
+
+interface CourseAssignment {
+  id: number;
+  course_id: number;
+  chapter_id: number;
+  title: string;
+  instructions: string;
+  attachments: any | null;
+  is_published: boolean;
+  total_marks: number;
+  minimum_pass_marks: number;
+  time_limit: number;
+  time_limit_option: "minutes" | "hours" | "days" | "weeks" | "months";
+  file_upload_limit: number;
+  created_at: string;
+  updated_at: string;
+}
+interface CourseQuiz {
+  id: number;
+  title: string;
+  instructions: string;
+  minimum_pass_percentage: number;
+  enable_retry: boolean;
+  retry_attempts: number;
+  randomize_questions: boolean;
+  reveal_answers: boolean;
+  single_quiz_view: boolean;
+  time_limit: number;
+  time_limit_option: string;
+  total_visible_questions: number;
+  is_published: boolean;
+  chapter_id: number;
+  course_id: number;
+  created_at: string;
+  updated_at: string;
+  questions: QuizQuestion[];
+}
+
+interface QuizQuestion {
+  id: number;
+  quiz_id: number;
+  title: string;
+  details: string;
+  type: string;
+  marks: number;
+  answer_explanation: string | null;
+  answer_required: boolean;
+  media: any[];
+  created_at: string;
+  updated_at: string;
 }
 
 interface CourseGeneralSettings {
@@ -124,6 +178,17 @@ interface Category {
   thumbnail: string | null;
   created_at: string;
   updated_at: string;
+  sub_categories?: Category[];
+}
+interface SubCategory {
+  id: number;
+  category_id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  thumbnail: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 interface Instructor {
@@ -134,6 +199,45 @@ interface Instructor {
   phone?: string | null;
   email: string;
   status: string;
+  image: string | null;
+  role: string;
+  designation: string;
   created_at: string;
   updated_at: string;
+}
+
+interface Student {
+  id: number;
+  user_id: string;
+  first_name: string;
+  last_name?: string | null;
+  phone?: string | null;
+  email: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  enrollments: {
+    id: number;
+    course_id: number;
+    student_id: number;
+  }[];
+}
+
+interface Enrollment {
+  id: number;
+  student_id: number;
+  student: Pick<IStudent, "id" | "first_name" | "last_name" | "email">;
+  course_id: number;
+  course: CourseDetails;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Banner {
+  id: number;
+  title: string;
+  image: string;
+  url: string;
+  created_at: Date;
+  updated_at: Date;
 }

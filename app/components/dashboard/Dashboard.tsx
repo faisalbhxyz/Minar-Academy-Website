@@ -7,6 +7,10 @@ import React, { useState } from "react";
 import { BsCalendarWeek } from "react-icons/bs";
 import PopularActivity from "./PopularActivity";
 import Shortcuts from "./Shortcuts";
+import { Session } from "next-auth";
+import { formatDate } from "@/lib/helpers";
+import ProgramCard from "../courses/ProgramCard";
+import EnrolledProgramCard from "../courses/EnrolledProgramCard";
 
 // Reusable tab button
 const TabButton = ({
@@ -42,7 +46,15 @@ const EmptyState = ({ message }: { message: string }) => (
   </div>
 );
 
-export default function Dashboard() {
+export default function Dashboard({
+  session,
+  stdDetails,
+  enrolledCourses,
+}: {
+  session: Session;
+  stdDetails: Student;
+  enrolledCourses: Enrollment[];
+}) {
   const [classTab, setClassTab] = useState<"upcoming" | "missed">("upcoming");
   const [resourceTab, setResourceTab] = useState<
     "all" | "academic" | "skill" | "books"
@@ -55,9 +67,9 @@ export default function Dashboard() {
 
   const resourceTabs = [
     { key: "all", label: "সব" },
-    { key: "academic", label: "একাডেমিক" },
-    { key: "skill", label: "স্কিল ডেভেলপমেন্ট" },
-    { key: "books", label: "বইসমূহ" },
+    // { key: "academic", label: "একাডেমিক" },
+    // { key: "skill", label: "স্কিল ডেভেলপমেন্ট" },
+    // { key: "books", label: "বইসমূহ" },
   ] as const;
 
   const renderClassContent = () => {
@@ -71,8 +83,20 @@ export default function Dashboard() {
     }
   };
 
-  const renderResourceContent = () => {
-    return <EmptyState message="এই মুহূর্তে এই ক্যাটাগরিতে কোনো তথ্য নেই।" />;
+  const renderResourceContent = ({
+    enrolments,
+  }: {
+    enrolments: Enrollment[];
+  }) => {
+    if (enrolments.length === 0)
+      return <EmptyState message="এই মুহূর্তে এই ক্যাটাগরিতে কোনো তথ্য নেই।" />;
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        {enrolments.map((item) => (
+          <EnrolledProgramCard key={item.id} item={item.course} />
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -119,7 +143,9 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
-          <div className="mt-4">{renderResourceContent()}</div>
+          <div className="mt-4">
+            {renderResourceContent({ enrolments: enrolledCourses })}
+          </div>
         </div>
       </div>
       <div className="w-full lg:w-96 lg:min-w-96">
@@ -133,8 +159,8 @@ export default function Dashboard() {
               className="w-14 h-14 rounded-md"
             />
             <div>
-              <p>Name</p>
-              <p>Class</p>
+              <p>{session.user.name}</p>
+              {/* <p>Class</p> */}
             </div>
           </div>
           <div className="flex items-center gap-2 mt-5">
@@ -145,7 +171,7 @@ export default function Dashboard() {
               height={50}
               className="w-5 h-5"
             />
-            <p>Joined 10MS 30 minutes ago</p>
+            <p>Joined Minar academy on {formatDate(stdDetails?.created_at)}</p>
           </div>
           <div className="flex items-center gap-2 mt-2">
             <Image
@@ -155,10 +181,10 @@ export default function Dashboard() {
               height={50}
               className="w-5 h-5"
             />
-            <p>Enrolled 0 courses</p>
+            <p>Enrolled {stdDetails?.enrollments.length} courses</p>
           </div>
         </div>
-        <div className="border rounded-lg mt-5">
+        {/* <div className="border rounded-lg mt-5">
           <div className="px-4 py-3 text-xl border-b font-semibold border-gray-200">
             গত সাত দিনের শিখন কার্যক্রম
           </div>
@@ -183,8 +209,8 @@ export default function Dashboard() {
               <span className="block w-3 h-3 bg-red-500 rounded-full" /> আজ
             </div>
           </div>
-        </div>
-        <PopularActivity />
+        </div> */}
+        {/* <PopularActivity /> */}
       </div>
     </div>
   );

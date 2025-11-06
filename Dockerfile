@@ -1,20 +1,25 @@
-# Step 1: Use a base image to run Node.js
-FROM node:20.10.0-alpine
-
-# Step 2: Set the working directory
+# Stage 1: Build
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Step 3: Copy package.json and package-lock.json files
 COPY package*.json ./
-
-# Step 4: Install only production dependencies
-RUN npm i --force
-
-# Step 5: Copy the built app (including the `.next` directory)
+RUN npm install --force
 COPY . .
 
-# Step 6: Expose the port Next.js will run on
-EXPOSE 3000
+# Build standalone
+RUN npm run build
 
-# Step 7: Start the Next.js app in production mode
-CMD ["npm", "run", "start"]
+# Stage 2: Production
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+# Copy standalone build
+COPY --from=builder /app/.next/standalone ./   
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+# Copy package.json (useful if you need version info or runtime scripts)
+COPY --from=builder /app/package.json ./package.json
+
+EXPOSE 3000
+CMD ["node", "server.js"]
