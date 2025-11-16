@@ -20,7 +20,7 @@ export default async function HomeLayout({
       <Header session={session} />
       <PhoneMenu session={session} />
       <div className="wrapper">
-        <UserGreeting session={session} />
+        {/* <UserGreeting session={session} /> */}
         <div className="flex">
           <div className="w-full">{children}</div>
         </div>
