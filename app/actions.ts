@@ -107,3 +107,18 @@ export const getStudentEnrollments = async (
     return [];
   }
 };
+
+export const getPaymentMethods = async (): Promise<IPaymentMethod[]> => {
+  try {
+    const res = await axiosInstance.get("/payment-methods", {
+      headers: {
+        "Content-Type": "application/json",
+        "app-key": process.env.NEXT_PUBLIC_APP_KEY,
+      },
+    });
+    return res.data.data;
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+};

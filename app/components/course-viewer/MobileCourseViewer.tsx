@@ -85,7 +85,11 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({ courseDetails }) => {
 
                     {/* Right side icon */}
                     <span className="ml-3 flex-shrink-0">
-                      {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      {open ? (
+                        <ChevronUp size={16} />
+                      ) : (
+                        <ChevronDown size={16} />
+                      )}
                     </span>
                   </DisclosureButton>
 
@@ -136,6 +140,7 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({ courseDetails }) => {
       {/* Video Player */}
       <div className="min-w-full bg-black aspect-video relative -m-3">
         <LessonVideoPlayer
+          key={activeLesson.id}
           provider="youtube"
           videoId={activeLesson.videoSource.value}
           autoPlay

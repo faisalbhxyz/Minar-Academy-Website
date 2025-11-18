@@ -241,3 +241,12 @@ interface Banner {
   created_at: Date;
   updated_at: Date;
 }
+
+interface IPaymentMethod {
+  id: number;
+  title: string;
+  image: string | null;
+  instruction: string;
+  created_at: Date;
+  updated_at: Date;
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Plyr from "plyr";
 import "plyr/dist/plyr.css";
 
@@ -64,7 +64,7 @@ export default function LessonVideoPlayer({
         playerInstance.current.destroy();
         playerInstance.current = null;
       }
-      return;
+      return
     }
 
     const instance = new Plyr(playerRef.current, {
@@ -335,7 +335,7 @@ export default function LessonVideoPlayer({
           </div>
         </div>
       )}
-      
+
       <style>{`
         iframe {
           pointer-events: none;

@@ -15,6 +15,8 @@ interface Order {
   customer_note: string;
   invoice_id: number;
   total: number;
+  payment_method?: string | null;
+  transaction_id?: string | null;
 }
 
 type State = {
