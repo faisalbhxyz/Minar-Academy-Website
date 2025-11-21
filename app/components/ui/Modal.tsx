@@ -1,6 +1,7 @@
 import React from "react";
 import { Dialog, DialogPanel } from "@headlessui/react";
 import { cn } from "@/lib/cn";
+import { X } from "lucide-react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -22,10 +23,19 @@ export default function Modal({
           <DialogPanel
             transition
             className={cn(
-              "w-full max-w-xl rounded-xl bg-white p-6 backdrop-blur-2xl duration-200 ease-out data-[closed]:transform-[scale(95%)] data-[closed]:opacity-0",
+              "w-full max-w-xl rounded-xl bg-white p-6 backdrop-blur-2xl duration-200 ease-out data-[closed]:transform-[scale(95%)] data-[closed]:opacity-0 relative",
               className
             )}
           >
+            {/* Close X Button */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200 text-gray-500 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
             {children}
           </DialogPanel>
         </div>

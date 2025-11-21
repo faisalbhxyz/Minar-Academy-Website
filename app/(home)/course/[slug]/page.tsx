@@ -9,9 +9,6 @@ export default async function Page({
 }) {
   const { slug } = await params;
   const courseDetails = await getCourseBySlug(slug);
-
-  console.log("DETAILS", courseDetails);
-
   if (!courseDetails) {
     return <div className="wrapper my-10">Course not found.</div>;
   }

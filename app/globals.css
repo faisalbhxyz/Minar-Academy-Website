@@ -4,7 +4,7 @@
   --background: #ffffff;
   --foreground: #171717;
   --primary: #246962;
-  --secondary: #c68e43
+  --secondary: #c68e43;
 }
 
 @theme inline {
@@ -13,7 +13,7 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --color-primary: var(--primary);
-  --color-secondary: var(--secondary)
+  --color-secondary: var(--secondary);
 }
 
 /* @media (prefers-color-scheme: dark) {
@@ -31,21 +31,22 @@ body {
 
 @layer base {
   button {
-    @apply cursor-pointer
+    @apply cursor-pointer;
   }
   .border {
-    @apply border border-gray-200
+    @apply border border-gray-200;
   }
 
   .wrapper {
-    @apply max-w-[1350px] mx-auto px-3
+    @apply max-w-[1350px] mx-auto px-3;
   }
 
-  .ytp-impression-link {
-   display: none;
-  }
 }
 
-.ytp-more-videos-view{
-  display: none !important;
+/* .ytp-impression-link {
+  display: none;
 }
+.plyr__video-embed iframe {
+  top: -50% !important;
+  height: 200% !important;
+} */

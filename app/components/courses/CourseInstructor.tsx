@@ -12,7 +12,7 @@ function CourseInstructor({
       <h2 className="text-3xl font-semibold text-center">কোর্স ইনস্ট্রাক্টর</h2>
       <div className="mt-8 flex items-center justify-center">
         {instructors.map((instructor) => (
-          <div className="bg-gray-100 p-6 rounded-xl shadow hover:shadow-md transition">
+          <div className="bg-gray-100 p-6 rounded-xl shadow hover:shadow-md transition mr-4">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 relative rounded-full overflow-hidden">
                 <Image

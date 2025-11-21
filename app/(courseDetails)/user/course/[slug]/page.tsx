@@ -1,5 +1,5 @@
 import { getCourseBySlug } from "@/app/actions";
-import CourseViewer from "@/app/components/course-viewer/CourseViewer";
+import VideoWrapper from "@/app/components/course-viewer/VideoWrapper";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
@@ -10,21 +10,13 @@ export default async function Page({
 }) {
   const { slug } = await params;
   const session = await auth();
-  if (!session) {
-    redirect("/auth/login");
-  }
+  if (!session) redirect("/auth/login");
 
   const courseDetails = await getCourseBySlug(slug);
 
-  if (!courseDetails) {
-    return <div className="wrapper my-10">Course not found.</div>;
-  }
+  console.log("DETAILS", courseDetails);
 
-  return (
-    <CourseViewer
-      // @ts-ignore
-      courseDetails={courseDetails}
-      userCompletedLessonIds={new Set()}
-    />
-  );
+  if (!courseDetails) return <div>Course not found.</div>;
+
+  return <VideoWrapper courseDetails={courseDetails} />;
 }

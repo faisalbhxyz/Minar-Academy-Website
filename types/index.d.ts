@@ -81,6 +81,19 @@ interface CourseChapter {
   quizzes?: CourseQuiz[];
 }
 
+interface LessonResource {
+  id: number;
+  course_id: number;
+  lesson_id: number;
+  mime_type: string;
+  title: string;
+  file_path: string;
+  position: number;
+  file_size: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
 interface CourseLesson {
   id: number;
   title: string;
@@ -90,7 +103,7 @@ interface CourseLesson {
   source: { data: Source };
   is_published: boolean;
   is_public: boolean;
-  resources?: Record<string, string> | null; // filename, mimetype, url, size
+  resources?: LessonResource[] | null; // filename, mimetype, url, size
   position: number;
   created_at: string;
   updated_at: string;
@@ -238,6 +251,15 @@ interface Banner {
   title: string;
   image: string;
   url: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface IPaymentMethod {
+  id: number;
+  title: string;
+  image: string | null;
+  instruction: string;
   created_at: Date;
   updated_at: Date;
 }

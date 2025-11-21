@@ -7,6 +7,3 @@ export const formatDate = (date: string): string => {
   return `${day} ${month}, ${year}`;
 };
 
-// export const isUnlocked = (loggedInUserId: number, student_id: number): boolean => {
-
-// }
