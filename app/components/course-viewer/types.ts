@@ -139,7 +139,7 @@ export type Lesson = {
     value: string; // YouTube video ID or full iframe HTML
   };
   description?: string | null;
-  resources?: Record<string, string> | null;
+  resources?: LessonResource[] | null;
 };
 
 export type Chapter = {

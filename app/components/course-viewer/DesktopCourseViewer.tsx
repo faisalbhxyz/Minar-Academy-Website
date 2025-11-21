@@ -9,6 +9,9 @@ import React, { useState } from "react";
 import LessonVideoPlayer from "./LessonVideoPlayer";
 import { CourseDetails, Chapter, Lesson } from "./types";
 import { processCourseDetailsForViewer } from "./utils";
+import Link from "next/link";
+import { toast } from "sonner";
+import { Download, Eye } from "lucide-react";
 
 interface Props {
   courseDetails: CourseDetails;
@@ -25,6 +28,32 @@ export default function DesktopCourseViewer({
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(
     initialActiveLesson
   );
+
+  const handleDownloadLessonResource = async (resource: {
+    file_path: string;
+    title: string;
+  }) => {
+    try {
+      const res = await fetch(resource.file_path, {
+        method: "GET",
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch file");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = resource.title; // filename
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      toast.error("Download failed");
+    }
+  };
 
   return (
     <div className="w-full min-h-screen bg-[#FAFAFA] py-6 px-4 font-inter">
@@ -76,13 +105,46 @@ export default function DesktopCourseViewer({
           </div> */}
 
           {/* CHAPTER MATERIAL SECTION */}
-          {/* <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-            <h2 className="font-semibold mb-3">চ্যাপ্টার ম্যাটেরিয়াল</h2>
-            <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200 cursor-pointer">
-              <span className="text-yellow-600 text-xl">📄</span>
-              <span className="font-medium">{activeLesson?.title}</span>
-            </div>
-          </div> */}
+          {activeLesson &&
+            activeLesson.resources &&
+            activeLesson.resources.length > 0 && (
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+                <h2 className="font-semibold mb-3">চ্যাপ্টার ম্যাটেরিয়াল</h2>
+                {activeLesson.resources.map((resource) => (
+                  <div
+                    key={resource.id}
+                    className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200 mb-2"
+                  >
+                    {/* File Info */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-yellow-600 text-xl">📄</span>
+                      <span className="font-medium">{resource.title}</span>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      {/* View Button */}
+                      <button
+                        onClick={() =>
+                          window.open(resource.file_path, "_blank")
+                        }
+                        className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white hover:bg-blue-600"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+
+                      {/* Download Button */}
+                      <button
+                        onClick={() => handleDownloadLessonResource(resource)}
+                        className="flex items-center justify-center w-8 h-8 rounded-full bg-green-500 text-white hover:bg-green-600"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
         </div>
 
         {/* RIGHT SIDE SIDEBAR */}

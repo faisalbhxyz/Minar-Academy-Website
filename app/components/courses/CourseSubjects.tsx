@@ -81,6 +81,7 @@ export default function CourseSubjects({
                           className="w-full flex gap-5 items-center p-1 cursor-pointer"
                           onClick={() =>
                             toggleLessonModal(
+                              chapter.title,
                               lesson.title,
                               lesson.source.data.data
                             )

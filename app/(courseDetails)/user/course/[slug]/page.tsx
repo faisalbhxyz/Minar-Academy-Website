@@ -13,6 +13,9 @@ export default async function Page({
   if (!session) redirect("/auth/login");
 
   const courseDetails = await getCourseBySlug(slug);
+
+  console.log("DETAILS", courseDetails);
+
   if (!courseDetails) return <div>Course not found.</div>;
 
   return <VideoWrapper courseDetails={courseDetails} />;

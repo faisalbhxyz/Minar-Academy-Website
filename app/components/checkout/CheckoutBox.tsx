@@ -3,6 +3,7 @@ import { getPaymentMethods } from "@/app/actions";
 import useOrderStore from "@/hooks/useOrderStore";
 import axiosInstance from "@/lib/axiosInstance";
 import { Session } from "next-auth";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -72,6 +73,7 @@ export default function CheckoutBox({ session }: { session: Session }) {
         router.push("/thank-you");
       })
       .catch((err) => {
+        setLoading(false);
         toast.error(err.response.data.error);
       });
   };
@@ -90,40 +92,51 @@ export default function CheckoutBox({ session }: { session: Session }) {
         </p>
       )}
 
-      <div className="flex flex-col gap-2">
-        {paymentMethod.map((method) => (
-          <div className="flex items-center gap-2" key={method.id}>
-            <input
-              id={method.title}
-              type="radio"
-              name="payment_method"
-              value={method.id}
-              onChange={(e) => setSelectedPaymentMethod(method)}
-              checked={selectedPaymentMethod?.id === method.id}
-            />
-            <label htmlFor={method.title}>{method.title}</label>
-          </div>
-        ))}
+      {paymentMethod && paymentMethod.length > 0 && (
+        <div className="flex flex-col gap-2">
+          {paymentMethod.map((method) => (
+            <div className="flex items-center gap-2" key={method.id}>
+              <input
+                id={method.title}
+                type="radio"
+                name="payment_method"
+                value={method.id}
+                onChange={(e) => setSelectedPaymentMethod(method)}
+                checked={selectedPaymentMethod?.id === method.id}
+              />
+              {method.image && (
+                <Image
+                  src={method.image}
+                  alt={method.title}
+                  className="size-7 rounded-md object-contain"
+                  width={64}
+                  height={64}
+                />
+              )}
+              <label htmlFor={method.title}>{method.title}</label>
+            </div>
+          ))}
 
-        {paymentMethod.length > 0 && selectedPaymentMethod && (
-          <div className="mt-4">
-            <label htmlFor="transaction_id" className="mb-2 block">
-              {selectedPaymentMethod.instruction}
-            </label>
-            <input
-              name="transaction_id"
-              id="transaction_id"
-              type="text"
-              className="w-full border border-primary rounded-lg px-3 py-2 focus:outline-none"
-              value={transaction_id || ""}
-              onChange={(e) => setTransactionId(e.target.value)}
-            />
-          </div>
-        )}
-      </div>
+          {paymentMethod.length > 0 && selectedPaymentMethod && (
+            <div className="mt-4">
+              <label htmlFor="transaction_id" className="mb-2 block">
+                {selectedPaymentMethod.instruction}
+              </label>
+              <input
+                name="transaction_id"
+                id="transaction_id"
+                type="text"
+                className="w-full border border-primary rounded-lg px-3 py-2 focus:outline-none"
+                value={transaction_id || ""}
+                onChange={(e) => setTransactionId(e.target.value)}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       <button
-        className="mt-4 w-full bg-primary hover:bg-primary-dark text-white py-3 rounded-lg font-semibold transition duration-200"
+        className="mt-4 w-full bg-primary hover:bg-primary-dark text-white py-3 rounded-lg font-semibold transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         onClick={handleCheckout}
         disabled={loading}
       >

@@ -6,21 +6,22 @@ import {
   DisclosurePanel,
   DisclosureButton,
 } from "@headlessui/react";
-import { ArrowLeftIcon, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Eye,
+} from "lucide-react";
 import { CourseViewerProps, Lesson } from "./types";
 import { processCourseDetailsForViewer } from "./utils";
 import LessonVideoPlayer from "./LessonVideoPlayer";
+import { toast } from "sonner";
 
 interface Material {
   id: number;
   title: string;
 }
-
-const staticMaterials: Material[] = [
-  { id: 1, title: "কোর্স নোট (PDF)" },
-  { id: 2, title: "চেকলিস্ট (PDF)" },
-  { id: 3, title: "প্র্যাকটিস এক্সারসাইজ" },
-];
 
 const MobileCourseViewer: React.FC<CourseViewerProps> = ({ courseDetails }) => {
   const { chapters, initialActiveLesson, initialCurrentLessonTitle, progress } =
@@ -54,6 +55,32 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({ courseDetails }) => {
 
   const handleVideoAreaInteract = () => {
     resetHideTimer();
+  };
+
+  const handleDownloadLessonResource = async (resource: {
+    file_path: string;
+    title: string;
+  }) => {
+    try {
+      const res = await fetch(resource.file_path, {
+        method: "GET",
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch file");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = resource.title; // filename
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      toast.error("Download failed");
+    }
   };
 
   // --------------------------------------------------------------------------
@@ -172,6 +199,50 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({ courseDetails }) => {
         </p>
 
         <div className="w-full h-px bg-gray-200 my-4" />
+
+        {/* Lesson Materials */}
+        {activeLesson.resources && activeLesson.resources.length > 0 && (
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 mt-4 -mx-4">
+            <h3 className="font-semibold mb-3 text-base md:text-lg">
+              চ্যাপ্টার ম্যাটেরিয়াল
+            </h3>
+            <div className="flex flex-col gap-2">
+              {activeLesson.resources.map((resource) => (
+                <div
+                  key={resource.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200"
+                >
+                  {/* File Info */}
+                  <div className="flex items-center gap-3 mb-2 sm:mb-0">
+                    <span className="text-yellow-600 text-xl">📄</span>
+                    <span className="font-medium truncate max-w-[200px] sm:max-w-[300px]">
+                      {resource.title}
+                    </span>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 flex-shrink-0">
+                    {/* View Button */}
+                    <button
+                      onClick={() => window.open(resource.file_path, "_blank")}
+                      className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white hover:bg-blue-600"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+
+                    {/* Download Button */}
+                    <button
+                      onClick={() => handleDownloadLessonResource(resource)}
+                      className="flex items-center justify-center w-8 h-8 rounded-full bg-green-500 text-white hover:bg-green-600"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
