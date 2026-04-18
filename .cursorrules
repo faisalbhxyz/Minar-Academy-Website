@@ -3,3 +3,7 @@
 - If a dependency is not imported/used in the codebase, remove it to avoid install-time failures (especially strict peer-dep conflicts on CI/Vercel).
 - Always run `npm install` locally after dependency changes and ensure it succeeds without `--force` / `--legacy-peer-deps`.
 
+## Vercel deploy security gate (Next.js)
+- Keep `next` and `eslint-config-next` on a **patched** version; Vercel may block production deploys for known vulnerable releases.
+- When upgrading `next`, upgrade `eslint-config-next` to the same version to avoid tooling mismatches.
+
