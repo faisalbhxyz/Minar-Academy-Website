@@ -15,4 +15,4 @@
 ## Vercel / Next.js `NEXT_PUBLIC_*` env vars
 - Values are **baked in at build time**. After adding or changing them in Vercel, trigger a **new Production deployment** (Redeploy); old bundles will not pick up changes.
 - Paste values **without** surrounding quotes; avoid trailing spaces/newlines. Prefer `normalizePublicEnvValue`-style handling in `lib/publicEnv.ts` when touching API base URL / app key.
-- `NEXT_PUBLIC_API_URL` must be a full absolute URL (e.g. `https://api.example.com`) — relative paths break axios `baseURL` during SSR/build.
+- `NEXT_PUBLIC_API_URL` should be a full absolute URL (ideally `https://…`). If the scheme is omitted (common copy-paste mistake), `ensureAbsoluteApiBaseUrl` in `lib/publicEnv.ts` prepends `https://` so axios `baseURL` stays valid.

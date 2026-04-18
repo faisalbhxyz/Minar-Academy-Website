@@ -16,7 +16,19 @@ export function normalizePublicEnvValue(
   return v.length > 0 ? v : undefined;
 }
 
-export const publicApiBaseUrl = normalizePublicEnvValue(
+/**
+ * Axios requires `baseURL` to be an absolute URL. Dashboard copy-paste often omits `https://`.
+ */
+export function ensureAbsoluteApiBaseUrl(
+  raw: string | undefined
+): string | undefined {
+  const n = normalizePublicEnvValue(raw);
+  if (!n) return undefined;
+  if (/^https?:\/\//i.test(n)) return n.replace(/\/+$/, "");
+  return `https://${n.replace(/^\/+/, "")}`.replace(/\/+$/, "");
+}
+
+export const publicApiBaseUrl = ensureAbsoluteApiBaseUrl(
   process.env.NEXT_PUBLIC_API_URL
 );
 
