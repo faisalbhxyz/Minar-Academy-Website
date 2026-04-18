@@ -7,3 +7,8 @@
 - Keep `next` and `eslint-config-next` on a **patched** version; Vercel may block production deploys for known vulnerable releases.
 - When upgrading `next`, upgrade `eslint-config-next` to the same version to avoid tooling mismatches.
 
+## Vercel + Git (GitHub) connection
+- `vercel deploy` may **still succeed** as an upload-based deployment even when `vercel git connect` fails. That does **not** mean the project is Git-linked.
+- If `vercel git connect <repo-url>` returns *Failed to connect … private / access*, fix **GitHub → Settings → Applications → Vercel** (org/repo access) or use the Vercel dashboard **Project → Settings → Git → Connect Repository** and authorize the `adstryker` org (or whichever org owns the repo).
+- Do not tell the user “deployed from Git” until the Vercel project shows a connected Git repository (no “Connect Git Repository” prompt on the project card).
+
