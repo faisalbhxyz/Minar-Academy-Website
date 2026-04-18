@@ -12,3 +12,7 @@
 - If `vercel git connect <repo-url>` returns *Failed to connect … private / access*, fix **GitHub → Settings → Applications → Vercel** (org/repo access) or use the Vercel dashboard **Project → Settings → Git → Connect Repository** and authorize the `adstryker` org (or whichever org owns the repo).
 - Do not tell the user “deployed from Git” until the Vercel project shows a connected Git repository (no “Connect Git Repository” prompt on the project card).
 
+## Vercel / Next.js `NEXT_PUBLIC_*` env vars
+- Values are **baked in at build time**. After adding or changing them in Vercel, trigger a **new Production deployment** (Redeploy); old bundles will not pick up changes.
+- Paste values **without** surrounding quotes; avoid trailing spaces/newlines. Prefer `normalizePublicEnvValue`-style handling in `lib/publicEnv.ts` when touching API base URL / app key.
+- `NEXT_PUBLIC_API_URL` must be a full absolute URL (e.g. `https://api.example.com`) — relative paths break axios `baseURL` during SSR/build.
