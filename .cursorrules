@@ -1,0 +1,5 @@
+## Dependency compatibility (React/Next)
+- Before adding or keeping any dependency, verify its **peerDependencies** are compatible with the repo’s current `react`, `react-dom`, and `next` versions.
+- If a dependency is not imported/used in the codebase, remove it to avoid install-time failures (especially strict peer-dep conflicts on CI/Vercel).
+- Always run `npm install` locally after dependency changes and ensure it succeeds without `--force` / `--legacy-peer-deps`.
+
