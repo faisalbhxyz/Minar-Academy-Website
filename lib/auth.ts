@@ -3,6 +3,9 @@ import axiosInstance from "./axiosInstance";
 import Credentials from "next-auth/providers/credentials";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Auth.js (NextAuth v5) requires a secret to sign/encrypt tokens and cookies.
+  // Prefer env (`AUTH_SECRET`) so it works across dev/prod consistently.
+  secret: process.env.AUTH_SECRET,
   session: {
     strategy: "jwt",
     maxAge: 2 * 60 * 60,

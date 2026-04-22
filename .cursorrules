@@ -16,3 +16,6 @@
 - Values are **baked in at build time**. After adding or changing them in Vercel, trigger a **new Production deployment** (Redeploy); old bundles will not pick up changes.
 - Paste values **without** surrounding quotes; avoid trailing spaces/newlines. Prefer `normalizePublicEnvValue`-style handling in `lib/publicEnv.ts` when touching API base URL / app key.
 - `NEXT_PUBLIC_API_URL` should be a full absolute URL (ideally `https://…`). If the scheme is omitted (common copy-paste mistake), `ensureAbsoluteApiBaseUrl` in `lib/publicEnv.ts` prepends `https://` so axios `baseURL` stays valid.
+
+## NextAuth/Auth.js v5 required env
+- Always set `AUTH_SECRET` in `.env`/deployment envs and wire `secret: process.env.AUTH_SECRET` in `NextAuth(...)`; otherwise Auth.js throws `MissingSecret` and login/auth routes 500.
