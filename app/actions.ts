@@ -101,7 +101,7 @@ export const getStudentEnrollments = async (
         Authorization: `Bearer ${session.accessToken}`,
       },
     });
-    return res.data.data;
+    return res.data.data ?? [];
   } catch (error) {
     console.log(error);
     return [];
@@ -193,6 +193,35 @@ export const getStudentQuizSubmissions = async (
   } catch (error) {
     console.error("Failed to fetch quiz submissions:", error);
     return [];
+  }
+};
+
+export const getStudentCertificates = async (
+  session: Session
+): Promise<Certificate[]> => {
+  try {
+    const res = await axiosInstance.get("/student/certificates", {
+      headers: studentAuthHeaders(session),
+    });
+    return res.data.data ?? [];
+  } catch (error) {
+    console.error("Failed to fetch certificates:", error);
+    return [];
+  }
+};
+
+export const getStudentCertificateById = async (
+  certificateId: number,
+  session: Session
+): Promise<Certificate | null> => {
+  try {
+    const res = await axiosInstance.get(`/student/certificates/${certificateId}`, {
+      headers: studentAuthHeaders(session),
+    });
+    return res.data.data ?? null;
+  } catch (error) {
+    console.error("Failed to fetch certificate:", error);
+    return null;
   }
 };
 

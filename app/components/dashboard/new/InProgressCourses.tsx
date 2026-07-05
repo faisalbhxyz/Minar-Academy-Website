@@ -12,9 +12,14 @@ export default function InProgressCourses({
         In Progress Courses
       </h2>
       {
-        courses.map((course) => (
-          <InProgressCourseCard key={course.id} course={course.course} />
-        ))
+        courses
+          .filter((enrollment) => enrollment.course)
+          .map((enrollment) => (
+            <InProgressCourseCard
+              key={enrollment.id}
+              course={enrollment.course}
+            />
+          ))
       }
     </section>
   );

@@ -2,13 +2,18 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { ClipboardList, FileText, Home, User } from "lucide-react";
+import { BookOpen, ClipboardList, FileText, Home, User, Award } from "lucide-react";
 
 export default function SidebarNavigation() {
   const pathname = usePathname();
 
   const items = [
     { label: "Dashboard", link: "/user/dashboard", icon: <Home size={16} /> },
+    {
+      label: "Enrolled Courses",
+      link: "/user/dashboard/enrolled-courses",
+      icon: <BookOpen size={16} />,
+    },
     {
       label: "My Assignments",
       link: "/user/dashboard/assignments",
@@ -24,11 +29,11 @@ export default function SidebarNavigation() {
       link: "/user/dashboard/quizzes",
       icon: <FileText size={16} />,
     },
-    // {
-    //   label: "Enrolled Courses",
-    //   link: "/user/dashboard/enrolled-courses",
-    //   icon: <BookOpen size={16} />,
-    // },
+    {
+      label: "Certificates",
+      link: "/user/dashboard/certificates",
+      icon: <Award size={16} />,
+    },
     // {
     //   label: "Wishlist",
     //   link: "/user/dashboard/wishlist",
@@ -62,7 +67,7 @@ export default function SidebarNavigation() {
   ];
 
   return (
-    <aside className="md:block hidden w-64 bg-white border-r border-gray-200 h-screen sticky top-20 p-4 space-y-2 text-sm font-medium text-gray-700">
+    <aside className="md:block hidden w-64 shrink-0 bg-white border-r border-gray-200 sticky top-20 self-start max-h-[calc(100vh-5rem)] overflow-y-auto p-4 space-y-2 text-sm font-medium text-gray-700">
       {items.map(({ label, link, icon }, idx) => (
         <Link
           key={idx}

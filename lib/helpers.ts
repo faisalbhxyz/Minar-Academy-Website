@@ -1,3 +1,6 @@
+export const toBnNumber = (n: number): string =>
+  n.toLocaleString("bn-BD");
+
 export const formatDate = (date: string): string => {
   const parsedDate = new Date(date);
   const day = String(parsedDate.getDate()).padStart(2, "0");

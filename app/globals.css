@@ -43,6 +43,39 @@ body {
 
 }
 
+@media print {
+  @page {
+    size: landscape;
+    margin: 0;
+  }
+
+  body.printing-certificate header,
+  body.printing-certificate footer,
+  body.printing-certificate aside,
+  body.printing-certificate nav,
+  body.printing-certificate .print\\:hidden {
+    display: none !important;
+  }
+
+  body.printing-certificate .wrapper {
+    max-width: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  body.printing-certificate .certificate-print-area {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    width: 100vw !important;
+    max-width: none !important;
+    height: 100vh !important;
+    aspect-ratio: auto !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+}
+
 /* .ytp-impression-link {
   display: none;
 }

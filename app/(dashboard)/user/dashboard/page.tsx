@@ -1,7 +1,12 @@
-import { getStudentDetails, getStudentEnrollments } from "@/app/actions";
+import {
+  getStudentDetails,
+  getStudentEnrollments,
+  getStudentCertificates,
+} from "@/app/actions";
 import DashboardStats from "@/app/components/dashboard/new/DashboardStats";
 import DashboardQuizzesSection from "@/app/components/dashboard/new/DashboardQuizzesSection";
 import InProgressCourses from "@/app/components/dashboard/new/InProgressCourses";
+import DashboardCertificatesSection from "@/app/components/dashboard/certificates/DashboardCertificatesSection";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
@@ -10,13 +15,21 @@ export default async function DashboardPage() {
   if (!session) redirect("/auth/login");
 
   const stdDetails = await getStudentDetails(session);
-  const enrolledCourses = await getStudentEnrollments(session);
+  const [enrolledCourses, certificates] = await Promise.all([
+    getStudentEnrollments(session),
+    getStudentCertificates(session),
+  ]);
 
   return (
     <>
       <DashboardStats
-        enrolled={stdDetails.enrollments.reduce((acc, curr) => acc + 1, 0)}
+        enrolled={stdDetails.enrollments?.length ?? enrolledCourses.length}
+        active={enrolledCourses.length}
+        completed={certificates.length}
       />
+      {certificates.length > 0 && (
+        <DashboardCertificatesSection certificates={certificates} />
+      )}
       {enrolledCourses && enrolledCourses.length > 0 && (
         <InProgressCourses courses={enrolledCourses} />
       )}

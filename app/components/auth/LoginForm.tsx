@@ -11,7 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { doCretendentialLogin } from "@/app/actions";
 import ValidationErrorMsg from "../ValidationErrorMsg";
-import { LuLoaderCircle } from "react-icons/lu";
+import { LuLoaderCircle, LuEye, LuEyeOff } from "react-icons/lu";
 
 const LoginSchema = z.object({
   email: z
@@ -32,6 +32,7 @@ export default function LoginForm() {
   const params = useSearchParams();
 
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [step, setStep] = useState(1);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -192,13 +193,31 @@ export default function LoginForm() {
             {...register("email")}
           />
           <ValidationErrorMsg error={errors.email?.message} />
-          <input
-            type="password"
-            placeholder="পাসওয়ার্ড লিখুন"
-            className="border w-full rounded-md p-3 outline-none focus:border-primary"
-            {...register("password")}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="পাসওয়ার্ড লিখুন"
+              className="border w-full rounded-md p-3 pr-11 outline-none focus:border-primary"
+              {...register("password")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              aria-label={showPassword ? "পাসওয়ার্ড লুকান" : "পাসওয়ার্ড দেখুন"}
+            >
+              {showPassword ? <LuEyeOff size={20} /> : <LuEye size={20} />}
+            </button>
+          </div>
           <ValidationErrorMsg error={errors.password?.message} />
+          <div className="flex items-center justify-end">
+            <Link
+              href="/auth/forgot-password"
+              className="text-sm text-primary"
+            >
+              পাসওয়ার্ড ভুলে গেছেন?
+            </Link>
+          </div>
         </div>
       )}
 

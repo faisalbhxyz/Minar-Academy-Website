@@ -343,6 +343,7 @@ interface Student {
   last_name?: string | null;
   phone?: string | null;
   email: string;
+  profile_image?: string | null;
   status: string;
   created_at: string;
   updated_at: string;
@@ -379,4 +380,88 @@ interface IPaymentMethod {
   instruction: string;
   created_at: Date;
   updated_at: Date;
+}
+
+interface AcademicNoteClass {
+  id: number;
+  title: string;
+  slug: string;
+  icon_label: string;
+  icon_color: string;
+  position: number;
+  note_count: number;
+}
+
+interface AcademicNotePaper {
+  id: number;
+  subject_id: number;
+  title: string;
+  slug: string;
+  icon_label: string;
+  icon_color: string;
+  position: number;
+  note_count: number;
+}
+
+interface AcademicNoteSubject {
+  id: number;
+  class_id: number;
+  title: string;
+  slug: string;
+  position: number;
+  note_count: number;
+  papers: AcademicNotePaper[];
+}
+
+interface AcademicNoteClassDetail extends AcademicNoteClass {
+  subjects: AcademicNoteSubject[];
+}
+
+interface AcademicNote {
+  id: number;
+  paper_id: number;
+  title: string;
+  subtitle?: string | null;
+  thumbnail?: string | null;
+  pdf_url: string;
+  pdf_file_name: string;
+  position: number;
+}
+
+interface Certificate {
+  id: number;
+  course_id: number;
+  course_title: string;
+  certificate_number: string;
+  student_name: string;
+  progress_percent: number;
+  template_path: string;
+  title: string | null;
+  subtitle_one: string | null;
+  subtitle_two: string | null;
+  owner_signature: string | null;
+  instructor_signature: string | null;
+  issued_at: string;
+}
+
+interface AcademicNotePaperDetail {
+  class: Pick<
+    AcademicNoteClass,
+    "id" | "title" | "slug" | "icon_label" | "icon_color"
+  >;
+  subject: Pick<
+    AcademicNoteSubject,
+    "id" | "class_id" | "title" | "slug" | "note_count"
+  >;
+  paper: Pick<
+    AcademicNotePaper,
+    | "id"
+    | "subject_id"
+    | "title"
+    | "slug"
+    | "icon_label"
+    | "icon_color"
+    | "note_count"
+  >;
+  notes: AcademicNote[];
 }

@@ -21,9 +21,9 @@ export default async function HomeLayout({
       <PhoneMenu session={session} />
       <div className="wrapper">
         <UserGreeting session={session} />
-        <div className="flex">
+        <div className="flex items-start">
           <SidebarNavigation />
-          <div className="w-full px-4 py-4">{children}</div>
+          <div className="min-w-0 flex-1 px-4 py-4">{children}</div>
         </div>
       </div>
       <Footer />

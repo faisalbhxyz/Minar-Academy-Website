@@ -76,8 +76,10 @@ Both require: `app-key` + `Authorization: Bearer <token>`.
 
 | Method & path | Used in | Body (summary) | Auth |
 |---------------|---------|----------------|------|
-| `POST /student/login` | `lib/auth.ts` (NextAuth Credentials) | `{ email, string }` | `app-key` only |
+| `POST /student/login` | `lib/auth.ts` (NextAuth Credentials) | `{ email, password }` | `app-key` only |
 | `POST /student/register` | `app/components/auth/RegisterForm.tsx` | `first_name`, `last_name`, `email`, `phone`, `password`, `confirm_password` | `app-key` only |
+| `POST /student/forgot-password` | `app/components/auth/ForgotPasswordForm.tsx` | `{ email, reset_url }` — `reset_url` is storefront reset page without query | `app-key` only |
+| `POST /student/reset-password` | `app/components/auth/ResetPasswordForm.tsx` | `{ email, token, password }` — `token`/`email` from email link query | `app-key` only |
 | `POST /order/create` | `app/components/checkout/CheckoutBox.tsx` | `course_id`, `payment_method`, `transaction_id` (nullable per UI logic) | `app-key` + Bearer |
 
 ---
@@ -104,6 +106,8 @@ Use these as a **frontend contract**; the backend may return extra fields.
 | Teachers | `GET /instructor/all` |
 | Login | `POST /student/login` |
 | Register | `POST /student/register` |
+| Forgot password | `POST /student/forgot-password` |
+| Reset password | `POST /student/reset-password` (link lands on `/auth/reset-password?token=…&email=…`) |
 | Checkout | `GET /payment-methods`, `POST /order/create` |
 | Dashboard / profile | `GET /student/details`, `GET /enrolled/courses` |
 
