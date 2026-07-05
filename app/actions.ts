@@ -35,7 +35,7 @@ export const getAllCourses = async (
       },
     });
 
-    return res.data.data;
+    return res.data.data ?? [];
   } catch (error) {
     console.error("Failed to fetch courses:", error);
     return [];
@@ -67,7 +67,7 @@ export const getAllCategories = async (): Promise<Category[]> => {
         "app-key": process.env.NEXT_PUBLIC_APP_KEY,
       },
     });
-    return res.data.data;
+    return res.data.data ?? [];
   } catch (error) {
     console.log(error);
     return [];
@@ -121,4 +121,104 @@ export const getPaymentMethods = async (): Promise<IPaymentMethod[]> => {
     console.log(error);
     return [];
   }
+};
+
+const studentAuthHeaders = (session: Session) => ({
+  "Content-Type": "application/json",
+  "app-key": process.env.NEXT_PUBLIC_APP_KEY,
+  Authorization: `Bearer ${session.accessToken}`,
+});
+
+export const getStudentAssignment = async (
+  courseSlug: string,
+  assignmentId: number,
+  session: Session
+): Promise<StudentAssignmentDetail | null> => {
+  try {
+    const res = await axiosInstance.get(
+      `/course/${courseSlug}/assignments/${assignmentId}`,
+      { headers: studentAuthHeaders(session) }
+    );
+    return res.data.data;
+  } catch (error) {
+    console.error("Failed to fetch assignment:", error);
+    return null;
+  }
+};
+
+export const getStudentAssignmentSubmissions = async (
+  session: Session,
+  courseId?: number
+): Promise<AssignmentSubmissionRecord[]> => {
+  try {
+    const query = courseId ? `?course_id=${courseId}` : "";
+    const res = await axiosInstance.get(
+      `/student/assignment-submissions${query}`,
+      { headers: studentAuthHeaders(session) }
+    );
+    return res.data.data ?? [];
+  } catch (error) {
+    console.error("Failed to fetch assignment submissions:", error);
+    return [];
+  }
+};
+
+export const getStudentQuiz = async (
+  courseSlug: string,
+  quizId: number,
+  session: Session
+): Promise<StudentQuizDetail | null> => {
+  try {
+    const res = await axiosInstance.get(
+      `/course/${courseSlug}/quizzes/${quizId}`,
+      { headers: studentAuthHeaders(session) }
+    );
+    return res.data.data;
+  } catch (error) {
+    console.error("Failed to fetch quiz:", error);
+    return null;
+  }
+};
+
+export const getStudentQuizSubmissions = async (
+  session: Session,
+  courseId?: number
+): Promise<QuizSubmissionRecord[]> => {
+  try {
+    const query = courseId ? `?course_id=${courseId}` : "";
+    const res = await axiosInstance.get(`/student/quiz-submissions${query}`, {
+      headers: studentAuthHeaders(session),
+    });
+    return res.data.data ?? [];
+  } catch (error) {
+    console.error("Failed to fetch quiz submissions:", error);
+    return [];
+  }
+};
+
+export const getEnrolledCoursesWithAssignments = async (
+  session: Session
+): Promise<Enrollment[]> => {
+  const enrollments = await getStudentEnrollments(session);
+  if (enrollments.length === 0) return [];
+
+  const enriched = await Promise.all(
+    enrollments.map(async (enrollment) => {
+      const hasAssignments = enrollment.course?.course_chapters?.some(
+        (chapter) => (chapter.assignments?.length ?? 0) > 0
+      );
+
+      if (hasAssignments) return enrollment;
+
+      const courseDetails = await getCourseBySlug(enrollment.course.slug);
+      if (!courseDetails) return enrollment;
+
+      return {
+        ...enrollment,
+        course: courseDetails,
+      };
+    })
+  );
+
+  return enriched;
 };

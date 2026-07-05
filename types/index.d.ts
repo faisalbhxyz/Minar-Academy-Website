@@ -110,13 +110,63 @@ interface CourseLesson {
   chapter_id: number;
 }
 
+interface AssignmentAttachment {
+  id?: number;
+  url: string;
+  file_name: string;
+  mime_type: string;
+  size: number;
+}
+
+interface AssignmentSubmissionSummary {
+  id: number;
+  score: number;
+  max_score: number;
+  percentage: number;
+  passed: boolean;
+  status: "pending_review" | "graded" | "submitted";
+  submitted_at: string;
+}
+
+interface StudentAssignmentDetail extends CourseAssignment {
+  has_submitted: boolean;
+  can_submit: boolean;
+  submission: AssignmentSubmissionSummary | null;
+}
+
+interface AssignmentSubmissionRecord {
+  id: number;
+  assignment_id: number;
+  assignment_title: string;
+  chapter_title: string;
+  student_name: string;
+  student_email: string;
+  score: number;
+  max_score: number;
+  percentage: number;
+  passed: boolean;
+  status: "pending_review" | "graded" | "submitted";
+  submitted_at: string;
+  file_count: number;
+  response_text?: string;
+  files?: AssignmentAttachment[];
+}
+
+interface DashboardAssignmentItem {
+  courseSlug: string;
+  courseTitle: string;
+  chapterTitle: string;
+  assignment: CourseAssignment;
+  submission?: AssignmentSubmissionSummary;
+}
+
 interface CourseAssignment {
   id: number;
   course_id: number;
   chapter_id: number;
   title: string;
   instructions: string;
-  attachments: any | null;
+  attachments: AssignmentAttachment[] | null;
   is_published: boolean;
   total_marks: number;
   minimum_pass_marks: number;
@@ -147,18 +197,85 @@ interface CourseQuiz {
   questions: QuizQuestion[];
 }
 
+type QuizQuestionType = "single_choice" | "multiple_choice" | "true_false";
+
+interface QuizQuestionOption {
+  id: string;
+  text: string;
+}
+
 interface QuizQuestion {
   id: number;
   quiz_id: number;
   title: string;
   details: string;
-  type: string;
+  type: QuizQuestionType;
   marks: number;
+  options?: QuizQuestionOption[];
   answer_explanation: string | null;
   answer_required: boolean;
   media: any[];
   created_at: string;
   updated_at: string;
+}
+
+interface StudentQuizDetail extends CourseQuiz {
+  attempts_used: number;
+  can_retry: boolean;
+}
+
+interface QuizAnswerPayload {
+  question_id: number;
+  value: string | boolean | string[];
+}
+
+interface QuizSubmissionAnswer {
+  question_id: number;
+  question_title: string;
+  question_type: QuizQuestionType;
+  submitted_answer: string | boolean | string[];
+  is_correct: boolean | null;
+  marks_awarded: number;
+  correct_answer?: { value: string | boolean } | { values: string[] };
+  answer_explanation?: string | null;
+}
+
+interface QuizSubmissionResult {
+  id: number;
+  quiz_title: string;
+  attempt_number: number;
+  score: number;
+  max_score: number;
+  percentage: number;
+  passed: boolean;
+  status: "graded" | "pending_review";
+  submitted_at: string;
+  reveal_answers: boolean;
+  answers: QuizSubmissionAnswer[];
+}
+
+interface QuizSubmissionRecord {
+  id: number;
+  quiz_id: number;
+  quiz_title: string;
+  course_id?: number;
+  course_title?: string;
+  chapter_title?: string;
+  score: number;
+  max_score: number;
+  percentage: number;
+  passed: boolean;
+  status: "graded" | "pending_review";
+  submitted_at: string;
+  attempt_number?: number;
+}
+
+interface DashboardQuizItem {
+  courseSlug: string;
+  courseTitle: string;
+  chapterTitle: string;
+  quiz: CourseQuiz;
+  latestSubmission?: QuizSubmissionRecord;
 }
 
 interface CourseGeneralSettings {

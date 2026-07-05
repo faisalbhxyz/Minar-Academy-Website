@@ -17,7 +17,7 @@ const getAllBanners = async () => {
         "app-key": process.env.NEXT_PUBLIC_APP_KEY,
       },
     });
-    return res.data.data;
+    return res.data.data ?? [];
   } catch (error) {
     console.log(error);
     return [];

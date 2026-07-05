@@ -142,10 +142,17 @@ export type Lesson = {
   resources?: LessonResource[] | null;
 };
 
+export type ChapterQuiz = {
+  id: number;
+  title: string;
+  chapterId: number;
+};
+
 export type Chapter = {
   id: number;
   title: string;
   lessons: Lesson[];
+  quizzes: ChapterQuiz[];
   totalLessons: number;
   completedLessons: number;
 };

@@ -12,7 +12,9 @@ import {
   ChevronUp,
   Download,
   Eye,
+  ListChecks,
 } from "lucide-react";
+import Link from "next/link";
 import { CourseViewerProps, Lesson } from "./types";
 import { processCourseDetailsForViewer } from "./utils";
 import LessonVideoPlayer from "./LessonVideoPlayer";
@@ -129,7 +131,7 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({ courseDetails }) => {
                           onClick={() => {
                             setActiveLesson(lesson);
                             setLastPlayedLessonId(lesson.id);
-                            setOpenChapterId(chapter.id); // Keep this chapter open
+                            setOpenChapterId(chapter.id);
                           }}
                           className={`p-3 rounded-md cursor-pointer mb-2 border 
                             ${
@@ -145,6 +147,16 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({ courseDetails }) => {
                         </div>
                       );
                     })}
+                    {chapter.quizzes.map((quiz) => (
+                      <Link
+                        key={`quiz-${quiz.id}`}
+                        href={`/user/dashboard/quizzes/${courseDetails.slug}/${quiz.id}`}
+                        className="flex items-center gap-2 p-3 rounded-md mb-2 border bg-purple-50 border-purple-200 text-purple-800"
+                      >
+                        <ListChecks className="w-4 h-4 shrink-0" />
+                        <span className="font-medium text-base">{quiz.title}</span>
+                      </Link>
+                    ))}
                   </DisclosurePanel>
                 </div>
               )}

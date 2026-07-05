@@ -29,7 +29,7 @@ export default function Course({
 
       <div className="mb-8 overflow-x-auto no-scrollbar">
         <nav className="flex items-center justify-center gap-3 px-2">
-          {categories.map((category) => (
+          {(categories ?? []).map((category) => (
             <Link
               key={category.id}
               href={`/courses/category/${category.slug}`}
@@ -63,7 +63,7 @@ export default function Course({
           <MdKeyboardArrowRight size={24} />
         </button>
 
-        {courses.map((course) => (
+        {(courses ?? []).map((course) => (
           <SwiperSlide key={course.id}>
             <div className="bg-white border rounded-2xl shadow hover:shadow-lg transition flex flex-col h-full overflow-hidden">
               <Link href={`/course/${course.slug}`}>

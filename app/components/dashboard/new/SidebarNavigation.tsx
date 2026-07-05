@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Home, User } from "lucide-react";
+import { ClipboardList, FileText, Home, User } from "lucide-react";
 
 export default function SidebarNavigation() {
   const pathname = usePathname();
@@ -10,9 +10,19 @@ export default function SidebarNavigation() {
   const items = [
     { label: "Dashboard", link: "/user/dashboard", icon: <Home size={16} /> },
     {
+      label: "My Assignments",
+      link: "/user/dashboard/assignments",
+      icon: <ClipboardList size={16} />,
+    },
+    {
       label: "My Profile",
       link: "/user/dashboard/profile",
       icon: <User size={16} />,
+    },
+    {
+      label: "কুইজ",
+      link: "/user/dashboard/quizzes",
+      icon: <FileText size={16} />,
     },
     // {
     //   label: "Enrolled Courses",
@@ -58,7 +68,9 @@ export default function SidebarNavigation() {
           key={idx}
           href={link}
           className={`flex items-center gap-2 px-2 py-2 rounded transition-colors duration-150 ${
-            pathname === link ? "bg-blue-500 text-white" : "hover:bg-gray-100"
+            pathname === link || pathname.startsWith(`${link}/`)
+              ? "bg-blue-500 text-white"
+              : "hover:bg-gray-100"
           }`}
         >
           {icon}

@@ -85,6 +85,14 @@ export function mapCourseChapterToChapter(
     id: chapterData.id,
     title: chapterData.title,
     lessons: lessons,
+    quizzes:
+      chapterData.quizzes
+        ?.filter((q) => q.is_published)
+        .map((q) => ({
+          id: q.id,
+          title: q.title,
+          chapterId: chapterData.id,
+        })) ?? [],
     totalLessons: totalLessons,
     completedLessons: completedLessons,
   };

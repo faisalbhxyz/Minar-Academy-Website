@@ -1,5 +1,6 @@
 import { getStudentDetails, getStudentEnrollments } from "@/app/actions";
 import DashboardStats from "@/app/components/dashboard/new/DashboardStats";
+import DashboardQuizzesSection from "@/app/components/dashboard/new/DashboardQuizzesSection";
 import InProgressCourses from "@/app/components/dashboard/new/InProgressCourses";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -19,6 +20,7 @@ export default async function DashboardPage() {
       {enrolledCourses && enrolledCourses.length > 0 && (
         <InProgressCourses courses={enrolledCourses} />
       )}
+      <DashboardQuizzesSection />
     </>
   );
 }

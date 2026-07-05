@@ -27,6 +27,7 @@ const defaultMenu: MenuItem[] = [
 
 const dashboardItems: MenuItem[] = [
   { name: "Dashboard", link: "/user/dashboard" },
+  { name: "My Assignments", link: "/user/dashboard/assignments" },
   { name: "My Profile", link: "/user/dashboard/profile" },
   { name: "Enrolled Courses", link: "/user/dashboard/enrolled-courses" },
   { name: "Wishlist", link: "/user/dashboard/wishlist" },

@@ -11,7 +11,7 @@ import { CourseDetails, Chapter, Lesson } from "./types";
 import { processCourseDetailsForViewer } from "./utils";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Download, Eye } from "lucide-react";
+import { Download, Eye, ListChecks } from "lucide-react";
 
 interface Props {
   courseDetails: CourseDetails;
@@ -179,6 +179,16 @@ export default function DesktopCourseViewer({
                         {lesson.title}
                       </span>
                     </div>
+                  ))}
+                  {chapter.quizzes.map((quiz) => (
+                    <Link
+                      key={`quiz-${quiz.id}`}
+                      href={`/user/dashboard/quizzes/${courseDetails.slug}/${quiz.id}`}
+                      className="flex items-center gap-2 p-2 rounded transition hover:bg-purple-50 text-purple-700"
+                    >
+                      <ListChecks className="w-4 h-4 shrink-0" />
+                      <span className="text-sm font-medium">{quiz.title}</span>
+                    </Link>
                   ))}
                 </div>
               </div>

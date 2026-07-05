@@ -19,7 +19,7 @@ export default function Banner({ banners }: { banners: Banner[] }) {
           loop
           className="h-full w-full"
         >
-          {banners.map((banner, index) => (
+          {(banners ?? []).map((banner, index) => (
             <SwiperSlide key={index}>
               <div className="w-full h-full">
                 <Image
