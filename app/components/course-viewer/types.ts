@@ -138,6 +138,8 @@ export type Lesson = {
     type: "youtubeId" | "iframe" | "none"; // 'none' for lessons that are not video
     value: string; // YouTube video ID or full iframe HTML
   };
+  videoProvider: "youtube" | "vimeo" | null;
+  videoEmbedId: string;
   description?: string | null;
   resources?: LessonResource[] | null;
 };
@@ -160,6 +162,10 @@ export type Chapter = {
 export type CourseViewerProps = {
   courseDetails: CourseDetails; // Pass the whole CourseDetails object
   userCompletedLessonIds: Set<number>; // Set of IDs of lessons completed by the user
+  courseSlug: string;
+  accessToken: string;
+  studentId: string;
+  apiProgressPercent?: number | null;
 };
 
 export type ChapterItemProps = {

@@ -62,6 +62,7 @@ export default async function PaperNotesPage({
                   subtitle: note.subtitle,
                   thumbnail: note.thumbnail,
                   pdfUrl: note.pdf_url,
+                  href: `/resource/academic/${classSlug}/${subjectSlug}/${paperSlug}/${note.id}`,
                 }}
               />
             ))}

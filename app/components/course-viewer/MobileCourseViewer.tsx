@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Disclosure,
   DisclosurePanel,
@@ -19,20 +19,65 @@ import { CourseViewerProps, Lesson } from "./types";
 import { processCourseDetailsForViewer } from "./utils";
 import LessonVideoPlayer from "./LessonVideoPlayer";
 import { toast } from "sonner";
+import type { CourseProgressData } from "@/lib/courseProgressApi";
 
-interface Material {
-  id: number;
-  title: string;
-}
+const MobileCourseViewer: React.FC<CourseViewerProps> = ({
+  courseDetails,
+  userCompletedLessonIds,
+  courseSlug,
+  accessToken,
+  studentId,
+  apiProgressPercent: initialApiProgressPercent,
+}) => {
+  const [completedLessonIds, setCompletedLessonIds] = useState(
+    userCompletedLessonIds
+  );
+  const [apiProgressPercent, setApiProgressPercent] = useState(
+    initialApiProgressPercent ?? null
+  );
 
-const MobileCourseViewer: React.FC<CourseViewerProps> = ({ courseDetails }) => {
-  const { chapters, initialActiveLesson, initialCurrentLessonTitle, progress } =
-    processCourseDetailsForViewer(courseDetails, new Set());
+  const { chapters } = useMemo(
+    () =>
+      processCourseDetailsForViewer(
+        courseDetails,
+        completedLessonIds,
+        apiProgressPercent
+      ),
+    [courseDetails, completedLessonIds, apiProgressPercent]
+  );
 
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [lastPlayedLessonId, setLastPlayedLessonId] = useState<number | null>(
     null
   );
+
+  const handleLessonCompleted = useCallback(
+    (lessonId: number, data?: CourseProgressData | null) => {
+      if (data?.completed_lesson_ids) {
+        setCompletedLessonIds(new Set(data.completed_lesson_ids));
+      } else {
+        setCompletedLessonIds((prev) => new Set([...prev, lessonId]));
+      }
+      if (data?.progress_percent != null) {
+        setApiProgressPercent(data.progress_percent);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!activeLesson) return;
+    const refreshed = chapters
+      .flatMap((chapter) => chapter.lessons)
+      .find((lesson) => lesson.id === activeLesson.id);
+    if (
+      refreshed &&
+      (refreshed.completed !== activeLesson.completed ||
+        refreshed.videoEmbedId !== activeLesson.videoEmbedId)
+    ) {
+      setActiveLesson(refreshed);
+    }
+  }, [chapters, activeLesson]);
 
   // NEW: Keep track of the currently open chapter
   const [openChapterId, setOpenChapterId] = useState<number | null>(null);
@@ -178,12 +223,24 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({ courseDetails }) => {
     >
       {/* Video Player */}
       <div className="min-w-full bg-black aspect-video relative -m-3">
-        <LessonVideoPlayer
-          key={activeLesson.id}
-          provider="youtube"
-          videoId={activeLesson.videoSource.value}
-          autoPlay
-        />
+        {activeLesson.videoProvider && activeLesson.videoEmbedId ? (
+          <LessonVideoPlayer
+            key={activeLesson.id}
+            provider={activeLesson.videoProvider}
+            videoId={activeLesson.videoEmbedId}
+            autoPlay
+            lessonId={activeLesson.id}
+            courseSlug={courseSlug}
+            accessToken={accessToken}
+            studentId={studentId}
+            isAlreadyCompleted={completedLessonIds.has(activeLesson.id)}
+            onLessonCompleted={handleLessonCompleted}
+          />
+        ) : (
+          <div className="flex h-full min-h-[200px] items-center justify-center text-white text-sm">
+            No video available for this lesson.
+          </div>
+        )}
       </div>
 
       {/* FLOATING BACK BUTTON */}

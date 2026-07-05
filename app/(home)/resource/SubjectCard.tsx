@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-import { FaFilePdf } from "react-icons/fa6";
+
+import PdfThumbnail from "@/app/components/resource/PdfThumbnail";
 
 export type NoteCardItem = {
   id: number;
@@ -9,6 +9,7 @@ export type NoteCardItem = {
   subtitle?: string | null;
   thumbnail?: string | null;
   pdfUrl: string;
+  href: string;
 };
 
 type Props = {
@@ -18,26 +19,14 @@ type Props = {
 const SubjectCard: React.FC<Props> = ({ note }) => {
   return (
     <Link
-      href={note.pdfUrl}
-      target="_blank"
-      rel="noopener noreferrer"
+      href={note.href}
       className="border hover:border-primary rounded-lg transition-all overflow-hidden"
     >
-      <div className="bg-indigo-200 h-40 flex justify-center items-center p-1">
-        {note.thumbnail ? (
-          <Image
-            src={note.thumbnail}
-            alt={note.title}
-            width={200}
-            height={200}
-            className="w-auto h-full object-contain"
-          />
-        ) : (
-          <span className="text-indigo-500">
-            <FaFilePdf size={64} />
-          </span>
-        )}
-      </div>
+      <PdfThumbnail
+        pdfUrl={note.pdfUrl}
+        alt={note.title}
+        apiThumbnail={note.thumbnail}
+      />
       <div className="p-4 space-y-3">
         <p className="text-xl font-semibold">{note.title}</p>
         {note.subtitle ? (

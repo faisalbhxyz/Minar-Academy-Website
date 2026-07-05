@@ -8,67 +8,141 @@ import {
   Lesson,
 } from "./types";
 
-// Helper to format duration from seconds to MM:SS
 export function formatDuration(seconds?: number | null): string {
-  if (seconds === undefined || seconds === null) {
+  if (seconds === undefined || seconds === null || Number.isNaN(seconds)) {
     return "00:00";
   }
   const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
+  const remainingSeconds = Math.floor(seconds % 60);
   return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
     .toString()
     .padStart(2, "0")}`;
 }
 
-// Maps CourseLesson from API to internal Lesson type for component use
+export function parsePlaybackTime(value?: string | number | null): number | null {
+  if (value === undefined || value === null || value === "") return null;
+
+  if (typeof value === "number" && !Number.isNaN(value)) return value;
+
+  const str = String(value).trim();
+  const asNumber = Number(str);
+  if (!Number.isNaN(asNumber) && /^\d+(\.\d+)?$/.test(str)) return asNumber;
+
+  const parts = str.split(":").map((part) => Number(part));
+  if (parts.some((part) => Number.isNaN(part))) return null;
+  if (parts.length === 3) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  }
+  if (parts.length === 2) {
+    return parts[0] * 60 + parts[1];
+  }
+  return null;
+}
+
+export function extractYouTubeIdFromIframe(html: string): string | null {
+  const match = html.match(
+    /src=["'](?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^"']+)/
+  );
+  if (!match?.[1]) return null;
+  return match[1].split("?")[0];
+}
+
+export function extractYouTubeId(content: string): string | null {
+  if (content.includes("<iframe")) {
+    return extractYouTubeIdFromIframe(content);
+  }
+
+  const urlMatch = content.match(
+    /(?:youtube\.com.*(?:\?|&)v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  );
+  if (urlMatch?.[1]) return urlMatch[1];
+
+  const trimmed = content.trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+  return null;
+}
+
+export function extractVimeoId(content: string): string | null {
+  if (content.includes("<iframe")) {
+    const match = content.match(
+      /player\.vimeo\.com\/video\/(\d+)|vimeo\.com\/(?:video\/)?(\d+)/
+    );
+    return match?.[1] ?? match?.[2] ?? null;
+  }
+
+  const urlMatch = content.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  return urlMatch?.[1] ?? null;
+}
+
+function resolveVideoEmbed(
+  lessonData: CourseLesson
+): Pick<Lesson, "videoSource" | "videoProvider" | "videoEmbedId"> {
+  const empty = {
+    videoSource: { type: "none" as const, value: "" },
+    videoProvider: null,
+    videoEmbedId: "",
+  };
+
+  if (
+    lessonData.lesson_type !== "video" ||
+    !lessonData.source ||
+    typeof lessonData.source.data.data !== "string"
+  ) {
+    return empty;
+  }
+
+  const sourceContent = lessonData.source.data.data;
+  const sourceType = lessonData.source_type;
+
+  if (sourceType === "vimeo") {
+    const vimeoId = extractVimeoId(sourceContent);
+    if (!vimeoId) return empty;
+    return {
+      videoSource: {
+        type: sourceContent.includes("<iframe") ? "iframe" : "youtubeId",
+        value: sourceContent,
+      },
+      videoProvider: "vimeo",
+      videoEmbedId: vimeoId,
+    };
+  }
+
+  const youtubeId = extractYouTubeId(sourceContent);
+  if (!youtubeId) return empty;
+
+  return {
+    videoSource: {
+      type: sourceContent.includes("<iframe") ? "iframe" : "youtubeId",
+      value: sourceContent,
+    },
+    videoProvider: "youtube",
+    videoEmbedId: youtubeId,
+  };
+}
+
 export function mapCourseLessonToLesson(
   lessonData: CourseLesson,
   completedLessonIds: Set<number>
 ): Lesson {
-  let videoSourceType: Lesson["videoSource"]["type"] = "none";
-  let videoSourceValue: string = "";
-
-  if (
-    lessonData.lesson_type === "video" &&
-    lessonData.source &&
-    typeof lessonData.source.data.data === "string"
-  ) {
-    const sourceContent = lessonData.source.data.data;
-
-    console.log("SOURCE CONTENT", lessonData);
-
-    if (sourceContent.includes("<iframe")) {
-      videoSourceType = "iframe";
-      videoSourceValue = sourceContent;
-    } else {
-      videoSourceType = "youtubeId";
-      const youtubeIdMatch = sourceContent.match(
-        /(?:youtube\.com.*(?:\?|&)v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-      );
-
-      if (youtubeIdMatch && youtubeIdMatch[1]) {
-        videoSourceValue = youtubeIdMatch[1];
-      } else {
-        videoSourceValue = sourceContent; // Assume the string itself is the YouTube ID
-      }
-    }
-  }
+  const video = resolveVideoEmbed(lessonData);
+  const playbackSeconds =
+    parsePlaybackTime(lessonData.source?.data?.playback_times) ??
+    parsePlaybackTime(
+      (lessonData.source?.data as { playback_time?: string | null })
+        ?.playback_time
+    );
 
   return {
     id: lessonData.id,
     title: lessonData.title,
-    duration: formatDuration(Number(lessonData.source.data.playback_times)), // Make sure playback_times is a number
+    duration: formatDuration(playbackSeconds),
     completed: completedLessonIds.has(lessonData.id),
-    videoSource: {
-      type: videoSourceType,
-      value: videoSourceValue,
-    },
+    ...video,
     description: lessonData.description,
     resources: lessonData.resources,
   };
 }
 
-// Maps CourseChapter from API to internal Chapter type for component use
 export function mapCourseChapterToChapter(
   chapterData: CourseChapter,
   completedLessonIds: Set<number>
@@ -98,10 +172,10 @@ export function mapCourseChapterToChapter(
   };
 }
 
-// Processes the full CourseDetails object to extract data for CourseViewerProps
 export function processCourseDetailsForViewer(
   courseDetails: CourseDetails,
-  userCompletedLessonIds: Set<number>
+  userCompletedLessonIds: Set<number>,
+  apiProgressPercent?: number | null
 ) {
   const chapters = courseDetails.course_chapters.map((chapter) =>
     mapCourseChapterToChapter(chapter, userCompletedLessonIds)
@@ -115,7 +189,7 @@ export function processCourseDetailsForViewer(
     (acc, chapter) => acc + chapter.completedLessons,
     0
   );
-  const overallProgressPercentage =
+  const lessonProgressPercentage =
     totalLessonsOverall > 0
       ? Math.round((completedLessonsOverall / totalLessonsOverall) * 100)
       : 0;
@@ -131,7 +205,8 @@ export function processCourseDetailsForViewer(
     progress: {
       completed: completedLessonsOverall,
       total: totalLessonsOverall,
-      percentage: overallProgressPercentage,
+      percentage:
+        apiProgressPercent != null ? apiProgressPercent : lessonProgressPercentage,
     },
   };
 }

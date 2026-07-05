@@ -9,29 +9,54 @@ import {
   Pause,
   Volume2,
   VolumeX,
-  RotateCcw,
   Maximize,
   Minimize,
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
+import {
+  LESSON_COMPLETE_THRESHOLD,
+  WATCH_SAVE_INTERVAL_MS,
+  loadWatchPosition,
+  postLessonComplete,
+  saveWatchPosition,
+  type CourseProgressData,
+} from "@/lib/courseProgressApi";
 
 interface LessonVideoPlayerProps {
   provider: "youtube" | "vimeo";
   videoId: string;
   autoPlay?: boolean;
+  lessonId?: number;
+  courseSlug?: string;
+  accessToken?: string;
+  studentId?: string;
+  isAlreadyCompleted?: boolean;
+  onLessonCompleted?: (
+    lessonId: number,
+    progress?: CourseProgressData | null
+  ) => void;
 }
 
 export default function LessonVideoPlayer({
   provider,
   videoId,
   autoPlay = false,
+  lessonId,
+  courseSlug,
+  accessToken,
+  studentId,
+  isAlreadyCompleted = false,
+  onLessonCompleted,
 }: LessonVideoPlayerProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<HTMLDivElement>(null);
   const playerInstance = useRef<Plyr | null>(null);
+  const maxPositionRef = useRef(0);
+  const completePostedRef = useRef(isAlreadyCompleted);
+  const lastSaveRef = useRef(0);
+  const onLessonCompletedRef = useRef(onLessonCompleted);
 
-  // NEW STATE: Controls whether the Plyr iframe is mounted/visible
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
 
   const [playing, setPlaying] = useState(false);
@@ -47,6 +72,16 @@ export default function LessonVideoPlayer({
   const [showControls, setShowControls] = useState(true);
 
   const hideControlsTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    onLessonCompletedRef.current = onLessonCompleted;
+  }, [onLessonCompleted]);
+
+  useEffect(() => {
+    completePostedRef.current = isAlreadyCompleted;
+    maxPositionRef.current = 0;
+    lastSaveRef.current = 0;
+  }, [lessonId, isAlreadyCompleted]);
 
   const formatTime = (sec: number) => {
     if (typeof sec !== "number" || sec < 0 || isNaN(sec)) return "0:00";
@@ -64,8 +99,11 @@ export default function LessonVideoPlayer({
         playerInstance.current.destroy();
         playerInstance.current = null;
       }
-      return
+      return;
     }
+
+    const trackingEnabled =
+      lessonId != null && courseSlug && accessToken && studentId;
 
     const instance = new Plyr(playerRef.current, {
       controls: [],
@@ -87,21 +125,88 @@ export default function LessonVideoPlayer({
 
     playerInstance.current = instance;
 
+    const flushWatchProgress = () => {
+      if (!trackingEnabled || lessonId == null || maxPositionRef.current <= 0) {
+        return;
+      }
+      void saveWatchPosition(
+        courseSlug!,
+        lessonId,
+        maxPositionRef.current,
+        instance.duration,
+        accessToken!,
+        studentId
+      );
+    };
+
     instance.on("ready", () => {
       setDuration(formatTime(instance.duration));
       setVolume(instance.volume);
+
+      if (trackingEnabled && lessonId != null) {
+        void loadWatchPosition(
+          courseSlug!,
+          lessonId,
+          accessToken!,
+          studentId
+        ).then((saved) => {
+          if (
+            saved > 0 &&
+            instance.duration > 0 &&
+            saved < instance.duration - 5
+          ) {
+            instance.currentTime = saved;
+            maxPositionRef.current = saved;
+          }
+        });
+      }
+
       if (autoPlay) {
         instance.play();
       }
     });
 
     instance.on("timeupdate", () => {
-      setCurrentTime(formatTime(instance.currentTime));
-      setProgress((instance.currentTime / instance.duration) * 100);
+      const current = instance.currentTime;
+      const total = instance.duration;
+
+      setCurrentTime(formatTime(current));
+      setProgress(total > 0 ? (current / total) * 100 : 0);
+
+      if (!trackingEnabled || !lessonId || total <= 0) return;
+
+      if (current > maxPositionRef.current) {
+        maxPositionRef.current = current;
+      }
+
+      const now = Date.now();
+      if (now - lastSaveRef.current >= WATCH_SAVE_INTERVAL_MS) {
+        lastSaveRef.current = now;
+        flushWatchProgress();
+      }
+
+      if (
+        !completePostedRef.current &&
+        maxPositionRef.current / total >= LESSON_COMPLETE_THRESHOLD
+      ) {
+        completePostedRef.current = true;
+        flushWatchProgress();
+        void postLessonComplete(courseSlug!, lessonId, accessToken!).then(
+          (progress) => {
+            onLessonCompletedRef.current?.(lessonId, progress);
+          }
+        );
+      }
     });
 
     instance.on("play", () => setPlaying(true));
-    instance.on("pause", () => setPlaying(false));
+    instance.on("pause", () => {
+      setPlaying(false);
+      flushWatchProgress();
+    });
+    instance.on("ended", () => {
+      flushWatchProgress();
+    });
     instance.on("volumechange", () => {
       setMuted(instance.muted);
       setVolume(instance.volume);
@@ -109,12 +214,22 @@ export default function LessonVideoPlayer({
 
     // Cleanup function
     return () => {
+      flushWatchProgress();
       if (playerInstance.current) playerInstance.current.destroy();
       if (hideControlsTimeout.current)
         clearTimeout(hideControlsTimeout.current);
       playerInstance.current = null;
     };
-  }, [provider, isPlayerVisible]);
+  }, [
+    provider,
+    videoId,
+    isPlayerVisible,
+    autoPlay,
+    lessonId,
+    courseSlug,
+    accessToken,
+    studentId,
+  ]);
 
   const toggleFullscreen = () => {
     if (!wrapperRef.current) return;

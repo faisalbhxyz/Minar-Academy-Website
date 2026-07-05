@@ -82,6 +82,21 @@ export const getCourseBySlug = async (
   }
 };
 
+export const getCourseProgress = async (
+  slug: string,
+  session: Session
+): Promise<CourseProgressData | null> => {
+  try {
+    const res = await axiosInstance.get(`/course/${slug}/progress`, {
+      headers: studentAuthHeaders(session),
+    });
+    return res.data.data ?? null;
+  } catch (error) {
+    console.error("Failed to fetch course progress:", error);
+    return null;
+  }
+};
+
 export const getAllCategories = async (): Promise<Category[]> => {
   try {
     const res = await axiosInstance.get("/category", {

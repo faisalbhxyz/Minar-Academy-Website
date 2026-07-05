@@ -3,8 +3,25 @@
 import { useEffect, useState } from "react";
 import DesktopCourseViewer from "./DesktopCourseViewer";
 import MobileCourseViewer from "./MobileCourseViewer";
+import { CourseDetails } from "./types";
 
-export default function VideoWrapper({ courseDetails }: any) {
+interface VideoWrapperProps {
+  courseDetails: CourseDetails;
+  userCompletedLessonIds: Set<number>;
+  courseSlug: string;
+  accessToken: string;
+  studentId: string;
+  apiProgressPercent?: number | null;
+}
+
+export default function VideoWrapper({
+  courseDetails,
+  userCompletedLessonIds,
+  courseSlug,
+  accessToken,
+  studentId,
+  apiProgressPercent,
+}: VideoWrapperProps) {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -16,9 +33,18 @@ export default function VideoWrapper({ courseDetails }: any) {
 
   if (isMobile === null) return null;
 
+  const viewerProps = {
+    courseDetails,
+    userCompletedLessonIds,
+    courseSlug,
+    accessToken,
+    studentId,
+    apiProgressPercent,
+  };
+
   return isMobile ? (
-    <MobileCourseViewer courseDetails={courseDetails} userCompletedLessonIds={new Set()} />
+    <MobileCourseViewer {...viewerProps} />
   ) : (
-    <DesktopCourseViewer courseDetails={courseDetails} userCompletedLessonIds={new Set()} />
+    <DesktopCourseViewer {...viewerProps} />
   );
 }

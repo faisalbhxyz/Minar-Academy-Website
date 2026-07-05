@@ -364,6 +364,20 @@ interface Enrollment {
   updated_at: string;
 }
 
+interface CourseProgressData {
+  lessons_completed: number;
+  lessons_total: number;
+  quizzes_completed: number;
+  quizzes_total: number;
+  assignments_completed: number;
+  assignments_total: number;
+  progress_percent: number;
+  count_lessons: boolean;
+  count_quizzes: boolean;
+  count_assignments: boolean;
+  completed_lesson_ids: number[];
+}
+
 interface Banner {
   id: number;
   title: string;

@@ -1,32 +1,69 @@
-// FULLY NEW, FROM-SCRATCH DESIGN — PIXEL PERFECT LIKE ATTACHED IMAGE
-// NO PREVIOUS COMPONENTS USED AT ALL except <LessonVideoPlayer>
-// First lesson autoloads, sidebar switches lesson
-// Clean modern UI inspired EXACTLY by your screenshot
-
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import LessonVideoPlayer from "./LessonVideoPlayer";
-import { CourseDetails, Chapter, Lesson } from "./types";
+import { CourseViewerProps, Lesson } from "./types";
 import { processCourseDetailsForViewer } from "./utils";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Download, Eye, ListChecks } from "lucide-react";
-
-interface Props {
-  courseDetails: CourseDetails;
-  userCompletedLessonIds: Set<number>;
-}
+import type { CourseProgressData } from "@/lib/courseProgressApi";
 
 export default function DesktopCourseViewer({
   courseDetails,
   userCompletedLessonIds,
-}: Props) {
-  const { chapters, initialActiveLesson, initialCurrentLessonTitle, progress } =
-    processCourseDetailsForViewer(courseDetails, userCompletedLessonIds);
+  courseSlug,
+  accessToken,
+  studentId,
+  apiProgressPercent: initialApiProgressPercent,
+}: CourseViewerProps) {
+  const [completedLessonIds, setCompletedLessonIds] = useState(
+    userCompletedLessonIds
+  );
+  const [apiProgressPercent, setApiProgressPercent] = useState(
+    initialApiProgressPercent ?? null
+  );
+
+  const { chapters, initialActiveLesson, progress } = useMemo(
+    () =>
+      processCourseDetailsForViewer(
+        courseDetails,
+        completedLessonIds,
+        apiProgressPercent
+      ),
+    [courseDetails, completedLessonIds, apiProgressPercent]
+  );
 
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(
     initialActiveLesson
+  );
+
+  useEffect(() => {
+    if (!activeLesson) return;
+    const refreshed = chapters
+      .flatMap((chapter) => chapter.lessons)
+      .find((lesson) => lesson.id === activeLesson.id);
+    if (
+      refreshed &&
+      (refreshed.completed !== activeLesson.completed ||
+        refreshed.videoEmbedId !== activeLesson.videoEmbedId)
+    ) {
+      setActiveLesson(refreshed);
+    }
+  }, [chapters, activeLesson]);
+
+  const handleLessonCompleted = useCallback(
+    (lessonId: number, data?: CourseProgressData | null) => {
+      if (data?.completed_lesson_ids) {
+        setCompletedLessonIds(new Set(data.completed_lesson_ids));
+      } else {
+        setCompletedLessonIds((prev) => new Set([...prev, lessonId]));
+      }
+      if (data?.progress_percent != null) {
+        setApiProgressPercent(data.progress_percent);
+      }
+    },
+    []
   );
 
   const handleDownloadLessonResource = async (resource: {
@@ -73,13 +110,23 @@ export default function DesktopCourseViewer({
         <div className="w-full space-y-6">
           {/* VIDEO PLAYER */}
           <div className="w-full rounded-xl overflow-hidden bg-black shadow-md aspect-video">
-            {activeLesson && activeLesson.videoSource.value && (
+            {activeLesson?.videoProvider && activeLesson.videoEmbedId ? (
               <LessonVideoPlayer
                 key={activeLesson.id}
-                provider="youtube"
-                videoId={activeLesson.videoSource.value}
+                provider={activeLesson.videoProvider}
+                videoId={activeLesson.videoEmbedId}
                 autoPlay
+                lessonId={activeLesson.id}
+                courseSlug={courseSlug}
+                accessToken={accessToken}
+                studentId={studentId}
+                isAlreadyCompleted={completedLessonIds.has(activeLesson.id)}
+                onLessonCompleted={handleLessonCompleted}
               />
+            ) : (
+              <div className="flex h-full min-h-[200px] items-center justify-center text-white text-sm">
+                Select a lesson to start or no video available.
+              </div>
             )}
           </div>
 
