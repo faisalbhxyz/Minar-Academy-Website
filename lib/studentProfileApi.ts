@@ -1,4 +1,5 @@
 import { parseApiError } from "@/lib/parseApiError";
+import { publicApiBaseUrl, publicAppKey } from "@/lib/publicEnv";
 import { ifSessionReplaced } from "@/lib/sessionReplaced";
 
 export const PROFILE_IMAGE_MAX_BYTES = 2 * 1024 * 1024;
@@ -32,14 +33,7 @@ type UpdateFailure = {
 
 export type StudentProfileUpdateResult = UpdateSuccess | UpdateFailure;
 
-export async function updateStudentProfile(
-  accessToken: string | undefined,
-  fields: StudentProfileUpdateFields
-): Promise<StudentProfileUpdateResult> {
-  if (!accessToken) {
-    return { ok: false, error: "Please sign in again" };
-  }
-
+function buildProfileFormData(fields: StudentProfileUpdateFields): FormData {
   const formData = new FormData();
   formData.append("first_name", fields.first_name);
   if (fields.last_name !== undefined && fields.last_name !== null) {
@@ -51,14 +45,65 @@ export async function updateStudentProfile(
   if (fields.profile_image) {
     formData.append("profile_image", fields.profile_image);
   }
+  return formData;
+}
 
-  let res: Response;
-  try {
-    res = await fetch("/api/student/profile", {
-      method: "PUT",
+async function updateViaProxy(formData: FormData): Promise<Response> {
+  return fetch("/api/student/profile", {
+    method: "PUT",
+    body: formData,
+    signal: AbortSignal.timeout(PROFILE_UPDATE_TIMEOUT_MS),
+  });
+}
+
+async function updateViaBackend(
+  accessToken: string,
+  fields: StudentProfileUpdateFields
+): Promise<Response> {
+  const formData = buildProfileFormData(fields);
+
+  if (fields.profile_image) {
+    formData.append("_method", "PUT");
+    return fetch(`${publicApiBaseUrl}/student/update`, {
+      method: "POST",
+      headers: {
+        "app-key": publicAppKey!,
+        Authorization: `Bearer ${accessToken}`,
+      },
       body: formData,
       signal: AbortSignal.timeout(PROFILE_UPDATE_TIMEOUT_MS),
     });
+  }
+
+  return fetch(`${publicApiBaseUrl}/student/update`, {
+    method: "PUT",
+    headers: {
+      "app-key": publicAppKey!,
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: formData,
+    signal: AbortSignal.timeout(PROFILE_UPDATE_TIMEOUT_MS),
+  });
+}
+
+export async function updateStudentProfile(
+  accessToken: string | undefined,
+  fields: StudentProfileUpdateFields
+): Promise<StudentProfileUpdateResult> {
+  if (!accessToken) {
+    return { ok: false, error: "Please sign in again" };
+  }
+
+  let res: Response;
+  try {
+    res = await updateViaProxy(buildProfileFormData(fields));
+
+    if (res.status === 404) {
+      if (!publicApiBaseUrl || !publicAppKey) {
+        return { ok: false, error: "App configuration is missing" };
+      }
+      res = await updateViaBackend(accessToken, fields);
+    }
   } catch (error) {
     if (error instanceof Error && error.name === "TimeoutError") {
       return {
