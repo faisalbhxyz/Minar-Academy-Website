@@ -1,14 +1,21 @@
 "use server";
 
-import { signIn, signOut } from "@/lib/auth";
+import { auth, signIn, signOut } from "@/lib/auth";
 import axiosInstance from "@/lib/axiosInstance";
 import { Session } from "next-auth";
 
-export const doCretendentialLogin = async (email: string, password: string) => {
+export const doCretendentialLogin = async (
+  email: string,
+  password: string,
+  deviceId: string,
+  deviceName?: string
+) => {
   try {
     await signIn("credentials", {
       email,
       password,
+      device_id: deviceId,
+      device_name: deviceName ?? "",
       redirect: false,
     });
   } catch (error: any) {
@@ -19,6 +26,22 @@ export const doCretendentialLogin = async (email: string, password: string) => {
 };
 
 export const doCretendentialLogout = async () => {
+  try {
+    const session = await auth();
+    if (session?.accessToken) {
+      await axiosInstance.post(
+        "/student/logout",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        }
+      );
+    }
+  } catch {
+    // Continue with local sign-out even if the API call fails.
+  }
   await signOut();
 };
 

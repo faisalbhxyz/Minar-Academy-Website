@@ -1,6 +1,10 @@
 "use client";
 
-import { publicApiBaseUrl, publicAppKey } from "@/lib/publicEnv";
+import {
+  PROFILE_IMAGE_ACCEPTED_TYPES,
+  PROFILE_IMAGE_MAX_BYTES,
+  updateStudentProfile,
+} from "@/lib/studentProfileApi";
 import { Camera } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -8,14 +12,13 @@ import { useRef, useState } from "react";
 import { LuLoaderCircle } from "react-icons/lu";
 import { toast } from "sonner";
 
-const MAX_SIZE_BYTES = 2 * 1024 * 1024;
-const ACCEPTED_TYPES = ["image/png", "image/jpg", "image/jpeg", "image/webp"];
+const ACCEPTED_TYPES: string[] = [...PROFILE_IMAGE_ACCEPTED_TYPES];
 
 interface Props {
-  studentId: number;
   profileImage: string | null | undefined;
   firstName: string;
   lastName?: string | null;
+  phone?: string | null;
   accessToken: string;
 }
 
@@ -26,10 +29,10 @@ function getInitials(firstName: string, lastName?: string | null) {
 }
 
 export default function StudentProfileImage({
-  studentId,
   profileImage,
   firstName,
   lastName,
+  phone,
   accessToken,
 }: Props) {
   const router = useRouter();
@@ -54,12 +57,12 @@ export default function StudentProfileImage({
     if (!file) return;
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      toast.error("শুধু PNG, JPG, JPEG বা WEBP ফাইল সাপোর্ট করা হয়");
+      toast.error("শুধু PNG বা JPG/JPEG ফাইল সাপোর্ট করা হয়");
       event.target.value = "";
       return;
     }
 
-    if (file.size > MAX_SIZE_BYTES) {
+    if (file.size > PROFILE_IMAGE_MAX_BYTES) {
       toast.error("ছবির সাইজ সর্বোচ্চ ২ MB হতে হবে");
       event.target.value = "";
       return;
@@ -76,43 +79,27 @@ export default function StudentProfileImage({
       return;
     }
 
-    if (!publicApiBaseUrl || !publicAppKey) {
-      toast.error("App configuration is missing");
-      return;
-    }
-
     setUploading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("profile_image", selectedFile);
+      const result = await updateStudentProfile(accessToken, {
+        first_name: firstName,
+        last_name: lastName,
+        phone,
+        profile_image: selectedFile,
+      });
 
-      const res = await fetch(
-        `${publicApiBaseUrl}/student/update/${studentId}`,
-        {
-          method: "PUT",
-          headers: {
-            "app-key": publicAppKey,
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: formData,
-        }
-      );
+      if (result.sessionReplaced) return;
 
-      const json = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        toast.error(json.message || json.error || "ছবি আপলোড ব্যর্থ হয়েছে");
+      if (!result.ok) {
+        toast.error(result.error || "ছবি আপলোড ব্যর্থ হয়েছে");
         return;
       }
 
-      const updatedImage =
-        json.data?.profile_image ??
-        json.data?.student?.profile_image ??
-        previewUrl;
+      const updatedImage = result.data.profile_image ?? previewUrl;
 
       if (updatedImage) setCurrentImage(updatedImage);
-      toast.success(json.message || "প্রোফাইল ছবি সফলভাবে আপডেট হয়েছে");
+      toast.success(result.message || "প্রোফাইল ছবি সফলভাবে আপডেট হয়েছে");
       resetSelection();
       router.refresh();
     } catch {
@@ -158,7 +145,7 @@ export default function StudentProfileImage({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/png,image/jpg,image/jpeg,image/webp"
+            accept="image/png,image/jpeg,image/jpg"
             onChange={handleFileChange}
             className="hidden"
           />
@@ -169,7 +156,7 @@ export default function StudentProfileImage({
             {currentImage ? "প্রোফাইল ছবি" : "প্রোফাইল ছবি যোগ করুন"}
           </p>
           <p className="text-xs text-gray-500">
-            JPG, PNG বা WEBP — সর্বোচ্চ ২ MB
+            JPG বা PNG — সর্বোচ্চ ২ MB
           </p>
           <div className="flex flex-wrap gap-2">
             <button

@@ -1,8 +1,8 @@
 "use client";
 
 import ValidationErrorMsg from "@/app/components/ValidationErrorMsg";
-import { publicApiBaseUrl, publicAppKey } from "@/lib/publicEnv";
 import { formatDate } from "@/lib/helpers";
+import { updateStudentProfile } from "@/lib/studentProfileApi";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -34,7 +34,6 @@ const ProfileSchema = z.object({
 type TProfileSchema = z.infer<typeof ProfileSchema>;
 
 interface Props {
-  studentId: number;
   firstName: string;
   lastName?: string | null;
   email: string;
@@ -44,7 +43,6 @@ interface Props {
 }
 
 export default function StudentProfileForm({
-  studentId,
   firstName,
   lastName,
   email,
@@ -80,39 +78,23 @@ export default function StudentProfileForm({
   };
 
   const handleSave = async (data: TProfileSchema) => {
-    if (!publicApiBaseUrl || !publicAppKey) {
-      toast.error("App configuration is missing");
-      return;
-    }
-
     setSaving(true);
 
     try {
-      const formData = new FormData();
-      formData.append("first_name", data.first_name);
-      formData.append("last_name", data.last_name ?? "");
-      formData.append("phone", data.phone);
+      const result = await updateStudentProfile(accessToken, {
+        first_name: data.first_name,
+        last_name: data.last_name ?? "",
+        phone: data.phone,
+      });
 
-      const res = await fetch(
-        `${publicApiBaseUrl}/student/update/${studentId}`,
-        {
-          method: "PUT",
-          headers: {
-            "app-key": publicAppKey,
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: formData,
-        }
-      );
+      if (result.sessionReplaced) return;
 
-      const json = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        toast.error(json.message || json.error || "প্রোফাইল আপডেট ব্যর্থ হয়েছে");
+      if (!result.ok) {
+        toast.error(result.error || "প্রোফাইল আপডেট ব্যর্থ হয়েছে");
         return;
       }
 
-      toast.success(json.message || "প্রোফাইল সফলভাবে আপডেট হয়েছে");
+      toast.success(result.message || "প্রোফাইল সফলভাবে আপডেট হয়েছে");
       setEditing(false);
       router.refresh();
     } catch {

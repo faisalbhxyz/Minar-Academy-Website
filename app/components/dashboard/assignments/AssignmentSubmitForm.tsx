@@ -1,6 +1,7 @@
 "use client";
 
 import { publicApiBaseUrl, publicAppKey } from "@/lib/publicEnv";
+import { ifSessionReplaced } from "@/lib/sessionReplaced";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -86,6 +87,8 @@ export default function AssignmentSubmitForm({
       );
 
       const json = await res.json().catch(() => ({}));
+
+      if (await ifSessionReplaced(res, json)) return;
 
       if (!res.ok) {
         toast.error(

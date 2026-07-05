@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MdArrowBack } from "react-icons/md";
 import OtpInput from "react-otp-input";
@@ -12,6 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { doCretendentialLogin } from "@/app/actions";
 import ValidationErrorMsg from "../ValidationErrorMsg";
 import { LuLoaderCircle, LuEye, LuEyeOff } from "react-icons/lu";
+import { getDeviceId, getDeviceName } from "@/lib/deviceId";
 
 const LoginSchema = z.object({
   email: z
@@ -40,6 +41,15 @@ export default function LoginForm() {
   const [otp, setOtp] = useState("");
 
   const authUser = false; // Replace with actual auth logic
+
+  useEffect(() => {
+    if (params.get("reason") === "session_replaced") {
+      toast.error(
+        "আপনার অ্যাকাউন্ট অন্য ডিভাইসে লগইন হয়েছে। অনুগ্রহ করে আবার সাইন ইন করুন।"
+      );
+      router.replace("/auth/login");
+    }
+  }, [params, router]);
 
   const {
     register,
@@ -85,7 +95,12 @@ export default function LoginForm() {
 
   const handleOnSubmit = async (data: TLoginSchema) => {
     setLoading(true);
-    const result = await doCretendentialLogin(data.email, data.password);
+    const result = await doCretendentialLogin(
+      data.email,
+      data.password,
+      getDeviceId(),
+      getDeviceName()
+    );
 
     if (result?.error) {
       toast.error(result.error);

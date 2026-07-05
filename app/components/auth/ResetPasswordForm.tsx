@@ -77,7 +77,10 @@ export default function ResetPasswordForm() {
         password: data.password,
       });
 
-      toast.success(res.data.message || "Password updated successfully");
+      toast.success(
+        res.data.message ||
+          "Password updated successfully. Please sign in again on this device."
+      );
       router.push("/auth/login");
     } catch (err: any) {
       const message =

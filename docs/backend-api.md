@@ -72,11 +72,22 @@ Both require: `app-key` + `Authorization: Bearer <token>`.
 
 ---
 
+## Authenticated mutations (PUT)
+
+| Method & path | Used in | Body (summary) | Auth |
+|---------------|---------|----------------|------|
+| `PUT /student/update` | `StudentProfileForm.tsx`, `StudentProfileImage.tsx` | `multipart/form-data`: `first_name` (required), `last_name`, `phone`, optional `profile_image` | `app-key` + Bearer (student JWT; updates logged-in student only — no `:id` in URL) |
+
+Admin-only equivalent: `PUT /private/student/update/:id`.
+
+---
+
 ## Mutations (POST)
 
 | Method & path | Used in | Body (summary) | Auth |
 |---------------|---------|----------------|------|
-| `POST /student/login` | `lib/auth.ts` (NextAuth Credentials) | `{ email, password }` | `app-key` only |
+| `POST /student/login` | `lib/auth.ts` (NextAuth Credentials) | `{ email, password, device_id, device_name? }` — `device_id` from `localStorage` (`lib/deviceId.ts`) | `app-key` only |
+| `POST /student/logout` | `doCretendentialLogout` in `app/actions.ts` | — | `app-key` + Bearer |
 | `POST /student/register` | `app/components/auth/RegisterForm.tsx` | `first_name`, `last_name`, `email`, `phone`, `password`, `confirm_password` | `app-key` only |
 | `POST /student/forgot-password` | `app/components/auth/ForgotPasswordForm.tsx` | `{ email, reset_url }` — `reset_url` is storefront reset page without query | `app-key` only |
 | `POST /student/reset-password` | `app/components/auth/ResetPasswordForm.tsx` | `{ email, token, password }` — `token`/`email` from email link query | `app-key` only |
@@ -109,7 +120,22 @@ Use these as a **frontend contract**; the backend may return extra fields.
 | Forgot password | `POST /student/forgot-password` |
 | Reset password | `POST /student/reset-password` (link lands on `/auth/reset-password?token=…&email=…`) |
 | Checkout | `GET /payment-methods`, `POST /order/create` |
-| Dashboard / profile | `GET /student/details`, `GET /enrolled/courses` |
+| Dashboard / profile | `GET /student/details`, `PUT /student/update`, `GET /enrolled/courses` |
+
+---
+
+## Single-device student sessions
+
+Each student may have **one active device session** at a time. Login must include a stable `device_id` (stored in `localStorage` under `lurnic_device_id` via `lib/deviceId.ts`).
+
+| Behaviour | Frontend handling |
+|-----------|-------------------|
+| Login on a new device | `POST /student/login` with new `device_id`; previous device gets `401` on next API call |
+| `401` with `code: "SESSION_REPLACED"` | `lib/sessionReplaced.ts` — sign out, redirect to `/auth/login?reason=session_replaced`, toast |
+| Explicit logout | `POST /student/logout` then NextAuth `signOut` (`doCretendentialLogout`) |
+| Password reset success | All sessions invalidated; user must log in again with `device_id` |
+
+Session checks: axios response interceptor (`lib/axiosInstance.ts`), `ifSessionReplaced` on client `fetch` calls, and `SessionGuard` (`app/components/SessionGuard.tsx`) on authenticated pages.
 
 ---
 

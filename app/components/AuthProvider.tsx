@@ -2,8 +2,8 @@
 
 import { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
-import { usePathname } from "next/navigation";
-import React, { useEffect } from "react";
+import React from "react";
+import SessionGuard from "./SessionGuard";
 
 export default function AuthProvider({
   children,
@@ -12,5 +12,10 @@ export default function AuthProvider({
   children: React.ReactNode;
   session: Session;
 }) {
-  return <SessionProvider session={session}>{children}</SessionProvider>;
+  return (
+    <SessionProvider session={session}>
+      <SessionGuard />
+      {children}
+    </SessionProvider>
+  );
 }

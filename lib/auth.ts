@@ -20,6 +20,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             {
               email: credentials.email,
               password: credentials.password,
+              device_id: credentials.device_id,
+              ...(credentials.device_name
+                ? { device_name: credentials.device_name }
+                : {}),
             },
             {
               headers: {

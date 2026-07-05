@@ -1,6 +1,7 @@
 "use client";
 
 import { publicApiBaseUrl, publicAppKey } from "@/lib/publicEnv";
+import { ifSessionReplaced } from "@/lib/sessionReplaced";
 import { formatQuizTimeLimit } from "@/lib/quizHelpers";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -114,6 +115,8 @@ export default function QuizAttemptForm({
       );
 
       const json = await res.json().catch(() => ({}));
+
+      if (await ifSessionReplaced(res, json)) return;
 
       if (!res.ok) {
         toast.error(json.message || json.error || "Failed to submit quiz");
