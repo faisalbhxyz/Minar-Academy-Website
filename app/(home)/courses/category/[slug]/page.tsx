@@ -1,6 +1,4 @@
 import React from "react";
-import CourseDetails from "@/app/components/courses/CourseDetails";
-import { courses } from "@/lib/constants";
 import axiosInstance from "@/lib/axiosInstance";
 import CoursesMenu from "../../CoursesMenu";
 import { getAllCategories } from "@/app/actions";

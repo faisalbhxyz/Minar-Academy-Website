@@ -30,7 +30,7 @@ export default function ProgramPath({
       <div className="p-5 border rounded-xl sticky top-20">
         <p className="text-xl">{course?.title}</p>
         <p className="text-base font-semibold mt-5 mb-3">
-          কী কী থাকছে এই ক্যারিয়ার পাথে
+          কী কী থাকছে এই কোর্সে
         </p>
         <ul className="space-y-4">
           {course?.overview.map((path: string, idx: number) => (

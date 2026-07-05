@@ -10,8 +10,6 @@ import { MdOutlineCheckCircle } from "react-icons/md";
 import ProgramPath from "./ProgramPath";
 import Blueprint from "./Blueprint";
 import useAppStore from "@/hooks/useAppStore";
-import YtVideoPlay from "../YtVideoPlay";
-import { teachers } from "@/lib/constants";
 import CourseVideoCard from "./CourseVideoCard";
 import LessonVideoCard from "./LessonVideoCard";
 
@@ -26,14 +24,6 @@ export default function CourseDetails({
   if (!course) {
     return <p className="text-red-500">Course not found.</p>;
   }
-  // const instructor = teachers.find(
-  //   (teacher) => teacher.name === course.authorized
-  // );
-  // if (!instructor) {
-  //   return <div>Instructor not found</div>;
-  // }
-  // console.log(instructor.demoVideoId);
-
   return (
     <div className="flex items-start my-10 gap-10">
       <div className="w-full">

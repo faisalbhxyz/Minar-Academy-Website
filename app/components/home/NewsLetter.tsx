@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 
 export default function NewsLetter() {
@@ -20,9 +21,12 @@ export default function NewsLetter() {
           <p className="text-2xl sm:text-4xl leading-snug">
             সেরা শিক্ষকের তৈরি ক্লাস নোট এবং লেকচার সিট প্রয়োজন?
           </p>
-          <button className="bg-primary text-white border border-primary px-6 py-2 rounded-full hover:bg-opacity-90 transition w-max mx-auto md:mx-0">
+          <Link
+            href="/resource"
+            className="bg-primary text-white border border-primary px-6 py-2 rounded-full hover:bg-opacity-90 transition w-max mx-auto md:mx-0"
+          >
             ফ্রি ডাউনলোড করুন
-          </button>
+          </Link>
         </div>
       </div>
     </div>

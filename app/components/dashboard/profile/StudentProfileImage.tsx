@@ -1,5 +1,6 @@
 "use client";
 
+import { compressProfileImage } from "@/lib/compressProfileImage";
 import {
   PROFILE_IMAGE_ACCEPTED_TYPES,
   PROFILE_IMAGE_MAX_BYTES,
@@ -57,7 +58,7 @@ export default function StudentProfileImage({
     if (!file) return;
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      toast.error("শুধু PNG বা JPG/JPEG ফাইল সাপোর্ট করা হয়");
+      toast.error("শুধু JPG, PNG বা WEBP ফাইল সাপোর্ট করা হয়");
       event.target.value = "";
       return;
     }
@@ -82,11 +83,12 @@ export default function StudentProfileImage({
     setUploading(true);
 
     try {
+      const compressedFile = await compressProfileImage(selectedFile);
       const result = await updateStudentProfile(accessToken, {
         first_name: firstName,
         last_name: lastName,
         phone,
-        profile_image: selectedFile,
+        profile_image: compressedFile,
       });
 
       if (result.sessionReplaced) return;
@@ -145,7 +147,7 @@ export default function StudentProfileImage({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/jpg"
+            accept="image/png,image/jpeg,image/jpg,image/webp"
             onChange={handleFileChange}
             className="hidden"
           />
@@ -156,7 +158,7 @@ export default function StudentProfileImage({
             {currentImage ? "প্রোফাইল ছবি" : "প্রোফাইল ছবি যোগ করুন"}
           </p>
           <p className="text-xs text-gray-500">
-            JPG বা PNG — সর্বোচ্চ ২ MB
+            JPG, PNG বা WEBP — সর্বোচ্চ ২ MB
           </p>
           <div className="flex flex-wrap gap-2">
             <button
