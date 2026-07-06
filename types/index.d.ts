@@ -222,7 +222,38 @@ interface QuizQuestion {
 interface StudentQuizDetail extends CourseQuiz {
   attempts_used: number;
   can_retry: boolean;
+  attempt_number?: number;
+  display_mode?: "all" | "single";
+  total_questions?: number;
+  current_question_index?: number;
+  started_at?: string | null;
+  expires_at?: string | null;
+  seconds_remaining?: number | null;
 }
+
+interface QuizQuestionPageResponse {
+  question_index: number;
+  total_questions: number;
+  display_mode: "single";
+  started_at?: string | null;
+  expires_at?: string | null;
+  seconds_remaining?: number | null;
+  id: number;
+  quiz_id: number;
+  title: string;
+  details: string;
+  type: QuizQuestionType;
+  marks: number;
+  options?: QuizQuestionOption[];
+  answer_required: boolean;
+  media: any[];
+  created_at: string;
+  updated_at: string;
+}
+
+type StudentQuizFetchResult =
+  | { ok: true; quiz: StudentQuizDetail }
+  | { ok: false; status: number; message: string };
 
 interface QuizAnswerPayload {
   question_id: number;

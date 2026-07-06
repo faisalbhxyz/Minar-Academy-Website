@@ -1,4 +1,7 @@
-import { getStudentQuiz } from "@/app/actions";
+import {
+  getStudentQuiz,
+  getStudentQuizSubmissions,
+} from "@/app/actions";
 import QuizAttemptForm from "@/app/components/quiz/QuizAttemptForm";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
@@ -14,14 +17,24 @@ export default async function QuizAttemptPage({
   if (!session) redirect("/auth/login");
 
   const { courseSlug, quizId } = await params;
-  const quiz = await getStudentQuiz(courseSlug, Number(quizId), session);
+  const numericQuizId = Number(quizId);
 
-  if (!quiz) {
+  const [quizResult, submissions] = await Promise.all([
+    getStudentQuiz(courseSlug, numericQuizId, session),
+    getStudentQuizSubmissions(session),
+  ]);
+
+  if (!quizResult.ok) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
-        <p className="text-gray-700 mb-4">
-          Quiz not found or you are not enrolled in this course.
+      <div className="rounded-lg border border-gray-200 bg-white p-8 text-center max-w-3xl">
+        <p className="text-gray-700 mb-2 font-medium">
+          {quizResult.status === 403
+            ? "Enrollment required"
+            : quizResult.status === 404
+              ? "Quiz unavailable"
+              : "Unable to load quiz"}
         </p>
+        <p className="text-gray-600 text-sm mb-4">{quizResult.message}</p>
         <Link
           href="/user/dashboard/quizzes"
           className="text-blue-600 hover:underline text-sm"
@@ -31,6 +44,13 @@ export default async function QuizAttemptPage({
       </div>
     );
   }
+
+  const latestSubmission = submissions
+    .filter((submission) => submission.quiz_id === numericQuizId)
+    .sort(
+      (a, b) =>
+        new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
+    )[0];
 
   return (
     <div className="space-y-4 max-w-3xl">
@@ -44,8 +64,9 @@ export default async function QuizAttemptPage({
 
       <QuizAttemptForm
         courseSlug={courseSlug}
-        quiz={quiz}
+        quiz={quizResult.quiz}
         accessToken={session.accessToken as string}
+        latestSubmission={latestSubmission}
       />
     </div>
   );

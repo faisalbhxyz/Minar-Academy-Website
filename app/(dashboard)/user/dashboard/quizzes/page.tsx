@@ -19,6 +19,9 @@ export default async function QuizzesPage() {
   ]);
 
   const quizzes = buildDashboardQuizzes(enrollments, submissions);
+  const quizSlugById = new Map(
+    quizzes.map((item) => [item.quiz.id, item.courseSlug])
+  );
 
   return (
     <div className="space-y-6">
@@ -65,11 +68,26 @@ export default async function QuizzesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {submissions.map((submission) => (
-                  <tr key={submission.id} className="text-gray-800">
-                    <td className="px-4 py-3 font-medium">
-                      {submission.quiz_title}
-                    </td>
+                {submissions.map((submission) => {
+                  const courseSlug = quizSlugById.get(submission.quiz_id);
+                  const href = courseSlug
+                    ? `/user/dashboard/quizzes/${courseSlug}/${submission.quiz_id}`
+                    : null;
+
+                  return (
+                    <tr key={submission.id} className="text-gray-800">
+                      <td className="px-4 py-3 font-medium">
+                        {href ? (
+                          <Link
+                            href={href}
+                            className="text-blue-600 hover:underline"
+                          >
+                            {submission.quiz_title}
+                          </Link>
+                        ) : (
+                          submission.quiz_title
+                        )}
+                      </td>
                     <td className="px-4 py-3">
                       {submission.score}/{submission.max_score} (
                       {submission.percentage}%)
@@ -92,7 +110,8 @@ export default async function QuizzesPage() {
                       )}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

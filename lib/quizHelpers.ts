@@ -48,6 +48,25 @@ export function getQuizPassClasses(passed: boolean): string {
     : "bg-red-100 text-red-800";
 }
 
+export function isSingleQuizDisplay(quiz: StudentQuizDetail): boolean {
+  if (quiz.display_mode === "single") return true;
+  if (quiz.display_mode === "all") return false;
+  return Boolean(quiz.single_quiz_view);
+}
+
+export function getQuizQuestionCount(quiz: StudentQuizDetail): number {
+  if (quiz.total_questions != null && quiz.total_questions > 0) {
+    return quiz.total_questions;
+  }
+  return quiz.questions?.length ?? 0;
+}
+
+export function formatQuizTimer(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
 export function buildDashboardQuizzes(
   enrollments: Enrollment[],
   submissions: QuizSubmissionRecord[]

@@ -1,20 +1,23 @@
 "use client";
 
 import { formatDate } from "@/lib/helpers";
-import {
-  getQuizPassClasses,
-  getQuizStatusClasses,
-  getQuizStatusLabel,
-} from "@/lib/quizHelpers";
+import { getQuizPassClasses } from "@/lib/quizHelpers";
 import { CheckCircle2, XCircle, HelpCircle } from "lucide-react";
+import { LuLoaderCircle } from "react-icons/lu";
 
 interface Props {
   result: QuizSubmissionResult;
   onRetry?: () => void;
   canRetry?: boolean;
+  retrying?: boolean;
 }
 
-export default function QuizResultView({ result, onRetry, canRetry }: Props) {
+export default function QuizResultView({
+  result,
+  onRetry,
+  canRetry,
+  retrying,
+}: Props) {
   const passLabel = result.passed ? "Passed" : "Failed";
 
   return (
@@ -120,8 +123,10 @@ export default function QuizResultView({ result, onRetry, canRetry }: Props) {
           <button
             type="button"
             onClick={onRetry}
-            className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition"
+            disabled={retrying}
+            className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition disabled:opacity-60"
           >
+            {retrying && <LuLoaderCircle className="animate-spin w-4 h-4" />}
             Try again
           </button>
         )}

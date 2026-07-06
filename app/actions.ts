@@ -205,16 +205,28 @@ export const getStudentQuiz = async (
   courseSlug: string,
   quizId: number,
   session: Session
-): Promise<StudentQuizDetail | null> => {
+): Promise<StudentQuizFetchResult> => {
   try {
     const res = await axiosInstance.get(
       `/course/${courseSlug}/quizzes/${quizId}`,
       { headers: studentAuthHeaders(session) }
     );
-    return res.data.data;
-  } catch (error) {
+    return { ok: true, quiz: res.data.data };
+  } catch (error: unknown) {
+    const axiosError = error as {
+      response?: { status?: number; data?: { message?: string; error?: string } };
+    };
+    const status = axiosError.response?.status ?? 500;
+    const message =
+      axiosError.response?.data?.message ||
+      axiosError.response?.data?.error ||
+      (status === 403
+        ? "You must be enrolled in this course to take the quiz."
+        : status === 404
+          ? "Quiz not found or is not published."
+          : "Failed to load quiz.");
     console.error("Failed to fetch quiz:", error);
-    return null;
+    return { ok: false, status, message };
   }
 };
 
