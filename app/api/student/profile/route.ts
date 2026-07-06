@@ -17,27 +17,27 @@ function isProfileImageField(value: FormDataEntryValue | null): value is File {
 
 async function forwardToBackend(
   accessToken: string,
-  init: RequestInit
+  formData: FormData
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
 
   try {
     return await fetch(`${publicApiBaseUrl}/student/update`, {
-      ...init,
+      method: "PUT",
       signal: controller.signal,
       headers: {
         "app-key": publicAppKey!,
         Authorization: `Bearer ${accessToken}`,
-        ...(init.headers ?? {}),
       },
+      body: formData,
     });
   } finally {
     clearTimeout(timeoutId);
   }
 }
 
-export async function PUT(request: NextRequest) {
+async function handleProfileUpdate(request: NextRequest) {
   const session = await auth();
   if (!session?.accessToken) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -70,33 +70,21 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    let res: Response;
+    const formData = isProfileImageField(profileImage)
+      ? await rebuildFormData(incoming)
+      : (() => {
+          const fields = new FormData();
+          fields.append("first_name", firstName.trim());
+          if (typeof lastName === "string") {
+            fields.append("last_name", lastName.trim());
+          }
+          if (typeof phone === "string") {
+            fields.append("phone", phone.trim());
+          }
+          return fields;
+        })();
 
-    if (isProfileImageField(profileImage)) {
-      const formData = await rebuildFormData(incoming);
-      formData.append("_method", "PUT");
-
-      res = await forwardToBackend(session.accessToken, {
-        method: "POST",
-        body: formData,
-      });
-    } else {
-      const formData = new FormData();
-      formData.append("first_name", firstName.trim());
-      if (typeof lastName === "string") {
-        formData.append("last_name", lastName.trim());
-      }
-      if (typeof phone === "string") {
-        formData.append("phone", phone.trim());
-      }
-      formData.append("_method", "PUT");
-
-      res = await forwardToBackend(session.accessToken, {
-        method: "POST",
-        body: formData,
-      });
-    }
-
+    const res = await forwardToBackend(session.accessToken, formData);
     const json = await res.json().catch(() => ({}));
 
     if (!res.ok) {
@@ -130,4 +118,12 @@ export async function PUT(request: NextRequest) {
       { status: 502 }
     );
   }
+}
+
+export async function PUT(request: NextRequest) {
+  return handleProfileUpdate(request);
+}
+
+export async function POST(request: NextRequest) {
+  return handleProfileUpdate(request);
 }

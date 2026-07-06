@@ -58,7 +58,7 @@ export default function StudentProfileImage({
     if (!file) return;
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      toast.error("শুধু JPG, PNG বা WEBP ফাইল সাপোর্ট করা হয়");
+      toast.error("শুধু JPG বা PNG ফাইল সাপোর্ট করা হয়");
       event.target.value = "";
       return;
     }
@@ -147,7 +147,7 @@ export default function StudentProfileImage({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/jpg,image/webp"
+            accept="image/png,image/jpeg,image/jpg"
             onChange={handleFileChange}
             className="hidden"
           />
@@ -158,7 +158,7 @@ export default function StudentProfileImage({
             {currentImage ? "প্রোফাইল ছবি" : "প্রোফাইল ছবি যোগ করুন"}
           </p>
           <p className="text-xs text-gray-500">
-            JPG, PNG বা WEBP — সর্বোচ্চ ২ MB
+            JPG বা PNG — সর্বোচ্চ ২ MB
           </p>
           <div className="flex flex-wrap gap-2">
             <button

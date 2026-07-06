@@ -7,7 +7,6 @@ export const PROFILE_IMAGE_ACCEPTED_TYPES = [
   "image/png",
   "image/jpeg",
   "image/jpg",
-  "image/webp",
 ] as const;
 
 const PROFILE_UPDATE_TIMEOUT_MS = 65_000;
@@ -58,23 +57,8 @@ async function updateViaProxy(formData: FormData): Promise<Response> {
 
 async function updateViaBackend(
   accessToken: string,
-  fields: StudentProfileUpdateFields
+  formData: FormData
 ): Promise<Response> {
-  const formData = buildProfileFormData(fields);
-
-  if (fields.profile_image) {
-    formData.append("_method", "PUT");
-    return fetch(`${publicApiBaseUrl}/student/update`, {
-      method: "POST",
-      headers: {
-        "app-key": publicAppKey!,
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: formData,
-      signal: AbortSignal.timeout(PROFILE_UPDATE_TIMEOUT_MS),
-    });
-  }
-
   return fetch(`${publicApiBaseUrl}/student/update`, {
     method: "PUT",
     headers: {
@@ -94,15 +78,17 @@ export async function updateStudentProfile(
     return { ok: false, error: "Please sign in again" };
   }
 
+  const formData = buildProfileFormData(fields);
+
   let res: Response;
   try {
-    res = await updateViaProxy(buildProfileFormData(fields));
+    res = await updateViaProxy(formData);
 
     if (res.status === 404) {
       if (!publicApiBaseUrl || !publicAppKey) {
         return { ok: false, error: "App configuration is missing" };
       }
-      res = await updateViaBackend(accessToken, fields);
+      res = await updateViaBackend(accessToken, formData);
     }
   } catch (error) {
     if (error instanceof Error && error.name === "TimeoutError") {
