@@ -15,6 +15,7 @@ import {
   Eye,
 } from "lucide-react";
 import Link from "next/link";
+import CourseCertificateCTA from "./CourseCertificateCTA";
 import { CourseViewerProps, Lesson } from "./types";
 import { processCourseDetailsForViewer } from "./utils";
 import LessonVideoPlayer from "./LessonVideoPlayer";
@@ -40,6 +41,7 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({
   assignmentSubmissionStatuses = {},
   quizSubmissionStatuses = {},
   completedQuizIds: initialCompletedQuizIds = [],
+  courseCertificate = null,
 }) => {
   const [completedLessonIds, setCompletedLessonIds] = useState(
     userCompletedLessonIds
@@ -173,7 +175,11 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({
     return (
       <div className="w-full min-h-screen bg-white pt-4 md:p-4 font-inter">
         <h2 className="text-xl font-bold mb-4">{courseDetails.title}</h2>
-        <div className="flex flex-col gap-4">
+        <CourseCertificateCTA
+          accessToken={accessToken}
+          courseCertificate={courseCertificate}
+        />
+        <div className="flex flex-col gap-4 mt-4">
           {chapters.map((chapter, cIndex: number) => (
             <Disclosure
               key={chapter.id}

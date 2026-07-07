@@ -15,6 +15,7 @@ interface VideoWrapperProps {
   assignmentSubmissionStatuses?: AssignmentSubmissionStatusMap;
   quizSubmissionStatuses?: QuizSubmissionStatusMap;
   completedQuizIds?: number[];
+  courseCertificate?: Certificate | null;
 }
 
 export default function VideoWrapper({
@@ -27,6 +28,7 @@ export default function VideoWrapper({
   assignmentSubmissionStatuses,
   quizSubmissionStatuses,
   completedQuizIds,
+  courseCertificate,
 }: VideoWrapperProps) {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
@@ -49,6 +51,7 @@ export default function VideoWrapper({
     assignmentSubmissionStatuses,
     quizSubmissionStatuses,
     completedQuizIds,
+    courseCertificate,
   };
 
   return isMobile ? (

@@ -186,6 +186,7 @@ export type CourseViewerProps = {
   assignmentSubmissionStatuses?: AssignmentSubmissionStatusMap;
   quizSubmissionStatuses?: QuizSubmissionStatusMap;
   completedQuizIds?: number[];
+  courseCertificate?: Certificate | null;
 };
 
 export type ChapterItemProps = {

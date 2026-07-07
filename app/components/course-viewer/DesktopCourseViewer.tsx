@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import LessonVideoPlayer from "./LessonVideoPlayer";
 import { CourseViewerProps, Lesson } from "./types";
 import { processCourseDetailsForViewer } from "./utils";
+import CourseCertificateCTA from "./CourseCertificateCTA";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Download, Eye, ClipboardList } from "lucide-react";
@@ -28,6 +29,7 @@ export default function DesktopCourseViewer({
   assignmentSubmissionStatuses = {},
   quizSubmissionStatuses = {},
   completedQuizIds: initialCompletedQuizIds = [],
+  courseCertificate = null,
 }: CourseViewerProps) {
   const [completedLessonIds, setCompletedLessonIds] = useState(
     userCompletedLessonIds
@@ -238,6 +240,11 @@ export default function DesktopCourseViewer({
               {progress.percentage}% সম্পন্ন
             </span>
           </div>
+
+          <CourseCertificateCTA
+            accessToken={accessToken}
+            courseCertificate={courseCertificate}
+          />
 
           {/* CHAPTERS + LESSONS */}
           <div className="space-y-4">

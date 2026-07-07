@@ -28,7 +28,10 @@ export default async function DashboardPage() {
         completed={certificates.length}
       />
       {certificates.length > 0 && (
-        <DashboardCertificatesSection certificates={certificates} />
+        <DashboardCertificatesSection
+          certificates={certificates}
+          accessToken={session.accessToken}
+        />
       )}
       {enrolledCourses && enrolledCourses.length > 0 && (
         <InProgressCourses courses={enrolledCourses} />

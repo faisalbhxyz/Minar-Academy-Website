@@ -1,4 +1,4 @@
-import { getCourseBySlug, getCourseProgress, getStudentAssignmentSubmissions, getStudentQuizSubmissions } from "@/app/actions";
+import { getCourseBySlug, getCourseCertificate, getCourseProgress, getStudentAssignmentSubmissions, getStudentQuizSubmissions } from "@/app/actions";
 import VideoWrapper from "@/app/components/course-viewer/VideoWrapper";
 import { buildAssignmentStatusMap } from "@/lib/assignmentHelpers";
 import { buildQuizSubmissionStatusMap } from "@/lib/quizHelpers";
@@ -14,9 +14,10 @@ export default async function Page({
   const session = await auth();
   if (!session) redirect("/auth/login");
 
-  const [courseDetails, courseProgress] = await Promise.all([
+  const [courseDetails, courseProgress, courseCertificate] = await Promise.all([
     getCourseBySlug(slug),
     getCourseProgress(slug, session),
+    getCourseCertificate(slug, session),
   ]);
 
   if (!courseDetails) return <div>Course not found.</div>;
@@ -51,6 +52,7 @@ export default async function Page({
       assignmentSubmissionStatuses={assignmentSubmissionStatuses}
       quizSubmissionStatuses={quizSubmissionStatuses}
       completedQuizIds={completedQuizIds}
+      courseCertificate={courseCertificate}
     />
   );
 }

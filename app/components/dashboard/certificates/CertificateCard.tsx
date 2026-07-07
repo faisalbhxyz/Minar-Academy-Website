@@ -1,11 +1,13 @@
-import Link from "next/link";
-import { Award, ChevronRight, Download } from "lucide-react";
+import { Award } from "lucide-react";
 import { formatCertificateDate } from "@/lib/certificateHelpers";
+import CertificateOpenButton from "./CertificateOpenButton";
 
 export default function CertificateCard({
   certificate,
+  accessToken,
 }: {
   certificate: Certificate;
+  accessToken: string;
 }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-lg border border-gray-200 bg-white p-4 hover:border-blue-300 hover:shadow-sm transition">
@@ -27,21 +29,11 @@ export default function CertificateCard({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
-        <Link
-          href={`/user/dashboard/certificates/${certificate.id}`}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-        >
-          <Download className="h-4 w-4" />
-          View & Download
-        </Link>
-        <Link
-          href={`/user/dashboard/certificates/${certificate.id}`}
-          className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 sm:hidden"
-        >
-          Open
-          <ChevronRight className="h-4 w-4" />
-        </Link>
+      <div className="shrink-0">
+        <CertificateOpenButton
+          accessToken={accessToken}
+          certificateId={certificate.id}
+        />
       </div>
     </div>
   );

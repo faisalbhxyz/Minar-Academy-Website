@@ -48,7 +48,11 @@ export default async function CertificatesPage() {
       ) : (
         <div className="grid gap-4">
           {certificates.map((certificate) => (
-            <CertificateCard key={certificate.id} certificate={certificate} />
+            <CertificateCard
+              key={certificate.id}
+              certificate={certificate}
+              accessToken={session.accessToken}
+            />
           ))}
         </div>
       )}

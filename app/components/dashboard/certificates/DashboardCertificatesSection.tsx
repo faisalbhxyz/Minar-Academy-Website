@@ -4,8 +4,10 @@ import CertificateCard from "./CertificateCard";
 
 export default function DashboardCertificatesSection({
   certificates,
+  accessToken,
 }: {
   certificates: Certificate[];
+  accessToken: string;
 }) {
   if (certificates.length === 0) return null;
 
@@ -36,7 +38,11 @@ export default function DashboardCertificatesSection({
 
       <div className="grid gap-3">
         {preview.map((certificate) => (
-          <CertificateCard key={certificate.id} certificate={certificate} />
+          <CertificateCard
+            key={certificate.id}
+            certificate={certificate}
+            accessToken={accessToken}
+          />
         ))}
       </div>
 

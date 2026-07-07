@@ -291,6 +291,24 @@ export const getStudentCertificateById = async (
   }
 };
 
+export const getCourseCertificate = async (
+  courseSlug: string,
+  session: Session
+): Promise<Certificate | null> => {
+  try {
+    const res = await axiosInstance.get(`/course/${courseSlug}/certificate`, {
+      headers: studentAuthHeaders(session),
+    });
+    return res.data.data ?? null;
+  } catch (error: unknown) {
+    const status = (error as { response?: { status?: number } })?.response
+      ?.status;
+    if (status === 404) return null;
+    console.error("Failed to fetch course certificate:", error);
+    return null;
+  }
+};
+
 export const getEnrolledCoursesWithAssignments = async (
   session: Session
 ): Promise<Enrollment[]> => {
