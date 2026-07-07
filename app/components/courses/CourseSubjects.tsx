@@ -22,7 +22,6 @@ export default function CourseSubjects({
   return (
     <div className="mt-10">
       <p className="text-3xl font-semibold text-center">কোর্সের বিষয়বস্তু</p>
-      {/* tabs */}
       <ul className="flex items-center justify-center flex-wrap gap-3 mt-10">
         {[{ id: 1, label: "কোর্স মডিউল" }].map((tab) => (
           <li
@@ -108,34 +107,48 @@ export default function CourseSubjects({
                           </div>
                         </button>
                       ))}
-                      {chapter.assignments?.map((assignemnt, index) => (
-                        <button
-                          key={index}
-                          type="button"
-                          className="w-full flex gap-5 items-center p-1 cursor-pointer"
-                        >
-                          <LuNotepadText size={17} className="text-gray-600" />
-                          <div className="w-full flex items-center justify-between">
-                            <p className="text-base font-medium text-gray-700">
-                              {assignemnt.title}
-                            </p>
+                      {chapter.assignments
+                        ?.filter((assignment) => assignment.is_published)
+                        .map((assignment) => (
+                          <div
+                            key={assignment.id}
+                            className="w-full flex gap-5 items-center p-1 opacity-80"
+                          >
+                            <LuNotepadText
+                              size={17}
+                              className="text-gray-500 shrink-0"
+                            />
+                            <div className="w-full flex items-center justify-between gap-3">
+                              <p className="text-base font-medium text-gray-700">
+                                {assignment.title}
+                              </p>
+                              <p className="text-sm text-gray-500 shrink-0">
+                                এনরোল করার পর
+                              </p>
+                            </div>
                           </div>
-                        </button>
-                      ))}
-                      {chapter.quizzes?.map((quiz, index) => (
-                        <button
-                          key={index}
-                          type="button"
-                          className="w-full flex gap-5 items-center p-1 cursor-pointer"
-                        >
-                          <LuListChecks size={17} className="text-gray-600" />
-                          <div className="w-full flex items-center justify-between">
-                            <p className="text-base font-medium text-gray-700">
-                              {quiz.title}
-                            </p>
+                        ))}
+                      {chapter.quizzes
+                        ?.filter((quiz) => quiz.is_published)
+                        .map((quiz) => (
+                          <div
+                            key={quiz.id}
+                            className="w-full flex gap-5 items-center p-1 opacity-80"
+                          >
+                            <LuListChecks
+                              size={17}
+                              className="text-gray-500 shrink-0"
+                            />
+                            <div className="w-full flex items-center justify-between gap-3">
+                              <p className="text-base font-medium text-gray-700">
+                                {quiz.title}
+                              </p>
+                              <p className="text-sm text-gray-500 shrink-0">
+                                এনরোল করার পর
+                              </p>
+                            </div>
                           </div>
-                        </button>
-                      ))}
+                        ))}
                     </div>
                   </div>
                 </article>

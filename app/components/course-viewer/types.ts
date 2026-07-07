@@ -150,22 +150,42 @@ export type ChapterQuiz = {
   chapterId: number;
 };
 
+export type ChapterAssignment = {
+  id: number;
+  title: string;
+  chapterId: number;
+};
+
 export type Chapter = {
   id: number;
   title: string;
   lessons: Lesson[];
   quizzes: ChapterQuiz[];
+  assignments: ChapterAssignment[];
   totalLessons: number;
   completedLessons: number;
 };
 
+export type AssignmentSubmissionStatusMap = Record<
+  number,
+  AssignmentSubmissionSummary["status"] | "not_submitted"
+>;
+
+export type QuizSubmissionStatusMap = Record<
+  number,
+  QuizSubmissionRecord["status"]
+>;
+
 export type CourseViewerProps = {
-  courseDetails: CourseDetails; // Pass the whole CourseDetails object
-  userCompletedLessonIds: Set<number>; // Set of IDs of lessons completed by the user
+  courseDetails: CourseDetails;
+  userCompletedLessonIds: Set<number>;
   courseSlug: string;
   accessToken: string;
   studentId: string;
   apiProgressPercent?: number | null;
+  assignmentSubmissionStatuses?: AssignmentSubmissionStatusMap;
+  quizSubmissionStatuses?: QuizSubmissionStatusMap;
+  completedQuizIds?: number[];
 };
 
 export type ChapterItemProps = {

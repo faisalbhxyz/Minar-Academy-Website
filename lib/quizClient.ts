@@ -80,6 +80,86 @@ export async function fetchQuizQuestion(
   }
 }
 
+export async function postQuizSkip(
+  courseSlug: string,
+  quizId: number,
+  accessToken: string
+): Promise<
+  | { ok: true; result: QuizSubmissionResult; message: string }
+  | { ok: false; status: number; message: string }
+> {
+  if (!publicApiBaseUrl || !publicAppKey) {
+    return { ok: false, status: 500, message: "App configuration is missing" };
+  }
+
+  try {
+    const res = await fetch(
+      `${publicApiBaseUrl}/course/${courseSlug}/quizzes/${quizId}/skip`,
+      {
+        method: "POST",
+        headers: quizHeaders(accessToken),
+      }
+    );
+    const json = await res.json().catch(() => ({}));
+
+    if (await ifSessionReplaced(res, json)) {
+      return { ok: false, status: 401, message: "Session expired" };
+    }
+
+    if (!res.ok) {
+      return {
+        ok: false,
+        status: res.status,
+        message: json.message || json.error || "Failed to skip quiz",
+      };
+    }
+
+    return {
+      ok: true,
+      result: json.data as QuizSubmissionResult,
+      message: json.message || "Quiz skipped",
+    };
+  } catch {
+    return { ok: false, status: 500, message: "Failed to skip quiz" };
+  }
+}
+
+export async function fetchQuizSubmissionDetail(
+  submissionId: number,
+  accessToken: string
+): Promise<
+  | { ok: true; result: QuizSubmissionResult }
+  | { ok: false; status: number; message: string }
+> {
+  if (!publicApiBaseUrl || !publicAppKey) {
+    return { ok: false, status: 500, message: "App configuration is missing" };
+  }
+
+  try {
+    const res = await fetch(
+      `${publicApiBaseUrl}/student/quiz-submissions/${submissionId}`,
+      { headers: quizHeaders(accessToken), cache: "no-store" }
+    );
+    const json = await res.json().catch(() => ({}));
+
+    if (await ifSessionReplaced(res, json)) {
+      return { ok: false, status: 401, message: "Session expired" };
+    }
+
+    if (!res.ok) {
+      return {
+        ok: false,
+        status: res.status,
+        message: json.message || json.error || "Failed to load submission",
+      };
+    }
+
+    return { ok: true, result: json.data as QuizSubmissionResult };
+  } catch {
+    return { ok: false, status: 500, message: "Failed to load submission" };
+  }
+}
+
 export function quizPageToQuestion(data: QuizQuestionPageResponse): QuizQuestion {
   return {
     id: data.id,

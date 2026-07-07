@@ -201,6 +201,22 @@ export const getStudentAssignmentSubmissions = async (
   }
 };
 
+export const getStudentAssignmentSubmission = async (
+  submissionId: number,
+  session: Session
+): Promise<AssignmentSubmissionRecord | null> => {
+  try {
+    const res = await axiosInstance.get(
+      `/student/assignment-submissions/${submissionId}`,
+      { headers: studentAuthHeaders(session) }
+    );
+    return res.data.data ?? null;
+  } catch (error) {
+    console.error("Failed to fetch assignment submission:", error);
+    return null;
+  }
+};
+
 export const getStudentQuiz = async (
   courseSlug: string,
   quizId: number,

@@ -10,9 +10,9 @@ import {
   ArrowLeftIcon,
   ChevronDown,
   ChevronUp,
+  ClipboardList,
   Download,
   Eye,
-  ListChecks,
 } from "lucide-react";
 import Link from "next/link";
 import { CourseViewerProps, Lesson } from "./types";
@@ -20,6 +20,15 @@ import { processCourseDetailsForViewer } from "./utils";
 import LessonVideoPlayer from "./LessonVideoPlayer";
 import { toast } from "sonner";
 import type { CourseProgressData } from "@/lib/courseProgressApi";
+import { useCourseProgressSync } from "@/hooks/useCourseProgressSync";
+import {
+  getAssignmentStatusClasses,
+  getAssignmentStatusLabel,
+} from "@/lib/assignmentHelpers";
+import {
+  getQuizStatusClasses,
+  getQuizStatusLabel,
+} from "@/lib/quizHelpers";
 
 const MobileCourseViewer: React.FC<CourseViewerProps> = ({
   courseDetails,
@@ -28,9 +37,15 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({
   accessToken,
   studentId,
   apiProgressPercent: initialApiProgressPercent,
+  assignmentSubmissionStatuses = {},
+  quizSubmissionStatuses = {},
+  completedQuizIds: initialCompletedQuizIds = [],
 }) => {
   const [completedLessonIds, setCompletedLessonIds] = useState(
     userCompletedLessonIds
+  );
+  const [completedQuizIds, setCompletedQuizIds] = useState(
+    new Set(initialCompletedQuizIds)
   );
   const [apiProgressPercent, setApiProgressPercent] = useState(
     initialApiProgressPercent ?? null
@@ -58,12 +73,33 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({
       } else {
         setCompletedLessonIds((prev) => new Set([...prev, lessonId]));
       }
+      if (data?.completed_quiz_ids) {
+        setCompletedQuizIds(new Set(data.completed_quiz_ids));
+      }
       if (data?.progress_percent != null) {
         setApiProgressPercent(data.progress_percent);
       }
     },
     []
   );
+
+  const handleProgressUpdate = useCallback((data: CourseProgressData) => {
+    if (data.completed_lesson_ids) {
+      setCompletedLessonIds(new Set(data.completed_lesson_ids));
+    }
+    if (data.completed_quiz_ids) {
+      setCompletedQuizIds(new Set(data.completed_quiz_ids));
+    }
+    if (data.progress_percent != null) {
+      setApiProgressPercent(data.progress_percent);
+    }
+  }, []);
+
+  useCourseProgressSync({
+    courseSlug,
+    accessToken,
+    onProgressUpdate: handleProgressUpdate,
+  });
 
   useEffect(() => {
     if (!activeLesson) return;
@@ -192,16 +228,58 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({
                         </div>
                       );
                     })}
-                    {chapter.quizzes.map((quiz) => (
-                      <Link
-                        key={`quiz-${quiz.id}`}
-                        href={`/user/dashboard/quizzes/${courseDetails.slug}/${quiz.id}`}
-                        className="flex items-center gap-2 p-3 rounded-md mb-2 border bg-purple-50 border-purple-200 text-purple-800"
-                      >
-                        <ListChecks className="w-4 h-4 shrink-0" />
-                        <span className="font-medium text-base">{quiz.title}</span>
-                      </Link>
-                    ))}
+                    {chapter.quizzes.map((quiz) => {
+                      const status = quizSubmissionStatuses[quiz.id];
+                      const isCompleted = completedQuizIds.has(quiz.id);
+
+                      return (
+                        <Link
+                          key={`quiz-${quiz.id}`}
+                          href={`/user/dashboard/quizzes/${courseDetails.slug}/${quiz.id}?returnTo=course`}
+                          className={`flex items-center gap-2 p-3 rounded-md mb-2 border ${
+                            isCompleted
+                              ? "bg-green-50 border-green-200 text-green-800"
+                              : "bg-purple-50 border-purple-200 text-purple-800"
+                          }`}
+                        >
+                          <span>{isCompleted ? "✔️" : "📝"}</span>
+                          <span className="min-w-0 flex-1 font-medium text-base">
+                            {quiz.title}
+                          </span>
+                          {status && (
+                            <span
+                              className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${getQuizStatusClasses(status)}`}
+                            >
+                              {getQuizStatusLabel(status)}
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                    {chapter.assignments.map((assignment) => {
+                      const status =
+                        assignmentSubmissionStatuses[assignment.id] ??
+                        "not_submitted";
+                      return (
+                        <Link
+                          key={`assignment-${assignment.id}`}
+                          href={`/user/dashboard/assignments/${courseDetails.slug}/${assignment.id}`}
+                          className="flex items-center gap-2 p-3 rounded-md mb-2 border bg-amber-50 border-amber-200 text-amber-900"
+                        >
+                          <ClipboardList className="w-4 h-4 shrink-0" />
+                          <span className="min-w-0 flex-1 font-medium text-base">
+                            {assignment.title}
+                          </span>
+                          {status !== "not_submitted" && (
+                            <span
+                              className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${getAssignmentStatusClasses(status)}`}
+                            >
+                              {getAssignmentStatusLabel(status)}
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
                   </DisclosurePanel>
                 </div>
               )}

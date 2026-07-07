@@ -1,5 +1,12 @@
 "use client";
 
+import AssignmentRichTextEditor from "@/app/components/dashboard/assignments/AssignmentRichTextEditor";
+import {
+  formatFileSize,
+  formatMaxFileSize,
+  isAssignmentResponseEmpty,
+  mimeTypesToAccept,
+} from "@/lib/assignmentHelpers";
 import { publicApiBaseUrl, publicAppKey } from "@/lib/publicEnv";
 import { ifSessionReplaced } from "@/lib/sessionReplaced";
 import { useRouter } from "next/navigation";
@@ -12,6 +19,15 @@ interface Props {
   assignmentId: number;
   fileUploadLimit: number;
   accessToken: string;
+  maxFileSizeBytes?: number;
+  allowedMimeTypes?: string[];
+  maxResponseTextLength?: number;
+  initialResponseText?: string;
+  existingFiles?: AssignmentAttachment[];
+  isResubmit?: boolean;
+  submitLabel?: string;
+  onCancel?: () => void;
+  onSuccess?: () => void;
 }
 
 export default function AssignmentSubmitForm({
@@ -19,10 +35,19 @@ export default function AssignmentSubmitForm({
   assignmentId,
   fileUploadLimit,
   accessToken,
+  maxFileSizeBytes = 2 * 1024 * 1024,
+  allowedMimeTypes,
+  maxResponseTextLength = 50000,
+  initialResponseText = "",
+  existingFiles = [],
+  isResubmit = false,
+  submitLabel = "Submit Assignment",
+  onCancel,
+  onSuccess,
 }: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [responseText, setResponseText] = useState("");
+  const [responseText, setResponseText] = useState(initialResponseText);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -34,6 +59,17 @@ export default function AssignmentSubmitForm({
       setSelectedFiles([]);
       return;
     }
+
+    const oversized = files.find((file) => file.size > maxFileSizeBytes);
+    if (oversized) {
+      toast.error(
+        `${oversized.name} exceeds the ${formatMaxFileSize(maxFileSizeBytes)} file size limit`
+      );
+      event.target.value = "";
+      setSelectedFiles([]);
+      return;
+    }
+
     setSelectedFiles(files);
   };
 
@@ -47,13 +83,31 @@ export default function AssignmentSubmitForm({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const trimmedText = responseText.trim();
-    if (!trimmedText && selectedFiles.length === 0) {
+    const hasText = !isAssignmentResponseEmpty(responseText);
+    const hasNewFiles = selectedFiles.length > 0;
+    const hadPriorContent =
+      isResubmit &&
+      (!isAssignmentResponseEmpty(initialResponseText) ||
+        existingFiles.length > 0);
+
+    if (!isResubmit) {
+      if (!hasText && !hasNewFiles) {
+        toast.error("Write a response or upload at least one file");
+        return;
+      }
+    } else if (!hasText && !hasNewFiles && !hadPriorContent) {
       toast.error("Write a response or upload at least one file");
       return;
     }
 
-    if (selectedFiles.length > fileUploadLimit) {
+    if (responseText.length > maxResponseTextLength) {
+      toast.error(
+        `Response text exceeds maximum length of ${maxResponseTextLength} characters`
+      );
+      return;
+    }
+
+    if (hasNewFiles && selectedFiles.length > fileUploadLimit) {
       toast.error(`Maximum ${fileUploadLimit} file(s) allowed`);
       return;
     }
@@ -67,8 +121,8 @@ export default function AssignmentSubmitForm({
 
     try {
       const formData = new FormData();
-      if (trimmedText) {
-        formData.append("response_text", trimmedText);
+      if (hasText) {
+        formData.append("response_text", responseText);
       }
       for (const file of selectedFiles) {
         formData.append("files", file);
@@ -92,12 +146,13 @@ export default function AssignmentSubmitForm({
 
       if (!res.ok) {
         toast.error(
-          json.message || json.error || "Failed to submit assignment"
+          json.error || json.message || "Failed to submit assignment"
         );
         return;
       }
 
       toast.success(json.message || "Assignment submitted successfully");
+      onSuccess?.();
       router.refresh();
     } catch {
       toast.error("Something went wrong. Please try again.");
@@ -107,59 +162,75 @@ export default function AssignmentSubmitForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label
-          htmlFor="response_text"
-          className="block text-sm font-medium text-gray-700 mb-2"
-        >
-          Your answer
-        </label>
-        <textarea
-          id="response_text"
-          value={responseText}
-          onChange={(event) => setResponseText(event.target.value)}
-          rows={8}
-          placeholder="Write your assignment response here..."
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <p className="mt-1 text-xs text-gray-500">
-          You can submit text, files, or both.
-        </p>
+        <h3 className="text-base font-semibold text-gray-900">
+          Assignment Submission
+        </h3>
+        <p className="mt-1 text-sm text-gray-500">Assignment answer form</p>
       </div>
 
       <div>
+        <label className="sr-only">Your answer</label>
+        <AssignmentRichTextEditor
+          value={responseText}
+          onChange={setResponseText}
+        />
+      </div>
+
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <label
           htmlFor="assignment_files"
-          className="block text-sm font-medium text-gray-700 mb-2"
+          className="block text-sm font-medium text-gray-800"
         >
-          Upload files (max {fileUploadLimit})
+          Attach assignment files (Max: {fileUploadLimit}{" "}
+          {fileUploadLimit === 1 ? "file" : "files"})
         </label>
-        <input
-          ref={fileInputRef}
-          id="assignment_files"
-          type="file"
-          multiple={fileUploadLimit > 1}
-          accept="image/*,.pdf,.doc,.docx,.zip,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip"
-          onChange={handleFileChange}
-          className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-        />
-        <p className="mt-1 text-xs text-gray-500">
-          Supported: images, PDF, DOC/DOCX, ZIP
-        </p>
+        <div className="mt-3">
+          <input
+            ref={fileInputRef}
+            id="assignment_files"
+            type="file"
+            multiple={fileUploadLimit > 1}
+            accept={mimeTypesToAccept(allowedMimeTypes)}
+            onChange={handleFileChange}
+            className="block w-full text-sm text-gray-600 file:mr-4 file:rounded-md file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700"
+          />
+        </div>
+        <div className="mt-3 space-y-1 text-xs text-gray-500">
+          <p>
+            File Support: Any standard Image, Document, Presentation, Sheet, PDF
+            or Text file is allowed
+          </p>
+          <p>Total File Size: Max {formatMaxFileSize(maxFileSizeBytes)} per file</p>
+        </div>
+
+        {isResubmit && existingFiles.length > 0 && selectedFiles.length === 0 && (
+          <ul className="mt-4 space-y-2">
+            <p className="text-xs font-medium text-gray-600">Current files:</p>
+            {existingFiles.map((file) => (
+              <li
+                key={file.id ?? file.url}
+                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700"
+              >
+                {file.file_name} ({formatFileSize(file.size)})
+              </li>
+            ))}
+          </ul>
+        )}
 
         {selectedFiles.length > 0 && (
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-4 space-y-2">
             {selectedFiles.map((file, index) => (
               <li
                 key={`${file.name}-${index}`}
-                className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
               >
                 <span className="truncate">{file.name}</span>
                 <button
                   type="button"
                   onClick={() => removeFile(index)}
-                  className="text-red-600 hover:text-red-700 shrink-0"
+                  className="shrink-0 text-red-600 hover:text-red-700"
                 >
                   Remove
                 </button>
@@ -169,14 +240,26 @@ export default function AssignmentSubmitForm({
         )}
       </div>
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition"
-      >
-        {submitting && <LuLoaderCircle className="animate-spin" />}
-        {submitting ? "Submitting..." : "Submit assignment"}
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {submitting && <LuLoaderCircle className="animate-spin" />}
+          {submitting ? "Submitting..." : submitLabel}
+        </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={submitting}
+            className="rounded-md border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
     </form>
   );
 }

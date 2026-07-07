@@ -12,6 +12,7 @@ export interface CourseProgressData {
   count_quizzes: boolean;
   count_assignments: boolean;
   completed_lesson_ids: number[];
+  completed_quiz_ids?: number[];
 }
 
 export interface LessonVideoProgressData {
@@ -212,4 +213,61 @@ export async function postLessonComplete(
 
   const json = await res.json().catch(() => null);
   return json?.data ?? null;
+}
+
+export const COURSE_PROGRESS_UPDATED_EVENT = "course-progress-updated";
+
+export function broadcastCourseProgressUpdate(
+  courseSlug: string,
+  data: CourseProgressData
+): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    sessionStorage.setItem(
+      `course-progress:${courseSlug}`,
+      JSON.stringify(data)
+    );
+  } catch {
+    // Ignore quota / private mode errors.
+  }
+
+  window.dispatchEvent(
+    new CustomEvent(COURSE_PROGRESS_UPDATED_EVENT, {
+      detail: { courseSlug, data },
+    })
+  );
+}
+
+export async function getCourseProgressClient(
+  courseSlug: string,
+  accessToken: string
+): Promise<CourseProgressData | null> {
+  const apiBase = publicApiBaseUrl;
+  if (!apiBase) return null;
+
+  try {
+    const res = await fetch(`${apiBase}/course/${courseSlug}/progress`, {
+      headers: studentHeaders(accessToken),
+      cache: "no-store",
+    });
+
+    if (!res.ok) return null;
+
+    const json = await res.json().catch(() => null);
+    return json?.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function syncCourseProgressAfterQuiz(
+  courseSlug: string,
+  accessToken: string
+): Promise<CourseProgressData | null> {
+  const progress = await getCourseProgressClient(courseSlug, accessToken);
+  if (progress) {
+    broadcastCourseProgressUpdate(courseSlug, progress);
+  }
+  return progress;
 }

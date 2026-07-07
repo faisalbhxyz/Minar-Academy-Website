@@ -65,6 +65,7 @@ export default async function QuizzesPage() {
                   <th className="px-4 py-3 font-medium">Score</th>
                   <th className="px-4 py-3 font-medium">Result</th>
                   <th className="px-4 py-3 font-medium">Date</th>
+                  <th className="px-4 py-3 font-medium">Details</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -108,6 +109,18 @@ export default async function QuizzesPage() {
                         "en-GB",
                         { day: "2-digit", month: "short", year: "numeric" }
                       )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={
+                          courseSlug
+                            ? `/user/dashboard/quizzes/submissions/${submission.id}?courseSlug=${courseSlug}`
+                            : `/user/dashboard/quizzes/submissions/${submission.id}`
+                        }
+                        className="inline-flex rounded-md border border-blue-600 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 transition"
+                      >
+                        Details
+                      </Link>
                     </td>
                   </tr>
                   );

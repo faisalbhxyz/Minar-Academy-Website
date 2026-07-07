@@ -126,11 +126,15 @@ interface AssignmentSubmissionSummary {
   passed: boolean;
   status: "pending_review" | "graded" | "submitted";
   submitted_at: string;
+  response_text?: string;
+  files?: AssignmentAttachment[];
 }
 
 interface StudentAssignmentDetail extends CourseAssignment {
   has_submitted: boolean;
   can_submit: boolean;
+  can_edit: boolean;
+  started_at?: string | null;
   submission: AssignmentSubmissionSummary | null;
 }
 
@@ -173,6 +177,11 @@ interface CourseAssignment {
   time_limit: number;
   time_limit_option: "minutes" | "hours" | "days" | "weeks" | "months";
   file_upload_limit: number;
+  deadline_at?: string | null;
+  seconds_remaining?: number | null;
+  max_file_size_bytes?: number;
+  allowed_mime_types?: string[];
+  max_response_text_length?: number;
   created_at: string;
   updated_at: string;
 }
@@ -197,7 +206,13 @@ interface CourseQuiz {
   questions: QuizQuestion[];
 }
 
-type QuizQuestionType = "single_choice" | "multiple_choice" | "true_false";
+type QuizQuestionType =
+  | "single_choice"
+  | "multiple_choice"
+  | "true_false"
+  | "short_answer"
+  | "fill_blank"
+  | "open_ended";
 
 interface QuizQuestionOption {
   id: string;
@@ -283,6 +298,15 @@ interface QuizSubmissionResult {
   submitted_at: string;
   reveal_answers: boolean;
   answers: QuizSubmissionAnswer[];
+  total_questions?: number;
+  correct_count?: number;
+  incorrect_count?: number;
+  unanswered_count?: number;
+  pass_marks?: number;
+  minimum_pass_percentage?: number;
+  quiz_time_seconds?: number;
+  attempt_time_seconds?: number;
+  instructor_feedback?: string | null;
 }
 
 interface QuizSubmissionRecord {
@@ -407,6 +431,7 @@ interface CourseProgressData {
   count_quizzes: boolean;
   count_assignments: boolean;
   completed_lesson_ids: number[];
+  completed_quiz_ids?: number[];
 }
 
 interface Banner {

@@ -167,6 +167,14 @@ export function mapCourseChapterToChapter(
           title: q.title,
           chapterId: chapterData.id,
         })) ?? [],
+    assignments:
+      chapterData.assignments
+        ?.filter((a) => a.is_published)
+        .map((a) => ({
+          id: a.id,
+          title: a.title,
+          chapterId: chapterData.id,
+        })) ?? [],
     totalLessons: totalLessons,
     completedLessons: completedLessons,
   };

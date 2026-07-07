@@ -3,23 +3,27 @@
 import {
   fetchQuizQuestion,
   fetchStudentQuiz,
+  postQuizSkip,
   quizPageToQuestion,
 } from "@/lib/quizClient";
 import { publicApiBaseUrl, publicAppKey } from "@/lib/publicEnv";
 import {
-  formatQuizTimeLimit,
-  formatQuizTimer,
   getQuizQuestionCount,
   isSingleQuizDisplay,
+  quizTimeLimitToSeconds,
+  formatQuizAttemptsAllowed,
 } from "@/lib/quizHelpers";
+import { syncCourseProgressAfterQuiz } from "@/lib/courseProgressApi";
 import { ifSessionReplaced } from "@/lib/sessionReplaced";
+import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { LuLoaderCircle } from "react-icons/lu";
-import { Clock, ListChecks } from "lucide-react";
+import QuizIntroCard from "./QuizIntroCard";
 import QuizQuestionField from "./QuizQuestionField";
 import QuizResultView from "./QuizResultView";
+import QuizTimerRing from "./QuizTimerRing";
 
 type AnswerMap = Record<number, string | boolean | string[]>;
 type QuestionCache = Record<number, QuizQuestion>;
@@ -29,6 +33,7 @@ interface Props {
   quiz: StudentQuizDetail;
   accessToken: string;
   latestSubmission?: QuizSubmissionRecord;
+  returnTo?: "course" | "quizzes";
 }
 
 export default function QuizAttemptForm({
@@ -36,6 +41,7 @@ export default function QuizAttemptForm({
   quiz: initialQuiz,
   accessToken,
   latestSubmission,
+  returnTo = "quizzes",
 }: Props) {
   const router = useRouter();
   const [quiz, setQuiz] = useState(initialQuiz);
@@ -50,8 +56,10 @@ export default function QuizAttemptForm({
   const [submitting, setSubmitting] = useState(false);
   const [loadingQuestion, setLoadingQuestion] = useState(false);
   const [refreshingQuiz, setRefreshingQuiz] = useState(false);
+  const [skippingQuiz, setSkippingQuiz] = useState(false);
   const [result, setResult] = useState<QuizSubmissionResult | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+  const [totalTimeSeconds, setTotalTimeSeconds] = useState(0);
   const submittingRef = useRef(false);
   const questionCacheRef = useRef<QuestionCache>(seedQuestionCache(initialQuiz));
 
@@ -67,8 +75,21 @@ export default function QuizAttemptForm({
     questionCacheRef.current = cache;
     setQuestionCache(cache);
     setCurrentIndex(nextQuiz.current_question_index ?? 0);
-    setSecondsLeft(
-      nextQuiz.seconds_remaining != null ? nextQuiz.seconds_remaining : null
+
+    const limitSeconds = quizTimeLimitToSeconds(
+      nextQuiz.time_limit,
+      nextQuiz.time_limit_option
+    );
+    const remaining =
+      nextQuiz.seconds_remaining != null ? nextQuiz.seconds_remaining : null;
+
+    setSecondsLeft(remaining);
+    setTotalTimeSeconds(
+      remaining != null && limitSeconds > 0
+        ? Math.max(remaining, limitSeconds)
+        : limitSeconds > 0
+          ? limitSeconds
+          : remaining ?? 0
     );
   }, []);
 
@@ -122,11 +143,35 @@ export default function QuizAttemptForm({
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
+  const validateCurrentQuestion = (question: QuizQuestion): boolean => {
+    if (!question.answer_required) return true;
+
+    const value = answers[question.id];
+    if (value === undefined || value === null) {
+      toast.error(`Please answer: ${question.title}`);
+      return false;
+    }
+    if (typeof value === "string" && value.trim().length === 0) {
+      toast.error(`Please answer: ${question.title}`);
+      return false;
+    }
+    if (Array.isArray(value) && value.length === 0) {
+      toast.error(`Please select at least one option for: ${question.title}`);
+      return false;
+    }
+    return true;
+  };
+
   const validateAnswers = (): boolean => {
-    const toValidate = allQuestions.length > 0 ? allQuestions : quiz.questions ?? [];
+    const toValidate =
+      allQuestions.length > 0 ? allQuestions : (quiz.questions ?? []);
     for (const question of toValidate.filter((q) => q.answer_required)) {
       const value = answers[question.id];
       if (value === undefined || value === null) {
+        toast.error(`Please answer: ${question.title}`);
+        return false;
+      }
+      if (typeof value === "string" && value.trim().length === 0) {
         toast.error(`Please answer: ${question.title}`);
         return false;
       }
@@ -138,6 +183,30 @@ export default function QuizAttemptForm({
     return true;
   };
 
+  const buildSubmitPayload = (): QuizAnswerPayload[] => {
+    const knownQuestionIds = new Set(
+      (allQuestions.length > 0 ? allQuestions : (quiz.questions ?? [])).map(
+        (question) => question.id
+      )
+    );
+
+    return Object.entries(answers)
+      .filter(([questionId, value]) => {
+        if (!knownQuestionIds.has(Number(questionId))) return false;
+        if (value === undefined || value === null) return false;
+        if (typeof value === "string") return value.trim().length > 0;
+        if (Array.isArray(value)) return value.length > 0;
+        return true;
+      })
+      .map(([questionId, value]) => ({
+        question_id: Number(questionId),
+        value:
+          typeof value === "string"
+            ? value.trim()
+            : (value as string | boolean | string[]),
+      }));
+  };
+
   const handleSubmit = async (autoSubmit = false) => {
     if (submittingRef.current) return;
     if (!autoSubmit && !validateAnswers()) return;
@@ -147,15 +216,7 @@ export default function QuizAttemptForm({
       return;
     }
 
-    const knownQuestions =
-      allQuestions.length > 0 ? allQuestions : (quiz.questions ?? []);
-
-    const payload: QuizAnswerPayload[] = knownQuestions
-      .filter((q) => answers[q.id] !== undefined)
-      .map((q) => ({
-        question_id: q.id,
-        value: answers[q.id],
-      }));
+    const payload = buildSubmitPayload();
 
     if (payload.length === 0 && !autoSubmit) {
       toast.error("Please answer at least one question");
@@ -199,6 +260,7 @@ export default function QuizAttemptForm({
       setResult(json.data);
       setPhase("result");
       toast.success(json.message || "Quiz submitted successfully");
+      void syncCourseProgressAfterQuiz(courseSlug, accessToken);
       router.refresh();
     } catch {
       toast.error("Something went wrong. Please try again.");
@@ -229,7 +291,6 @@ export default function QuizAttemptForm({
     }, 1000);
 
     return () => clearInterval(interval);
-    // secondsLeft intentionally omitted — timer should not restart on each tick
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, handleTimeUp]);
 
@@ -279,106 +340,117 @@ export default function QuizAttemptForm({
     }
   };
 
+  const handleSubmitAndNext = async () => {
+    if (singleView) {
+      const question = questionCache[currentIndex];
+      if (question && !validateCurrentQuestion(question)) return;
+
+      if (currentIndex < totalQuestions - 1) {
+        await loadQuestionAtIndex(currentIndex + 1);
+        return;
+      }
+    }
+
+    await handleSubmit();
+  };
+
+  const handleSkipQuestion = async () => {
+    if (singleView && currentIndex < totalQuestions - 1) {
+      await loadQuestionAtIndex(currentIndex + 1);
+      return;
+    }
+
+    await handleSubmit(true);
+  };
+
+  const handleSkipQuiz = async () => {
+    if (skippingQuiz) return;
+
+    setSkippingQuiz(true);
+    try {
+      const res = await postQuizSkip(courseSlug, quiz.id, accessToken);
+      if (!res.ok) {
+        toast.error(res.message);
+        if (res.status === 400 || res.status === 403) {
+          router.refresh();
+        }
+        return;
+      }
+
+      await syncCourseProgressAfterQuiz(courseSlug, accessToken);
+      toast.success(res.message);
+
+      if (returnTo === "course") {
+        router.push(`/user/course/${courseSlug}`);
+        router.refresh();
+        return;
+      }
+
+      setResult(res.result);
+      setPhase("result");
+      router.refresh();
+    } finally {
+      setSkippingQuiz(false);
+    }
+  };
+
   if (phase === "result" && result) {
     return (
       <QuizResultView
         result={result}
+        quiz={quiz}
+        accessToken={accessToken}
         canRetry={quiz.can_retry}
         onRetry={handleRetry}
         retrying={refreshingQuiz}
+        courseSlug={courseSlug}
+        returnTo={returnTo}
       />
     );
   }
 
   if (phase === "intro") {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-6 space-y-5">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{quiz.title}</h1>
-          {quiz.instructions && (
-            <div
-              className="mt-3 text-gray-600 text-sm prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: quiz.instructions }}
-            />
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-          <span className="inline-flex items-center gap-1.5">
-            <ListChecks className="w-4 h-4" />
-            {totalQuestions} question{totalQuestions === 1 ? "" : "s"}
-          </span>
-          {quiz.time_limit > 0 && (
-            <span className="inline-flex items-center gap-1.5">
-              <Clock className="w-4 h-4" />
-              {formatQuizTimeLimit(quiz.time_limit, quiz.time_limit_option)}
-            </span>
-          )}
-          <span>Pass mark: {quiz.minimum_pass_percentage}%</span>
-          {quiz.attempts_used > 0 && (
-            <span>Attempts used: {quiz.attempts_used}</span>
-          )}
-          {quiz.attempt_number != null && quiz.attempt_number > 0 && (
-            <span>Current attempt: {quiz.attempt_number}</span>
-          )}
-        </div>
-
-        {latestSubmission && !quiz.can_retry && (
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm space-y-2">
-            <p className="font-medium text-gray-900">Your latest result</p>
-            <p className="text-gray-700">
-              Score: {latestSubmission.score}/{latestSubmission.max_score} (
-              {latestSubmission.percentage}%) —{" "}
-              {latestSubmission.passed ? "Passed" : "Failed"}
-            </p>
-            {latestSubmission.status === "pending_review" && (
-              <p className="text-amber-700">Some answers are under review.</p>
-            )}
-          </div>
-        )}
-
-        {!quiz.can_retry && quiz.attempts_used > 0 ? (
-          <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
-            Maximum attempts reached. You cannot retake this quiz.
-          </p>
-        ) : (
-          <button
-            type="button"
-            disabled={refreshingQuiz}
-            onClick={() => void handleStartAttempt()}
-            className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition disabled:opacity-60"
-          >
-            {refreshingQuiz && <LuLoaderCircle className="animate-spin" />}
-            {quiz.attempts_used > 0 ? "Retake quiz" : "Start quiz"}
-          </button>
-        )}
-      </div>
+      <QuizIntroCard
+        quiz={quiz}
+        totalQuestions={totalQuestions}
+        latestSubmission={latestSubmission}
+        onStart={() => void handleStartAttempt()}
+        onSkip={() => void handleSkipQuiz()}
+        starting={refreshingQuiz}
+        skipping={skippingQuiz}
+      />
     );
   }
 
   const activeQuestion = singleView ? questionCache[currentIndex] : undefined;
+  const isLastQuestion = singleView && currentIndex >= totalQuestions - 1;
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3">
-        <div>
-          <h2 className="font-semibold text-gray-900">{quiz.title}</h2>
+    <div className="rounded-xl border border-gray-200 bg-white p-5 md:p-6 space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-600">
           {singleView && (
-            <p className="text-sm text-gray-500">
-              Question {currentIndex + 1} of {totalQuestions}
-            </p>
+            <span>
+              Questions No:{" "}
+              <span className="font-medium text-gray-900">
+                {currentIndex + 1}/{totalQuestions}
+              </span>
+            </span>
           )}
+          <span>
+            Attempts Allowed:{" "}
+            <span className="font-medium text-gray-900">
+              {formatQuizAttemptsAllowed(quiz)}
+            </span>
+          </span>
         </div>
+
         {secondsLeft !== null && (
-          <div
-            className={`text-sm font-mono font-semibold px-3 py-1 rounded-lg ${
-              secondsLeft <= 60
-                ? "bg-red-100 text-red-700"
-                : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            {formatQuizTimer(secondsLeft)}
-          </div>
+          <QuizTimerRing
+            secondsLeft={secondsLeft}
+            totalSeconds={totalTimeSeconds}
+          />
         )}
       </div>
 
@@ -418,48 +490,47 @@ export default function QuizAttemptForm({
         )}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
         {singleView ? (
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={currentIndex === 0 || loadingQuestion}
-              onClick={() => void loadQuestionAtIndex(currentIndex - 1)}
-              className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-50"
-            >
-              Previous
-            </button>
-            {currentIndex < totalQuestions - 1 ? (
+          <>
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                disabled={loadingQuestion}
-                onClick={() => void loadQuestionAtIndex(currentIndex + 1)}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-60"
+                disabled={currentIndex === 0 || loadingQuestion || submitting}
+                onClick={() => void loadQuestionAtIndex(currentIndex - 1)}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 disabled:opacity-50 transition"
               >
-                {loadingQuestion && <LuLoaderCircle className="animate-spin" />}
-                Next
+                <ArrowLeft className="w-4 h-4" />
+                Back
               </button>
-            ) : (
               <button
                 type="button"
                 disabled={submitting || loadingQuestion}
-                onClick={() => handleSubmit()}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60"
+                onClick={() => void handleSubmitAndNext()}
+                className="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-60 transition"
               >
-                {submitting && <LuLoaderCircle className="animate-spin" />}
-                Submit quiz
+                {submitting && <LuLoaderCircle className="animate-spin w-4 h-4" />}
+                {isLastQuestion ? "Submit Quiz" : "Submit & Next"}
               </button>
-            )}
-          </div>
+            </div>
+            <button
+              type="button"
+              disabled={submitting || loadingQuestion}
+              onClick={() => void handleSkipQuestion()}
+              className="text-sm text-gray-500 hover:text-gray-800 disabled:opacity-50 transition"
+            >
+              Skip
+            </button>
+          </>
         ) : (
           <button
             type="button"
             disabled={submitting}
-            onClick={() => handleSubmit()}
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60"
+            onClick={() => void handleSubmit()}
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-60 transition"
           >
-            {submitting && <LuLoaderCircle className="animate-spin" />}
-            {submitting ? "Submitting..." : "Submit quiz"}
+            {submitting && <LuLoaderCircle className="animate-spin w-4 h-4" />}
+            {submitting ? "Submitting..." : "Submit Quiz"}
           </button>
         )}
       </div>

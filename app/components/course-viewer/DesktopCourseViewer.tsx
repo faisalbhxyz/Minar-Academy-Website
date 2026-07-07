@@ -6,8 +6,17 @@ import { CourseViewerProps, Lesson } from "./types";
 import { processCourseDetailsForViewer } from "./utils";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Download, Eye, ListChecks } from "lucide-react";
+import { Download, Eye, ClipboardList } from "lucide-react";
+import {
+  getAssignmentStatusClasses,
+  getAssignmentStatusLabel,
+} from "@/lib/assignmentHelpers";
 import type { CourseProgressData } from "@/lib/courseProgressApi";
+import { useCourseProgressSync } from "@/hooks/useCourseProgressSync";
+import {
+  getQuizStatusClasses,
+  getQuizStatusLabel,
+} from "@/lib/quizHelpers";
 
 export default function DesktopCourseViewer({
   courseDetails,
@@ -16,9 +25,15 @@ export default function DesktopCourseViewer({
   accessToken,
   studentId,
   apiProgressPercent: initialApiProgressPercent,
+  assignmentSubmissionStatuses = {},
+  quizSubmissionStatuses = {},
+  completedQuizIds: initialCompletedQuizIds = [],
 }: CourseViewerProps) {
   const [completedLessonIds, setCompletedLessonIds] = useState(
     userCompletedLessonIds
+  );
+  const [completedQuizIds, setCompletedQuizIds] = useState(
+    new Set(initialCompletedQuizIds)
   );
   const [apiProgressPercent, setApiProgressPercent] = useState(
     initialApiProgressPercent ?? null
@@ -59,12 +74,33 @@ export default function DesktopCourseViewer({
       } else {
         setCompletedLessonIds((prev) => new Set([...prev, lessonId]));
       }
+      if (data?.completed_quiz_ids) {
+        setCompletedQuizIds(new Set(data.completed_quiz_ids));
+      }
       if (data?.progress_percent != null) {
         setApiProgressPercent(data.progress_percent);
       }
     },
     []
   );
+
+  const handleProgressUpdate = useCallback((data: CourseProgressData) => {
+    if (data.completed_lesson_ids) {
+      setCompletedLessonIds(new Set(data.completed_lesson_ids));
+    }
+    if (data.completed_quiz_ids) {
+      setCompletedQuizIds(new Set(data.completed_quiz_ids));
+    }
+    if (data.progress_percent != null) {
+      setApiProgressPercent(data.progress_percent);
+    }
+  }, []);
+
+  useCourseProgressSync({
+    courseSlug,
+    accessToken,
+    onProgressUpdate: handleProgressUpdate,
+  });
 
   const handleDownloadLessonResource = async (resource: {
     file_path: string;
@@ -227,16 +263,56 @@ export default function DesktopCourseViewer({
                       </span>
                     </div>
                   ))}
-                  {chapter.quizzes.map((quiz) => (
-                    <Link
-                      key={`quiz-${quiz.id}`}
-                      href={`/user/dashboard/quizzes/${courseDetails.slug}/${quiz.id}`}
-                      className="flex items-center gap-2 p-2 rounded transition hover:bg-purple-50 text-purple-700"
-                    >
-                      <ListChecks className="w-4 h-4 shrink-0" />
-                      <span className="text-sm font-medium">{quiz.title}</span>
-                    </Link>
-                  ))}
+                  {chapter.quizzes.map((quiz) => {
+                    const status = quizSubmissionStatuses[quiz.id];
+                    const isCompleted = completedQuizIds.has(quiz.id);
+
+                    return (
+                      <Link
+                        key={`quiz-${quiz.id}`}
+                        href={`/user/dashboard/quizzes/${courseDetails.slug}/${quiz.id}?returnTo=course`}
+                        className={`flex items-center gap-2 p-2 rounded transition hover:bg-purple-50 ${
+                          isCompleted ? "text-green-700" : "text-purple-700"
+                        }`}
+                      >
+                        <span>{isCompleted ? "✔️" : "📝"}</span>
+                        <span className="min-w-0 flex-1 text-sm font-medium">
+                          {quiz.title}
+                        </span>
+                        {status && (
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${getQuizStatusClasses(status)}`}
+                          >
+                            {getQuizStatusLabel(status)}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                  {chapter.assignments.map((assignment) => {
+                    const status =
+                      assignmentSubmissionStatuses[assignment.id] ??
+                      "not_submitted";
+                    return (
+                      <Link
+                        key={`assignment-${assignment.id}`}
+                        href={`/user/dashboard/assignments/${courseDetails.slug}/${assignment.id}`}
+                        className="flex items-center gap-2 p-2 rounded transition hover:bg-amber-50 text-amber-800"
+                      >
+                        <ClipboardList className="w-4 h-4 shrink-0" />
+                        <span className="min-w-0 flex-1 text-sm font-medium">
+                          {assignment.title}
+                        </span>
+                        {status !== "not_submitted" && (
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${getAssignmentStatusClasses(status)}`}
+                          >
+                            {getAssignmentStatusLabel(status)}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             ))}

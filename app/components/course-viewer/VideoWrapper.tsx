@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import DesktopCourseViewer from "./DesktopCourseViewer";
 import MobileCourseViewer from "./MobileCourseViewer";
-import { CourseDetails } from "./types";
+import { CourseDetails, AssignmentSubmissionStatusMap, QuizSubmissionStatusMap } from "./types";
 
 interface VideoWrapperProps {
   courseDetails: CourseDetails;
@@ -12,6 +12,9 @@ interface VideoWrapperProps {
   accessToken: string;
   studentId: string;
   apiProgressPercent?: number | null;
+  assignmentSubmissionStatuses?: AssignmentSubmissionStatusMap;
+  quizSubmissionStatuses?: QuizSubmissionStatusMap;
+  completedQuizIds?: number[];
 }
 
 export default function VideoWrapper({
@@ -21,6 +24,9 @@ export default function VideoWrapper({
   accessToken,
   studentId,
   apiProgressPercent,
+  assignmentSubmissionStatuses,
+  quizSubmissionStatuses,
+  completedQuizIds,
 }: VideoWrapperProps) {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
@@ -40,6 +46,9 @@ export default function VideoWrapper({
     accessToken,
     studentId,
     apiProgressPercent,
+    assignmentSubmissionStatuses,
+    quizSubmissionStatuses,
+    completedQuizIds,
   };
 
   return isMobile ? (

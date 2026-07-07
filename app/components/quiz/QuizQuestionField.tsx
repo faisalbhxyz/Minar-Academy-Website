@@ -16,19 +16,13 @@ export default function QuizQuestionField({
   questionNumber,
 }: Props) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 md:p-5">
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <h3 className="text-base font-semibold text-gray-900">
-          <span className="text-blue-600 mr-2">Q{questionNumber}.</span>
-          {question.title}
-        </h3>
-        <span className="shrink-0 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
-          {question.marks} mark{question.marks === 1 ? "" : "s"}
-        </span>
-      </div>
+    <div className="space-y-4">
+      <h3 className="text-lg font-bold text-gray-900">
+        {questionNumber}. {question.title}
+      </h3>
 
       {question.details && (
-        <p className="text-sm text-gray-600 mb-4">{question.details}</p>
+        <p className="text-sm text-gray-600">{question.details}</p>
       )}
 
       {renderInput(question.type, question, value, onChange)}
@@ -45,43 +39,46 @@ function renderInput(
   switch (type) {
     case "single_choice":
       return (
-        <div className="space-y-2">
-          {(question.options ?? []).map((option) => (
-            <label
-              key={option.id}
-              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition ${
-                value === option.id
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 hover:border-gray-300"
-              }`}
-            >
-              <input
-                type="radio"
-                name={`question-${question.id}`}
-                value={option.id}
-                checked={value === option.id}
-                onChange={() => onChange(option.id)}
-                className="text-blue-600"
-              />
-              <span className="text-sm text-gray-800">{option.text}</span>
-            </label>
-          ))}
+        <div className="space-y-3">
+          {(question.options ?? []).map((option) => {
+            const selected = value === option.id;
+            return (
+              <label
+                key={option.id}
+                className={`flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition ${
+                  selected
+                    ? "border-blue-500 bg-blue-50/50"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name={`question-${question.id}`}
+                  value={option.id}
+                  checked={selected}
+                  onChange={() => onChange(option.id)}
+                  className="h-4 w-4 text-blue-600 shrink-0"
+                />
+                <span className="text-sm text-gray-800">{option.text}</span>
+              </label>
+            );
+          })}
         </div>
       );
 
     case "multiple_choice": {
       const selected = Array.isArray(value) ? value : [];
       return (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {(question.options ?? []).map((option) => {
             const checked = selected.includes(option.id);
             return (
               <label
                 key={option.id}
-                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition ${
+                className={`flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition ${
                   checked
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "border-blue-500 bg-blue-50/50"
+                    : "border-gray-200 bg-white hover:border-gray-300"
                 }`}
               >
                 <input
@@ -94,7 +91,7 @@ function renderInput(
                       onChange([...selected, option.id]);
                     }
                   }}
-                  className="text-blue-600 rounded"
+                  className="h-4 w-4 text-blue-600 rounded shrink-0"
                 />
                 <span className="text-sm text-gray-800">{option.text}</span>
               </label>
@@ -106,35 +103,39 @@ function renderInput(
 
     case "true_false":
       return (
-        <div className="flex gap-3">
-          {[true, false].map((option) => (
-            <label
-              key={String(option)}
-              className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border cursor-pointer transition ${
-                value === option
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 hover:border-gray-300"
-              }`}
-            >
-              <input
-                type="radio"
-                name={`question-${question.id}`}
-                checked={value === option}
-                onChange={() => onChange(option)}
-                className="text-blue-600"
-              />
-              <span className="text-sm font-medium text-gray-800">
-                {option ? "True" : "False"}
-              </span>
-            </label>
-          ))}
+        <div className="space-y-3">
+          {[true, false].map((option) => {
+            const selected = value === option;
+            return (
+              <label
+                key={String(option)}
+                className={`flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition ${
+                  selected
+                    ? "border-blue-500 bg-blue-50/50"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name={`question-${question.id}`}
+                  checked={selected}
+                  onChange={() => onChange(option)}
+                  className="h-4 w-4 text-blue-600 shrink-0"
+                />
+                <span className="text-sm font-medium text-gray-800">
+                  {option ? "True" : "False"}
+                </span>
+              </label>
+            );
+          })}
         </div>
       );
 
     default:
       return (
-        <p className="text-sm text-gray-500">
-          Unsupported question type: {type}
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          This question type ({type}) is not supported. Please contact your
+          instructor.
         </p>
       );
   }
