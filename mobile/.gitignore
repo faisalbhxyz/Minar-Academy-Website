@@ -21,7 +21,6 @@
 .env
 .env*.local
 .env.local
-google-services.json
 GoogleService-Info.plist
 firebase-service-account.json
 .expo/
