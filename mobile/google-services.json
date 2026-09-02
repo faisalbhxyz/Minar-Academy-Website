@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "YOUR_PROJECT_NUMBER",
-    "project_id": "YOUR_FIREBASE_PROJECT_ID",
-    "storage_bucket": "YOUR_FIREBASE_PROJECT_ID.appspot.com"
+    "project_number": "123456789012",
+    "project_id": "minar-academy-placeholder",
+    "storage_bucket": "minar-academy-placeholder.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:YOUR_PROJECT_NUMBER:android:YOUR_APP_ID",
+        "mobilesdk_app_id": "1:123456789012:android:abcdef1234567890abcdef",
         "android_client_info": {
           "package_name": "com.minaracademy.app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "YOUR_ANDROID_API_KEY"
+          "current_key": "AIzaSyBuildPlaceholderOnly000000000000000"
         }
       ],
       "services": {
