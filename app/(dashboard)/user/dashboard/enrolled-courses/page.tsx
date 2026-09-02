@@ -1,4 +1,4 @@
-import { getStudentEnrollments } from "@/app/actions";
+import { getStudentLearningReport } from "@/app/actions";
 import InProgressCourseCard from "@/app/components/dashboard/new/InProgressCourseCard";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
@@ -9,7 +9,7 @@ export default async function EnrolledCoursesPage() {
   const session = await auth();
   if (!session) redirect("/auth/login");
 
-  const enrollments = await getStudentEnrollments(session);
+  const { items } = await getStudentLearningReport(session);
 
   return (
     <div className="space-y-6">
@@ -27,7 +27,7 @@ export default async function EnrolledCoursesPage() {
         </p>
       </div>
 
-      {enrollments.length === 0 ? (
+      {items.length === 0 ? (
         <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center">
           <p className="text-gray-700 font-medium">No enrolled courses yet</p>
           <p className="text-sm text-gray-500 mt-2">
@@ -42,11 +42,12 @@ export default async function EnrolledCoursesPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {enrollments.map((enrollment) =>
+          {items.map(({ enrollment, progress }) =>
             enrollment.course ? (
               <InProgressCourseCard
                 key={enrollment.id}
                 course={enrollment.course}
+                progress={progress}
               />
             ) : null
           )}

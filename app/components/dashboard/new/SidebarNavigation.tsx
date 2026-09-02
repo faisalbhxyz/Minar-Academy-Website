@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { BookOpen, ClipboardList, FileText, Home, User, Award } from "lucide-react";
+import { BookOpen, ClipboardList, FileText, Home, User, Award, BarChart3, ShoppingCart, Bell } from "lucide-react";
 
 export default function SidebarNavigation() {
   const pathname = usePathname();
@@ -13,6 +13,11 @@ export default function SidebarNavigation() {
       label: "Enrolled Courses",
       link: "/user/dashboard/enrolled-courses",
       icon: <BookOpen size={16} />,
+    },
+    {
+      label: "Learning Report",
+      link: "/user/dashboard/learning-report",
+      icon: <BarChart3 size={16} />,
     },
     {
       label: "My Assignments",
@@ -34,36 +39,16 @@ export default function SidebarNavigation() {
       link: "/user/dashboard/certificates",
       icon: <Award size={16} />,
     },
-    // {
-    //   label: "Wishlist",
-    //   link: "/user/dashboard/wishlist",
-    //   icon: <Heart size={16} />,
-    // },
-    // {
-    //   label: "Reviews",
-    //   link: "/user/dashboard/reviews",
-    //   icon: <Star size={16} />,
-    // },
-    // {
-    //   label: "My Quiz Attempts",
-    //   link: "/user/dashboard/quizzes",
-    //   icon: <FileText size={16} />,
-    // },
-    // {
-    //   label: "Order History",
-    //   link: "/user/dashboard/orders",
-    //   icon: <ShoppingCart size={16} />,
-    // },
-    // {
-    //   label: "Question & Answer",
-    //   link: "/user/dashboard/qa",
-    //   icon: <MessageSquare size={16} />,
-    // },
-    // {
-    //   label: "Settings",
-    //   link: "/user/dashboard/settings",
-    //   icon: <Settings size={16} />,
-    // },
+    {
+      label: "Order History",
+      link: "/user/dashboard/orders",
+      icon: <ShoppingCart size={16} />,
+    },
+    {
+      label: "Notifications",
+      link: "/user/dashboard/notifications",
+      icon: <Bell size={16} />,
+    },
   ];
 
   return (

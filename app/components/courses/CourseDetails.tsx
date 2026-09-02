@@ -4,7 +4,7 @@ import Image from "next/image";
 import React, { useState } from "react";
 import CourseSubjects from "./CourseSubjects";
 import CourseInstructor from "./CourseInstructor";
-import StudentReview from "./StudentReview";
+import CourseReviewsSection from "./CourseReviewsSection";
 import GeneraleQuestions from "./GeneraleQuestions";
 import { MdOutlineCheckCircle } from "react-icons/md";
 import ProgramPath from "./ProgramPath";
@@ -99,7 +99,10 @@ export default function CourseDetails({
         </div>
         <CourseSubjects chapters={course.course_chapters} />
         <CourseInstructor instructors={course.course_instructors} />
-        {/* <StudentReview /> */}
+        <CourseReviewsSection
+          courseSlug={course.slug}
+          courseTitle={course.title}
+        />
         {/* <GeneraleQuestions /> */}
         {/* <Blueprint /> */}
         {/* <ConsultationForm /> */}

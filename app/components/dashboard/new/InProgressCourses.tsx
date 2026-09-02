@@ -1,26 +1,27 @@
 import InProgressCourseCard from "@/app/components/dashboard/new/InProgressCourseCard";
+import type { EnrollmentWithProgress } from "@/lib/learningReport";
 
 export default function InProgressCourses({
-  courses,
+  items,
 }: {
-  courses: Enrollment[];
+  items: EnrollmentWithProgress[];
 }) {
+  if (items.length === 0) return null;
 
   return (
     <section className="mt-6 bg-white rounded">
       <h2 className="text-lg font-semibold text-gray-700 mb-4">
-        In Progress Courses
+        চলমান কোর্স
       </h2>
-      {
-        courses
-          .filter((enrollment) => enrollment.course)
-          .map((enrollment) => (
-            <InProgressCourseCard
-              key={enrollment.id}
-              course={enrollment.course}
-            />
-          ))
-      }
+      {items
+        .filter((item) => item.enrollment.course)
+        .map((item) => (
+          <InProgressCourseCard
+            key={item.enrollment.id}
+            course={item.enrollment.course}
+            progress={item.progress}
+          />
+        ))}
     </section>
   );
 }

@@ -1,0 +1,46 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "NODE_ENV": "production"
+      }
+    },
+    "apk-safe": {
+      "extends": "preview",
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "credentialsSource": "remote",
+        "autoIncrement": true
+      },
+      "env": {
+        "NODE_ENV": "production",
+        "EXPO_PUBLIC_API_URL": "https://api.minaracademy.com/v1",
+        "EXPO_PUBLIC_APP_KEY": "cmbwd9tis0002013i4lmol1ew"
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle",
+        "credentialsSource": "remote",
+        "autoIncrement": true
+      },
+      "env": {
+        "NODE_ENV": "production",
+        "EXPO_PUBLIC_API_URL": "https://api.minaracademy.com/v1",
+        "EXPO_PUBLIC_APP_KEY": "cmbwd9tis0002013i4lmol1ew"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

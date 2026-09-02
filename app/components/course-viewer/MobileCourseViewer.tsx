@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import CourseCertificateCTA from "./CourseCertificateCTA";
+import CourseReviewPrompt from "./CourseReviewPrompt";
 import { CourseViewerProps, Lesson } from "./types";
 import { processCourseDetailsForViewer } from "./utils";
 import LessonVideoPlayer from "./LessonVideoPlayer";
@@ -53,7 +54,7 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({
     initialApiProgressPercent ?? null
   );
 
-  const { chapters } = useMemo(
+  const { chapters, progress } = useMemo(
     () =>
       processCourseDetailsForViewer(
         courseDetails,
@@ -174,7 +175,21 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({
   if (!activeLesson) {
     return (
       <div className="w-full min-h-screen bg-white pt-4 md:p-4 font-inter">
-        <h2 className="text-xl font-bold mb-4">{courseDetails.title}</h2>
+        <h2 className="text-xl font-bold mb-2">{courseDetails.title}</h2>
+        <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <div className="flex justify-between text-sm text-gray-700 mb-2">
+            <span>
+              {progress.completed}/{progress.total} লেসন সম্পন্ন
+            </span>
+            <span className="font-semibold">{progress.percentage}%</span>
+          </div>
+          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-indigo-600 rounded-full transition-all"
+              style={{ width: `${progress.percentage}%` }}
+            />
+          </div>
+        </div>
         <CourseCertificateCTA
           accessToken={accessToken}
           courseCertificate={courseCertificate}
@@ -195,7 +210,7 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({
                       </span>
 
                       <span className="text-gray-500 text-sm mt-1 font-bold">
-                        {chapter.lessons.length} videos
+                        {chapter.completedLessons}/{chapter.totalLessons} সম্পন্ন
                       </span>
                     </div>
 
@@ -229,7 +244,8 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({
                           `}
                         >
                           <h3 className="font-medium text-base flex items-center gap-2">
-                            <span>{index + 1}.</span> {lesson.title}
+                            <span>{lesson.completed ? "✔" : `${index + 1}.`}</span>
+                            {lesson.title}
                           </h3>
                         </div>
                       );
@@ -397,6 +413,12 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({
           </div>
         )}
       </div>
+      <CourseReviewPrompt
+        courseSlug={courseSlug}
+        courseTitle={courseDetails.title}
+        accessToken={accessToken}
+        progressPercent={progress.percentage}
+      />
     </div>
   );
 };

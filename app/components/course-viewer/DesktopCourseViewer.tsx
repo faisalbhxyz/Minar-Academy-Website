@@ -5,6 +5,7 @@ import LessonVideoPlayer from "./LessonVideoPlayer";
 import { CourseViewerProps, Lesson } from "./types";
 import { processCourseDetailsForViewer } from "./utils";
 import CourseCertificateCTA from "./CourseCertificateCTA";
+import CourseReviewPrompt from "./CourseReviewPrompt";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Download, Eye, ClipboardList } from "lucide-react";
@@ -326,6 +327,12 @@ export default function DesktopCourseViewer({
           </div>
         </div>
       </div>
+      <CourseReviewPrompt
+        courseSlug={courseSlug}
+        courseTitle={courseDetails.title}
+        accessToken={accessToken}
+        progressPercent={progress.percentage}
+      />
     </div>
   );
 }

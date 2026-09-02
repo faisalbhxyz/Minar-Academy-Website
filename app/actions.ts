@@ -2,6 +2,8 @@
 
 import { auth, signIn, signOut } from "@/lib/auth";
 import axiosInstance from "@/lib/axiosInstance";
+import { buildLearningReportSummary } from "@/lib/learningReport";
+import type { EnrollmentWithProgress } from "@/lib/learningReport";
 import { Session } from "next-auth";
 
 export const doCretendentialLogin = async (
@@ -309,6 +311,47 @@ export const getCourseCertificate = async (
   }
 };
 
+export const getCourseReviews = async (
+  courseSlug: string,
+  session?: Session
+): Promise<CourseReviewsSummary | null> => {
+  try {
+    const headers = session
+      ? studentAuthHeaders(session)
+      : {
+          "Content-Type": "application/json",
+          "app-key": process.env.NEXT_PUBLIC_APP_KEY,
+        };
+    const res = await axiosInstance.get(`/course/${courseSlug}/reviews`, {
+      headers,
+    });
+    return res.data.data ?? null;
+  } catch (error) {
+    console.error("Failed to fetch course reviews:", error);
+    return null;
+  }
+};
+
+export const submitCourseReviewAction = async (
+  courseSlug: string,
+  payload: { rating: number; comment?: string; tags?: string[] },
+  session: Session
+): Promise<CourseReview | null> => {
+  try {
+    const res = await axiosInstance.post(
+      `/course/${courseSlug}/review`,
+      payload,
+      { headers: studentAuthHeaders(session) }
+    );
+    return res.data.data ?? null;
+  } catch (error: unknown) {
+    const message =
+      (error as { response?: { data?: { message?: string } } })?.response?.data
+        ?.message || "রিভিউ জমা দেওয়া যায়নি।";
+    throw new Error(message);
+  }
+};
+
 export const getEnrolledCoursesWithAssignments = async (
   session: Session
 ): Promise<Enrollment[]> => {
@@ -334,4 +377,99 @@ export const getEnrolledCoursesWithAssignments = async (
   );
 
   return enriched;
+};
+
+export const getEnrollmentsWithProgress = async (
+  session: Session
+): Promise<EnrollmentWithProgress[]> => {
+  const enrollments = await getStudentEnrollments(session);
+  if (enrollments.length === 0) return [];
+
+  return Promise.all(
+    enrollments
+      .filter((enrollment) => enrollment.course)
+      .map(async (enrollment) => ({
+        enrollment,
+        progress: await getCourseProgress(enrollment.course.slug, session),
+      }))
+  );
+};
+
+export const getStudentLearningReport = async (session: Session) => {
+  const [items, certificates, apiInsights] = await Promise.all([
+    getEnrollmentsWithProgress(session),
+    getStudentCertificates(session),
+    fetchLearningReportServer(session, "7d"),
+  ]);
+  const summary = buildLearningReportSummary(items, certificates.length);
+  if (apiInsights) {
+    summary.inProgressCourses = apiInsights.courses_in_progress;
+    summary.completedCourses = Math.max(
+      summary.completedCourses,
+      apiInsights.courses_completed
+    );
+  }
+  return { items, summary, apiInsights, certificateCount: certificates.length };
+};
+
+export const fetchLearningReportServer = async (
+  session: Session,
+  period: LearningReportPeriod = "7d"
+): Promise<StudentLearningReportData | null> => {
+  try {
+    const res = await axiosInstance.get("/student/learning-report", {
+      headers: studentAuthHeaders(session),
+      params: { period },
+    });
+    return res.data.data ?? null;
+  } catch (error) {
+    console.error("Failed to fetch learning report:", error);
+    return null;
+  }
+};
+
+export const getStudentNotifications = async (
+  session: Session
+): Promise<StudentNotification[]> => {
+  try {
+    const res = await axiosInstance.get("/student/notifications", {
+      headers: studentAuthHeaders(session),
+    });
+    return res.data.data ?? [];
+  } catch (error) {
+    console.error("Failed to fetch notifications:", error);
+    return [];
+  }
+};
+
+export const markStudentNotificationRead = async (
+  notificationId: number
+): Promise<boolean> => {
+  const session = await auth();
+  if (!session?.accessToken) return false;
+  try {
+    const res = await axiosInstance.patch(
+      `/student/notifications/${notificationId}/read`,
+      {},
+      { headers: studentAuthHeaders(session) }
+    );
+    return res.status >= 200 && res.status < 300;
+  } catch (error) {
+    console.error("Failed to mark notification read:", error);
+    return false;
+  }
+};
+
+export const getStudentOrders = async (
+  session: Session
+): Promise<StudentOrder[]> => {
+  try {
+    const res = await axiosInstance.get("/student/orders", {
+      headers: studentAuthHeaders(session),
+    });
+    return res.data.data ?? [];
+  } catch (error) {
+    console.error("Failed to fetch orders:", error);
+    return [];
+  }
 };

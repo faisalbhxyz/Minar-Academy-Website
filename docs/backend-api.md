@@ -1,149 +1,613 @@
-# Minar Academy — Backend API (Frontend integration)
+# Minar Academy — Complete Storefront API Guide
 
-এই ডকুমেন্টটি **minar-academy** Next.js অ্যাপ থেকে যে বাহ্যিক ব্যাকএন্ড API কল হয়, তার উপর ভিত্তি করে লেখা। ব্যাকএন্ডের অফিসিয়াল OpenAPI/Swagger থাকলে সেটার সাথে cross-check করা উচিত।
+**API base:** `https://<api-host>/v1`  
+**Web frontend:** `minar-academy` (`NEXT_PUBLIC_API_URL`)  
+**Mobile app:** `mobile/` (`apiBaseUrl` in `mobile/src/lib/env.ts`)  
+**Backend repo:** `lurnic-server/api` (Go + Gin + MySQL)
+
+একটি মাস্টার ডকুমেন্ট — web ও mobile অ্যাপের জন্য প্রয়োজনীয় সব storefront API কীভাবে কাজ করে, কোন flow এ কোন endpoint লাগে, এবং backend implementation কোথায় আছে।
+
+**Related per-feature docs:**  
+`STUDENT_DEVICE_LOGIN_STOREFRONT_API.md` · `LESSON_VIDEO_PROGRESS_STOREFRONT_API.md` · `lesson-offline-drive-api.md` · `QUIZ_STOREFRONT_API.md` · `ASSIGNMENT_STOREFRONT_API.md` · `CERTIFICATE_STOREFRONT_API.md` · `CLASS_NOTE_STOREFRONT_API.md` · `STUDENT_PROFILE_STOREFRONT_API.md`
 
 ---
 
-## Base configuration
+## Table of contents
 
-| Item | Source |
+1. [Architecture overview](#1-architecture-overview)
+2. [Base configuration](#2-base-configuration)
+3. [Response & error conventions](#3-response--error-conventions)
+4. [Authentication & sessions](#4-authentication--sessions)
+5. [Complete endpoint index](#5-complete-endpoint-index)
+6. [User journeys (how APIs connect)](#6-user-journeys-how-apis-connect)
+7. [Endpoint reference by module](#7-endpoint-reference-by-module)
+8. [Database migrations (new)](#8-database-migrations-new)
+9. [Environment variables](#9-environment-variables)
+10. [QA smoke test](#10-qa-smoke-test)
+11. [Implementation status](#11-implementation-status)
+
+---
+
+## 1. Architecture overview
+
+```mermaid
+flowchart TB
+  subgraph clients [Clients]
+    Web[minar-academy Web]
+    Mobile[Mobile App]
+  end
+
+  subgraph api [Lurnic API /v1]
+    Auth[Student Auth]
+    Catalog[Public Catalog]
+    Learn[Learning Progress]
+    Assess[Quiz + Assignment]
+    Cert[Certificates]
+    Review[Course Reviews]
+    Notes[Academic Notes]
+    Checkout[Orders]
+    V2[Learning Report + Notifications + Orders]
+  end
+
+  subgraph data [MySQL]
+    DB[(dashlearn)]
+  end
+
+  Web --> api
+  Mobile --> api
+  api --> DB
+```
+
+**Multi-tenant:** প্রতিটি request এ `app-key` header দিয়ে tenant identify হয় (`middleware.GetTenantID`). Student JWT তে `session_id` থাকে — single-device session enforce হয়।
+
+**Admin vs Storefront:**
+- Storefront routes: `/student/*`, `/course/*`, `/banners`, `/enrolled/*`, etc.
+- Admin routes: `/private/*` (dashboard JWT, not covered here)
+
+---
+
+## 2. Base configuration
+
+| Item | Web | Mobile |
+|------|-----|--------|
+| Base URL | `NEXT_PUBLIC_API_URL` → `https://api.example.com/v1` | `apiBaseUrl` in `mobile/src/lib/env.ts` |
+| App key | `app-key: <NEXT_PUBLIC_APP_KEY>` | same |
+| Auth | `Authorization: Bearer <JWT>` | auto via `mobile/src/api/client.ts` |
+| Content-Type | `application/json` | same; `multipart/form-data` for uploads |
+
+**Important:** সব storefront path `/v1` prefix এর নিচে। Example: `POST /v1/student/login`
+
+---
+
+## 3. Response & error conventions
+
+### Success envelope (most endpoints)
+
+```json
+{ "data": { }, "message": "optional" }
+```
+
+### Exceptions
+
+| Endpoint | Success shape |
+|----------|----------------|
+| `POST /student/login` | Top-level `{ "token", "user" }` — no `data` wrapper |
+| `POST /order/create` | `{ "message", "order": { ... } }` |
+| `GET /student/certificates/{id}/html` | Raw HTML (`text/html`) |
+
+### Error body (storefront standard)
+
+```json
+{
+  "message": "Human-readable error",
+  "error": "OPTIONAL_MACHINE_CODE"
+}
+```
+
+| HTTP | Usage |
 |------|--------|
-| **Base URL** | Environment variable `NEXT_PUBLIC_API_URL` |
-| **HTTP client** | Axios instance: `lib/axiosInstance.ts` |
+| `401` | Missing/invalid token; `error: "SESSION_REPLACED"` for single-device logout |
+| `403` | Not enrolled, course incomplete, permission denied |
+| `404` | Resource not found |
+| `409` | Conflict (e.g. duplicate review) |
+| `422` | Validation error (`error: "VALIDATION_ERROR"`) |
 
-### Common headers
-
-প্রায় সব রিকোয়েস্টে:
-
-- `Content-Type: application/json`
-- `app-key: <NEXT_PUBLIC_APP_KEY>` (value from `NEXT_PUBLIC_APP_KEY`)
-
-### Authenticated requests
-
-যেখানে লগইন লাগে, অতিরিক্ত:
-
-- `Authorization: Bearer <JWT access token>`
-
-টোকেন NextAuth সেশন থেকে আসে (`session.accessToken`)।
+**Go package:** `api/internal/apiresponse` — নতুন storefront endpoints এ এই format follow করে।
 
 ---
 
-## Response shape (as used in this repo)
+## 4. Authentication & sessions
 
-| Pattern | Where |
-|---------|--------|
-| Most **GET** success payloads | Main data is in **`response.data.data`** (array or object). |
-| **POST `/student/login`** | Top-level **`response.data`** with `token` and `user` (see `lib/auth.ts`). |
-| **POST `/order/create`** | `message`, `order` (with fields like `course_id`, `customer_note`, `invoice_id`, `total`) — see `app/components/checkout/CheckoutBox.tsx`. |
+### Single-device sessions
 
-Error responses: কোডে প্রায়ই `err.response.data.error` বা `message` ব্যবহার করা হয়েছে (যেমন রেজিস্টার/চেকআউট)।
+প্রতি student এর **একটি active device session**। Login এ stable `device_id` পাঠাতে হবে।
 
----
+| Client | `device_id` storage |
+|--------|---------------------|
+| Web | `localStorage` key `lurnic_device_id` |
+| Mobile | AsyncStorage via `mobile/src/lib/storage.ts` |
 
-## Public / data-display APIs (GET)
+### `POST /student/login`
 
-| Method & path | Used in | Purpose |
-|---------------|---------|---------|
-| `GET /banners` | `app/(home)/page.tsx` | Home page banner carousel |
-| `GET /course?showItems=<n>` or `GET /course?showItems=all` | `getAllCourses` in `app/actions.ts` | Course list; limit by number or fetch all |
-| `GET /course/{slug}` | `getCourseBySlug` in `app/actions.ts` | Single course detail by slug |
-| `GET /category` | `getAllCategories` in `app/actions.ts` | All categories |
-| `GET /course/menu/{slug}` | `app/(home)/courses/[menu]/page.tsx` | Courses filtered by menu slug |
-| `GET /course/category/{slug}` | `app/(home)/courses/category/[slug]/page.tsx` | Courses filtered by category slug |
-| `GET /course/search?search=<query>` | `app/components/CourseSearch.tsx` | Course search (debounced client-side) |
-| `GET /instructor/all` | `app/(home)/teachers/page.tsx` | All instructors / teachers |
-| `GET /payment-methods` | `getPaymentMethods` in `app/actions.ts`, checkout | Available payment methods |
+```http
+POST /v1/student/login
+app-key: <tenant_app_key>
+Content-Type: application/json
 
-### Query parameters
+{
+  "email": "student@example.com",
+  "password": "secret",
+  "device_id": "550e8400-e29b-41d4-a716-446655440000",
+  "device_name": "Chrome on macOS"
+}
+```
 
-- **`/course`**: `showItems` — either a number (e.g. `12`) or `all`.
-- **`/course/search`**: `search` — search string (axios `params`).
+**Success `200`:**
 
----
+```json
+{
+  "token": "<JWT>",
+  "user": {
+    "id": 1,
+    "user_id": "uuid-or-string",
+    "first_name": "নাম",
+    "last_name": "পারিবারিক",
+    "email": "student@example.com",
+    "phone": "01XXXXXXXXX",
+    "profile_image": "https://...",
+    "status": "active"
+  }
+}
+```
 
-## Authenticated APIs (GET)
+### Session replaced
 
-| Method & path | Used in | Purpose |
-|---------------|---------|---------|
-| `GET /student/details` | `getStudentDetails` in `app/actions.ts` | Logged-in student profile |
-| `GET /enrolled/courses` | `getStudentEnrollments` in `app/actions.ts` | Student’s enrolled courses |
+```json
+{
+  "message": "Your account was logged in on another device. Please sign in again.",
+  "error": "SESSION_REPLACED"
+}
+```
 
-Both require: `app-key` + `Authorization: Bearer <token>`.
+HTTP `401` — frontend sign-out করে login page এ redirect করে।
 
----
-
-## Authenticated mutations (PUT)
-
-| Method & path | Used in | Body (summary) | Auth |
-|---------------|---------|----------------|------|
-| `PUT /student/update` | `StudentProfileForm.tsx`, `StudentProfileImage.tsx` | `multipart/form-data`: `first_name` (required), `last_name`, `phone`, optional `profile_image` | `app-key` + Bearer (student JWT; updates logged-in student only — no `:id` in URL) |
-
-Admin-only equivalent: `PUT /private/student/update/:id`.
-
----
-
-## Mutations (POST)
-
-| Method & path | Used in | Body (summary) | Auth |
-|---------------|---------|----------------|------|
-| `POST /student/login` | `lib/auth.ts` (NextAuth Credentials) | `{ email, password, device_id, device_name? }` — `device_id` from `localStorage` (`lib/deviceId.ts`) | `app-key` only |
-| `POST /student/logout` | `doCretendentialLogout` in `app/actions.ts` | — | `app-key` + Bearer |
-| `POST /student/register` | `app/components/auth/RegisterForm.tsx` | `first_name`, `last_name`, `email`, `phone`, `password`, `confirm_password` | `app-key` only |
-| `POST /student/forgot-password` | `app/components/auth/ForgotPasswordForm.tsx` | `{ email, reset_url }` — `reset_url` is storefront reset page without query | `app-key` only |
-| `POST /student/reset-password` | `app/components/auth/ResetPasswordForm.tsx` | `{ email, token, password }` — `token`/`email` from email link query | `app-key` only |
-| `POST /order/create` | `app/components/checkout/CheckoutBox.tsx` | `course_id`, `payment_method`, `transaction_id` (nullable per UI logic) | `app-key` + Bearer |
+**Backend:** `api/internal/modules/student/` · `api/internal/middleware/studentAuth.go`
 
 ---
 
-## TypeScript types (frontend)
+## 5. Complete endpoint index
 
-Shared shapes live in **`types/index.d.ts`**, including:
-
-- `CourseDetails`, `Category`, `Banner`, `Instructor`, `Student`
-- `Enrollment`, `IPaymentMethod`
-
-Use these as a **frontend contract**; the backend may return extra fields.
+| Method | Path | Auth | Status |
+|--------|------|------|--------|
+| **Auth** | | | |
+| POST | `/student/login` | app-key | ✅ |
+| POST | `/student/logout` | Bearer | ✅ |
+| POST | `/student/register` | app-key | ✅ |
+| POST | `/student/forgot-password` | app-key | ✅ |
+| POST | `/student/reset-password` | app-key | ✅ |
+| **Catalog** | | | |
+| GET | `/banners` | app-key | ✅ |
+| GET | `/course` | app-key | ✅ |
+| GET | `/course/{slug}` | app-key | ✅ |
+| GET | `/course/search` | app-key | ✅ |
+| GET | `/course/menu/{slug}` | app-key | ✅ |
+| GET | `/course/category/{slug}` | app-key | ✅ |
+| GET | `/category` | app-key | ✅ |
+| GET | `/instructor/all` | app-key | ✅ |
+| GET | `/payment-methods` | app-key | ✅ |
+| **Student** | | | |
+| GET | `/student/details` | Bearer | ✅ |
+| PUT | `/student/update` | Bearer (multipart) | ✅ |
+| GET | `/enrolled/courses` | Bearer | ✅ (nested curriculum) |
+| **Learning** | | | |
+| GET | `/course/{slug}/progress` | Bearer | ✅ |
+| GET/PATCH | `/course/{slug}/lessons/{lessonId}/progress` | Bearer | ✅ |
+| POST | `/course/{slug}/lessons/{lessonId}/complete` | Bearer | ✅ |
+| **Quizzes** | | | |
+| GET | `/course/{slug}/quizzes/{quizId}` | Bearer | ✅ |
+| GET | `/course/{slug}/quizzes/{quizId}/questions/{index}` | Bearer | ✅ |
+| POST | `/course/{slug}/quizzes/{quizId}/submit` | Bearer | ✅ |
+| POST | `/course/{slug}/quizzes/{quizId}/skip` | Bearer | ✅ |
+| GET | `/student/quiz-submissions` | Bearer | ✅ |
+| GET | `/student/quiz-submissions/{id}` | Bearer | ✅ |
+| **Assignments** | | | |
+| GET | `/course/{slug}/assignments/{assignmentId}` | Bearer | ✅ |
+| POST | `/course/{slug}/assignments/{assignmentId}/submit` | Bearer (multipart) | ✅ |
+| GET | `/student/assignment-submissions` | Bearer | ✅ |
+| GET | `/student/assignment-submissions/{id}` | Bearer | ✅ |
+| **Certificates** | | | |
+| GET | `/course/{slug}/certificate` | Bearer | ✅ |
+| GET | `/student/certificates` | Bearer | ✅ |
+| GET | `/student/certificates/{id}` | Bearer | ✅ |
+| GET | `/student/certificates/{id}/html` | Bearer | ✅ |
+| **Reviews** | | | |
+| GET | `/course/{slug}/reviews` | optional Bearer | ✅ |
+| POST | `/course/{slug}/review` | Bearer | ✅ |
+| **Academic notes** | | | |
+| GET | `/academic-notes` | app-key | ✅ |
+| GET | `/academic-notes/{classSlug}` | app-key | ✅ |
+| GET | `/academic-notes/{classSlug}/{subjectSlug}/{paperSlug}` | app-key | ✅ |
+| **Checkout** | | | |
+| POST | `/order/create` | Bearer | ✅ |
+| **v2** | | | |
+| GET | `/student/learning-report` | Bearer | ✅ |
+| GET | `/student/notifications` | Bearer | ✅ |
+| PATCH | `/student/notifications/{id}/read` | Bearer | ✅ |
+| POST | `/student/push-token` | Bearer | ⏳ mobile ready — backend pending |
+| DELETE | `/student/push-token` | Bearer | ⏳ mobile ready — backend pending |
+| GET | `/student/orders` | Bearer | ✅ |
 
 ---
 
-## Page → API quick map
+## 6. User journeys (how APIs connect)
 
-| User-facing area | APIs involved |
-|------------------|---------------|
-| Home | `GET /banners`, `GET /course?showItems=...`, `GET /category` |
-| Course listing (menu / category) | `GET /course/menu/{slug}` or `GET /course/category/{slug}`, often with `GET /category` |
-| Course detail | `GET /course/{slug}` |
-| Search (header/component) | `GET /course/search?search=...` |
-| Teachers | `GET /instructor/all` |
-| Login | `POST /student/login` |
-| Register | `POST /student/register` |
-| Forgot password | `POST /student/forgot-password` |
-| Reset password | `POST /student/reset-password` (link lands on `/auth/reset-password?token=…&email=…`) |
-| Checkout | `GET /payment-methods`, `POST /order/create` |
-| Dashboard / profile | `GET /student/details`, `PUT /student/update`, `GET /enrolled/courses` |
+### 6.1 Browse → Enroll → Learn
+
+```mermaid
+sequenceDiagram
+  participant S as Student
+  participant API as /v1 API
+
+  S->>API: GET /banners, /course, /category
+  S->>API: GET /course/{slug}
+  S->>API: POST /student/login
+  S->>API: GET /payment-methods
+  S->>API: POST /order/create
+  Note over API: Order created; admin marks paid → enrollment
+  S->>API: GET /enrolled/courses
+  Note over API: Returns course with full course_chapters[]
+  S->>API: GET /course/{slug}/progress
+  loop Each lesson
+    S->>API: PATCH .../lessons/{id}/progress
+    S->>API: POST .../lessons/{id}/complete
+  end
+```
+
+### 6.2 Assessment → Certificate → Review
+
+```mermaid
+sequenceDiagram
+  participant S as Student
+  participant API as /v1 API
+
+  S->>API: GET /course/{slug}/quizzes/{id}
+  S->>API: POST /course/{slug}/quizzes/{id}/submit
+  S->>API: GET /course/{slug}/assignments/{id}
+  S->>API: POST .../assignments/{id}/submit (multipart)
+  S->>API: GET /course/{slug}/progress
+  Note over API: progress_percent >= 100
+  S->>API: GET /course/{slug}/certificate
+  S->>API: GET /student/certificates/{id}/html
+  S->>API: POST /course/{slug}/review
+```
+
+### 6.3 Critical: `/enrolled/courses` nested curriculum
+
+Frontend dashboard ও My Learning syllabus lock/unlock এর জন্য **প্রতিটি enrollment এ full course object** দরকার:
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "course_id": 5,
+      "student_id": 12,
+      "created_at": "...",
+      "updated_at": "...",
+      "course": {
+        "id": 5,
+        "title": "...",
+        "slug": "...",
+        "course_chapters": [
+          {
+            "course_lessons": [{ "id": 1, "title": "...", "is_public": false }],
+            "assignments": [{ "id": 2, "title": "...", "is_published": true }],
+            "quizzes": [{ "id": 3, "title": "...", "is_published": true }]
+          }
+        ],
+        "course_instructors": [],
+        "general_settings": {}
+      }
+    }
+  ]
+}
+```
+
+**Backend:** `enrollment/service.go` → `course.LoadPublicCoursesByIDs()` (batch load, no N+1)
 
 ---
 
-## Single-device student sessions
+## 7. Endpoint reference by module
 
-Each student may have **one active device session** at a time. Login must include a stable `device_id` (stored in `localStorage` under `lurnic_device_id` via `lib/deviceId.ts`).
+### 7.1 Catalog (public, `app-key` only)
 
-| Behaviour | Frontend handling |
-|-----------|-------------------|
-| Login on a new device | `POST /student/login` with new `device_id`; previous device gets `401` on next API call |
-| `401` with `code: "SESSION_REPLACED"` | `lib/sessionReplaced.ts` — sign out, redirect to `/auth/login?reason=session_replaced`, toast |
-| Explicit logout | `POST /student/logout` then NextAuth `signOut` (`doCretendentialLogout`) |
-| Password reset success | All sessions invalidated; user must log in again with `device_id` |
+| Endpoint | Backend module |
+|----------|----------------|
+| `GET /banners` | `modules/banner` |
+| `GET /course` | `modules/course` — query: `showItems=<n>` or `all` |
+| `GET /course/{slug}` | `modules/course` — full curriculum |
+| `GET /course/search?search=` | `modules/course` |
+| `GET /course/menu/{slug}` | `modules/course` — subcategory filter |
+| `GET /course/category/{slug}` | `modules/course` |
+| `GET /category` | `modules/category` — `sub_categories[]` |
+| `GET /instructor/all` | `modules/instructor` |
+| `GET /payment-methods` | `modules/payment_method` |
 
-Session checks: axios response interceptor (`lib/axiosInstance.ts`), `ifSessionReplaced` on client `fetch` calls, and `SessionGuard` (`app/components/SessionGuard.tsx`) on authenticated pages.
+### 7.2 Student profile
+
+| Endpoint | Notes |
+|----------|-------|
+| `GET /student/details` | `{ data: Student }` with enrollments |
+| `PUT /student/update` | multipart: `first_name`, `last_name`, `phone`, `profile_image` |
+
+### 7.3 Course progress & lessons
+
+| Endpoint | Response key fields |
+|----------|---------------------|
+| `GET /course/{slug}/progress` | `progress_percent`, `completed_lesson_ids`, counts |
+| `PATCH .../lessons/{id}/progress` | `{ max_position_seconds, duration_seconds }` |
+| `POST .../lessons/{id}/complete` | Updated `CourseProgressData` |
+
+**Auto-complete rule (frontend):** watch position ≥ 80% → auto POST complete.
+
+**Backend:** `modules/courseprogress` · `internal/progress/course.go`
+
+**Offline download (Google Drive):** Mobile app সরাসরি Drive থেকে download করে — নতুন endpoint বাধ্যতামূলক নয়। Backend-এ lesson response-এ Drive URL intact রাখতে হবে। বিস্তারিত: [`docs/lesson-offline-drive-api.md`](./lesson-offline-drive-api.md)
+
+### 7.4 Quizzes & Assignments
+
+See dedicated docs: `QUIZ_STOREFRONT_API.md`, `ASSIGNMENT_STOREFRONT_API.md`
+
+### 7.5 Certificates
+
+See `CERTIFICATE_STOREFRONT_API.md`
+
+- `GET /course/{slug}/certificate` — `404` = not unlocked yet
+- `GET /student/certificates/{id}/html` — raw HTML for WebView/print
+
+### 7.6 Course reviews
+
+**`GET /course/{slug}/reviews`**
+
+- Auth optional (`OptionalStudentAuthMiddleware`)
+- Query: `page` (default 1), `per_page` (default 20, max 50)
+- Bearer থাকলে `student_review` ও `can_review` return করে
+
+**`POST /course/{slug}/review`**
+
+```json
+{
+  "rating": 5,
+  "comment": "optional, max 2000 chars",
+  "tags": ["excellent_content", "excellent_teaching"]
+}
+```
+
+**Allowed tags:** `excellent_content`, `excellent_teaching`, `sufficient_resources`, `others`
+
+**Errors:**
+
+| HTTP | error code |
+|------|------------|
+| 403 | `NOT_ENROLLED` |
+| 403 | `COURSE_NOT_COMPLETED` |
+| 409 | `REVIEW_ALREADY_EXISTS` |
+| 422 | `VALIDATION_ERROR` |
+
+**Business rules:**
+- Enrolled + `progress_percent >= 100`
+- One review per student per course (`UNIQUE course_id, student_id`)
+
+**Backend:** `modules/coursereview` · migration `00063_create_course_reviews_table.sql`
+
+### 7.7 Academic notes
+
+See `CLASS_NOTE_STOREFRONT_API.md`
+
+### 7.8 Checkout
+
+**`POST /order/create`**
+
+```json
+{
+  "course_id": 5,
+  "payment_method": "bKash",
+  "transaction_id": "TXN123456"
+}
+```
+
+Free courses: `payment_method` ও `transaction_id` null হতে পারে।
+
+**Success:**
+
+```json
+{
+  "message": "Order placed successfully",
+  "order": {
+    "course_id": 5,
+    "invoice_id": 1,
+    "total": 1500,
+    "customer_note": ""
+  }
+}
+```
+
+Admin `Mark as paid` করলে auto-enrollment হয় (`order/service.go` → `MarkAsPaid`).
+
+### 7.9 v2 APIs
+
+#### `GET /student/learning-report?period=7d|30d|90d`
+
+```json
+{
+  "data": {
+    "period": "7d",
+    "daily_watch_seconds": [
+      { "date": "2026-03-01", "seconds": 3600 }
+    ],
+    "streak_days": 3,
+    "quiz_accuracy_percent": 85.5,
+    "courses_in_progress": 2,
+    "courses_completed": 1
+  }
+}
+```
+
+#### `GET /student/notifications`
+
+Returns `StudentNotification[]` — empty array যদি কোনো notification না থাকে।
+
+#### `PATCH /student/notifications/{id}/read`
+
+Marks notification as read.
+
+#### `POST /student/push-token`
+
+Register or update the student's FCM device token (mobile app).
+
+```json
+{
+  "token": "fcm_registration_token",
+  "platform": "android",
+  "device_id": "uuid"
+}
+```
+
+`platform`: `android` | `ios`
+
+#### `DELETE /student/push-token`
+
+Remove token on logout. Body: `{ "device_id": "uuid", "token": "optional" }`.
+
+**FCM setup:** see [`docs/push-notifications-fcm.md`](./push-notifications-fcm.md)
+
+#### `GET /student/orders`
+
+Returns order history with course title, payment status, invoice_id.
+
+**Backend:** `modules/student/storefront_*.go` · migration `00064_create_student_notifications_table.sql`
 
 ---
 
-## Environment variables required
+## 8. Database migrations (new)
 
-- `NEXT_PUBLIC_API_URL` — API base URL (must be reachable from the browser for client-side calls).
-- `NEXT_PUBLIC_APP_KEY` — Sent as `app-key` on every integrated request above.
+Deploy এর আগে run করুন:
+
+```bash
+cd api
+goose -dir migrations mysql "$GOOSE_DBSTRING" up
+```
+
+| Migration | Table |
+|-----------|-------|
+| `00063_create_course_reviews_table.sql` | `course_reviews` |
+| `00064_create_student_notifications_table.sql` | `student_notifications` |
 
 ---
 
-*Last aligned with frontend codebase structure; update when backend routes or response envelopes change.*
+## 9. Environment variables
+
+| Variable | Platform | Purpose |
+|----------|----------|---------|
+| `NEXT_PUBLIC_API_URL` | Web | API base URL (include `/v1`) |
+| `NEXT_PUBLIC_APP_KEY` | Web + Mobile | `app-key` header |
+| `JWT_SECRET` | API | Student/admin JWT signing |
+| `GOOSE_DBSTRING` | API | MySQL connection |
+| `AUTH_SECRET` | Web (NextAuth) | Session signing — not sent to API |
+
+**After env change:** redeploy web (build-time vars); restart mobile dev build.
+
+---
+
+## 10. QA smoke test
+
+```bash
+API_URL="https://api.example.com/v1"
+APP_KEY="your-app-key"
+TOKEN="student-jwt"
+
+# Public catalog
+curl -s "$API_URL/banners" -H "app-key: $APP_KEY"
+curl -s "$API_URL/course/my-slug" -H "app-key: $APP_KEY"
+curl -s "$API_URL/category" -H "app-key: $APP_KEY"
+
+# Auth
+curl -s -X POST "$API_URL/student/login" -H "app-key: $APP_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"secret","device_id":"test-device-0001"}'
+
+# Enrolled courses (must include course_chapters)
+curl -s "$API_URL/enrolled/courses" \
+  -H "app-key: $APP_KEY" -H "Authorization: Bearer $TOKEN"
+
+# Progress
+curl -s "$API_URL/course/my-slug/progress" \
+  -H "app-key: $APP_KEY" -H "Authorization: Bearer $TOKEN"
+
+# Lesson complete
+curl -s -X POST "$API_URL/course/my-slug/lessons/42/complete" \
+  -H "app-key: $APP_KEY" -H "Authorization: Bearer $TOKEN"
+
+# Reviews
+curl -s "$API_URL/course/my-slug/reviews" -H "app-key: $APP_KEY"
+curl -s -X POST "$API_URL/course/my-slug/review" \
+  -H "app-key: $APP_KEY" -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"rating":5,"comment":"Great course!"}'
+
+# v2
+curl -s "$API_URL/student/learning-report?period=30d" \
+  -H "app-key: $APP_KEY" -H "Authorization: Bearer $TOKEN"
+curl -s "$API_URL/student/orders" \
+  -H "app-key: $APP_KEY" -H "Authorization: Bearer $TOKEN"
+curl -s "$API_URL/student/notifications" \
+  -H "app-key: $APP_KEY" -H "Authorization: Bearer $TOKEN"
+
+# Checkout
+curl -s -X POST "$API_URL/order/create" \
+  -H "app-key: $APP_KEY" -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"course_id":5,"payment_method":"bKash","transaction_id":"TXN123"}'
+```
+
+---
+
+## 11. Implementation status
+
+| Priority | Area | Status | Backend location |
+|----------|------|--------|------------------|
+| P0 | Auth + sessions | ✅ | `modules/student`, `middleware/studentAuth` |
+| P0 | Catalog | ✅ | `modules/course`, `banner`, `category`, etc. |
+| P0 | Enrolled courses (nested) | ✅ | `enrollment/service.go` + `course/public_mapper.go` |
+| P0 | Lesson progress + complete | ✅ | `modules/courseprogress` |
+| P1 | Quizzes | ✅ | `modules/quiz` |
+| P1 | Assignments | ✅ | `modules/assignment` |
+| P1 | Certificates | ✅ | `modules/certificate` |
+| P1 | Checkout | ✅ | `modules/order` |
+| P2 | Course reviews | ✅ | `modules/coursereview` |
+| P2 | Academic notes | ✅ | `modules/academicnote` |
+| P3 | Learning report | ✅ | `modules/student/storefront_service.go` |
+| P3 | Notifications | ✅ | `student_notifications` table + storefront |
+| P3 | Order history | ✅ | `GET /student/orders` |
+
+### Recent changes (March 2026)
+
+1. **`GET /enrolled/courses`** — এখন প্রতিটি `course` object এ full `course_chapters[]` (lessons, assignments, quizzes) return করে
+2. **`POST /student/login`** — user object এ `id`, `first_name`, `last_name`, `profile_image`, `status` (string)
+3. **Course reviews** — `GET/POST /course/{slug}/reviews|review`
+4. **Error format** — storefront endpoints এ `{ message, error }` standard (`apiresponse` package)
+5. **v2** — learning report, notifications, order history
+6. **Order message** — `"Order placed successfully"`
+
+### Frontend type contracts
+
+| Platform | Types file |
+|----------|------------|
+| Web | `types/index.d.ts` |
+| Mobile | `mobile/src/types/api.ts` |
+
+Frontend ইতিমধ্যে এই contract ধরে বানানো — backend deploy + migration run করলে অতিরিক্ত frontend কাজ লাগবে না।
+
+---
+
+*Document version: 3.0 — complete implementation guide. Last updated: March 2026.*

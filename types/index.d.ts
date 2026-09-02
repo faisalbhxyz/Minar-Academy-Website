@@ -527,6 +527,75 @@ interface Certificate {
   download_url?: string;
 }
 
+interface CourseReviewStudent {
+  id: number;
+  first_name: string;
+  last_name?: string | null;
+  profile_image?: string | null;
+}
+
+interface CourseReview {
+  id: number;
+  course_id: number;
+  student_id: number;
+  rating: number;
+  comment?: string | null;
+  tags?: string[];
+  student?: CourseReviewStudent;
+  created_at: string;
+  updated_at: string;
+}
+
+interface CourseReviewsSummary {
+  average_rating: number;
+  total_reviews: number;
+  reviews: CourseReview[];
+  student_review?: CourseReview | null;
+  can_review?: boolean;
+}
+
+type LearningReportPeriod = "7d" | "30d" | "90d";
+
+interface DailyWatchSeconds {
+  date: string;
+  seconds: number;
+}
+
+interface StudentLearningReportData {
+  period: LearningReportPeriod;
+  daily_watch_seconds: DailyWatchSeconds[];
+  streak_days: number;
+  quiz_accuracy_percent: number;
+  courses_in_progress: number;
+  courses_completed: number;
+}
+
+interface StudentNotification {
+  id: number;
+  title: string;
+  body?: string | null;
+  message?: string | null;
+  type?: string | null;
+  link?: string | null;
+  is_read: boolean;
+  read_at?: string | null;
+  created_at: string;
+}
+
+interface StudentOrder {
+  id: number;
+  course_id: number;
+  course_title: string;
+  invoice_id?: number | string | null;
+  total: number;
+  payment_method?: string | null;
+  transaction_id?: string | null;
+  status?: string | null;
+  payment_status?: string | null;
+  created_at: string;
+  customer_note?: string | null;
+}
+
 interface AcademicNotePaperDetail {
   class: Pick<
     AcademicNoteClass,

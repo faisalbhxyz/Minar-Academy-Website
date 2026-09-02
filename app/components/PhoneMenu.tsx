@@ -34,6 +34,7 @@ const dashboardItems: MenuItem[] = [
   { name: "Reviews", link: "/user/dashboard/reviews" },
   { name: "My Quiz Attempts", link: "/user/dashboard/quizzes" },
   { name: "Order History", link: "/user/dashboard/orders" },
+  { name: "Notifications", link: "/user/dashboard/notifications" },
   { name: "Question & Answer", link: "/user/dashboard/qa" },
   { name: "Teachers Panel", link: "/teachers" },
   { name: "Settings", link: "/user/dashboard/settings" },
