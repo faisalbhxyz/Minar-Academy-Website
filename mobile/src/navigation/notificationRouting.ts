@@ -1,19 +1,6 @@
-import type { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
-
 import { navigationRef } from "@/navigation/navigationRef";
 
 type NotificationData = Record<string, string | undefined>;
-
-function asData(
-  message: FirebaseMessagingTypes.RemoteMessage | { data?: NotificationData }
-): NotificationData {
-  const raw = message.data ?? {};
-  const out: NotificationData = {};
-  for (const [key, value] of Object.entries(raw)) {
-    if (typeof value === "string") out[key] = value;
-  }
-  return out;
-}
 
 function extractSlug(link: string): string | null {
   const match = link.match(/\/course\/([^/?#]+)/i);
@@ -89,10 +76,4 @@ export function navigateFromNotificationData(
   }
 
   navigationRef.navigate("Home", { screen: "Notifications" });
-}
-
-export function navigateFromRemoteMessage(
-  message: FirebaseMessagingTypes.RemoteMessage
-): void {
-  navigateFromNotificationData(asData(message));
 }

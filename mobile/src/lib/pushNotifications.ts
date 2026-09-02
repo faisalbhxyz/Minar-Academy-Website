@@ -2,9 +2,6 @@ import { Platform } from "react-native";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
-import messaging, {
-  type FirebaseMessagingTypes,
-} from "@react-native-firebase/messaging";
 
 import * as api from "@/api";
 import { getDeviceId } from "@/lib/storage";
@@ -41,14 +38,6 @@ async function ensureAndroidChannel(): Promise<void> {
 }
 
 async function ensurePermission(): Promise<boolean> {
-  if (Platform.OS === "ios") {
-    const authStatus = await messaging().requestPermission();
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-    if (!enabled) return false;
-  }
-
   const settings = await Notifications.getPermissionsAsync();
   if (settings.granted) return true;
 
@@ -63,7 +52,7 @@ async function ensurePermission(): Promise<boolean> {
   return requested.granted;
 }
 
-export async function getFcmToken(): Promise<string | null> {
+export async function getPushToken(): Promise<string | null> {
   if (!isPushSupported()) return null;
 
   const permitted = await ensurePermission();
@@ -71,15 +60,21 @@ export async function getFcmToken(): Promise<string | null> {
 
   await ensureAndroidChannel();
 
-  const token = await messaging().getToken();
-  return token || null;
+  const projectId =
+    Constants.expoConfig?.extra?.eas?.projectId ??
+    Constants.easConfig?.projectId;
+
+  if (!projectId) return null;
+
+  const token = await Notifications.getExpoPushTokenAsync({ projectId });
+  return token.data || null;
 }
 
 export async function registerPushTokenWithBackend(): Promise<void> {
   if (!isPushSupported()) return;
 
   try {
-    const token = await getFcmToken();
+    const token = await getPushToken();
     if (!token) return;
 
     const deviceId = await getDeviceId();
@@ -90,6 +85,7 @@ export async function registerPushTokenWithBackend(): Promise<void> {
       token,
       platform,
       device_id: deviceId,
+      provider: "expo",
     });
   } catch {
     // Push should never block login/bootstrap.
@@ -104,7 +100,7 @@ export async function unregisterPushTokenFromBackend(): Promise<void> {
     let token: string | null = null;
 
     try {
-      token = await messaging().getToken();
+      token = await getPushToken();
     } catch {
       token = null;
     }
@@ -116,25 +112,4 @@ export async function unregisterPushTokenFromBackend(): Promise<void> {
   } catch {
     // Best-effort cleanup on logout.
   }
-}
-
-export async function displayForegroundNotification(
-  remoteMessage: FirebaseMessagingTypes.RemoteMessage
-): Promise<void> {
-  const title =
-    remoteMessage.notification?.title ??
-    remoteMessage.data?.title ??
-    "Minar Academy";
-  const body =
-    remoteMessage.notification?.body ?? remoteMessage.data?.body ?? "";
-
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title,
-      body,
-      data: remoteMessage.data ?? {},
-      sound: true,
-    },
-    trigger: null,
-  });
 }

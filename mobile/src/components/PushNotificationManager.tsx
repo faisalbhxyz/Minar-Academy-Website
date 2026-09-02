@@ -1,16 +1,9 @@
 import { useEffect } from "react";
 import { Platform } from "react-native";
-import messaging from "@react-native-firebase/messaging";
 import * as Notifications from "expo-notifications";
 
-import {
-  displayForegroundNotification,
-  registerPushTokenWithBackend,
-} from "@/lib/pushNotifications";
-import {
-  navigateFromNotificationData,
-  navigateFromRemoteMessage,
-} from "@/navigation/notificationRouting";
+import { registerPushTokenWithBackend } from "@/lib/pushNotifications";
+import { navigateFromNotificationData } from "@/navigation/notificationRouting";
 import { useAuthStore } from "@/store/authStore";
 
 function readNotificationData(
@@ -36,37 +29,25 @@ export function PushNotificationManager() {
       void registerPushTokenWithBackend();
     }
 
-    const tokenRefreshUnsub = messaging().onTokenRefresh(() => {
-      if (useAuthStore.getState().token) {
-        void registerPushTokenWithBackend();
-      }
+    const receivedSub = Notifications.addNotificationReceivedListener(() => {
+      // Foreground display handled by setNotificationHandler.
     });
 
-    const foregroundUnsub = messaging().onMessage(async (remoteMessage) => {
-      await displayForegroundNotification(remoteMessage);
-    });
-
-    const openedUnsub = messaging().onNotificationOpenedApp((remoteMessage) => {
-      navigateFromRemoteMessage(remoteMessage);
-    });
-
-    void messaging()
-      .getInitialNotification()
-      .then((remoteMessage) => {
-        if (remoteMessage) navigateFromRemoteMessage(remoteMessage);
-      });
-
-    const tapUnsub = Notifications.addNotificationResponseReceivedListener(
+    const responseSub = Notifications.addNotificationResponseReceivedListener(
       (response) => {
         navigateFromNotificationData(readNotificationData(response));
       }
     );
 
+    void Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response) {
+        navigateFromNotificationData(readNotificationData(response));
+      }
+    });
+
     return () => {
-      tokenRefreshUnsub();
-      foregroundUnsub();
-      openedUnsub();
-      tapUnsub.remove();
+      receivedSub.remove();
+      responseSub.remove();
     };
   }, [token]);
 

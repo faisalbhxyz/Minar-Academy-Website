@@ -19,7 +19,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.minaracademy.app",
-      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "প্রোফাইল ছবি আপডেট করতে গ্যালারি অ্যাক্সেস প্রয়োজন।",
         "ITSAppUsesNonExemptEncryption": false,
@@ -30,7 +29,6 @@
       "package": "com.minaracademy.app",
       "versionCode": 1,
       "allowBackup": false,
-      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -80,8 +78,7 @@
             "networkInspector": false
           },
           "ios": {
-            "networkInspector": false,
-            "useFrameworks": "static"
+            "networkInspector": false
           }
         }
       ],
@@ -92,10 +89,7 @@
           "color": "#246962",
           "defaultChannel": "default"
         }
-      ],
-      "./plugins/withFirebaseNotificationManifestFix.js",
-      "@react-native-firebase/app",
-      "@react-native-firebase/messaging"
+      ]
     ],
     "extra": {
       "eas": {

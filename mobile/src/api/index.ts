@@ -398,6 +398,7 @@ export async function registerPushToken(payload: {
   token: string;
   platform: "android" | "ios";
   device_id: string;
+  provider?: "expo" | "fcm";
 }) {
   await api.post("/student/push-token", payload);
 }
