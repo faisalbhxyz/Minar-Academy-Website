@@ -33,11 +33,7 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Toaster richColors />
-        {session ? (
-          <AuthProvider session={session}>{children}</AuthProvider>
-        ) : (
-          children
-        )}
+        <AuthProvider session={session}>{children}</AuthProvider>
       </body>
     </html>
   );
