@@ -2,7 +2,7 @@
   "expo": {
     "name": "Minar Academy",
     "slug": "minar-academy",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -12,9 +12,9 @@
       "color": "#246962"
     },
     "splash": {
-      "image": "./assets/logo.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#f4f7f6"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": true,
@@ -22,12 +22,14 @@
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "প্রোফাইল ছবি আপডেট করতে গ্যালারি অ্যাক্সেস প্রয়োজন।",
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       }
     },
     "android": {
       "package": "com.minaracademy.app",
-      "versionCode": 1,
+      "versionCode": 28,
       "allowBackup": false,
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
@@ -39,7 +41,8 @@
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.ACCESS_NETWORK_STATE",
-        "android.permission.POST_NOTIFICATIONS"
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.RECORD_AUDIO"
       ],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",
@@ -75,13 +78,15 @@
             "usesCleartextTraffic": false,
             "enableMinifyInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true,
-            "networkInspector": false
+            "networkInspector": false,
+            "extraProguardRules": "-keep class com.horcrux.svg.** { *; }\n-keep class com.facebook.react.turbomodule.** { *; }\n"
           },
           "ios": {
             "networkInspector": false
           }
         }
       ],
+      "./plugins/withAndroidAbiSplits.js",
       [
         "expo-notifications",
         {
@@ -93,9 +98,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "48e50cf7-49a9-4729-af2f-21f156abb82b"
+        "projectId": "7674d976-28b9-4227-8f92-2d2583c52722"
       }
     },
-    "owner": "faisalbh"
+    "owner": "nextrike"
   }
 }

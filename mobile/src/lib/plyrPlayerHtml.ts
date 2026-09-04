@@ -33,23 +33,30 @@ export function buildPlyrPlayerHtml(params: {
     #shell {
       position: relative; width: 100%; height: 100%; background: #000; overflow: hidden;
     }
-    #player { width: 100%; height: 100%; }
+    #player { width: 100%; height: 100%; overflow: hidden; }
     .plyr, .plyr__video-wrapper, .plyr__video-embed {
       width: 100% !important;
       height: 100% !important;
       background: #000;
+      overflow: hidden !important;
     }
     .plyr__controls { display: none !important; }
     .plyr__video-embed {
       padding-bottom: 0 !important;
     }
+    /*
+      Fit the full 16:9 frame (no horizontal zoom that cuts the whiteboard).
+      Mild vertical inset only hides YT title/logo chrome without cropping content.
+      Interaction is blocked via pointer-events + #hit overlay + custom #ui.
+    */
     .plyr__video-embed iframe {
-      pointer-events: none;
+      pointer-events: none !important;
       position: absolute !important;
-      top: 0 !important;
+      top: -6% !important;
       left: 0 !important;
       width: 100% !important;
-      height: 100% !important;
+      height: 112% !important;
+      border: 0 !important;
     }
     #hit {
       position: absolute; inset: 0; z-index: 20;
@@ -58,8 +65,17 @@ export function buildPlyrPlayerHtml(params: {
       position: absolute; inset: 0; z-index: 30;
       display: flex; flex-direction: column; justify-content: flex-end;
       padding: 8px 10px 10px;
-      background: linear-gradient(to top, rgba(0,0,0,.78) 0%, rgba(0,0,0,.2) 40%, transparent 68%);
+      background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,.72) 0%,
+        transparent 18%,
+        transparent 58%,
+        rgba(0,0,0,.78) 100%
+      );
       transition: opacity .25s ease;
+    }
+    #ui.paused {
+      background: rgba(0,0,0,.55);
     }
     #ui.hidden { opacity: 0; pointer-events: none; }
     #times {
@@ -224,11 +240,16 @@ export function buildPlyrPlayerHtml(params: {
           disableContextMenu: true,
           youtube: {
             noCookie: true,
+            customControls: true,
             modestbranding: 1,
             controls: 0,
             rel: 0,
+            fs: 0,
+            disablekb: 1,
             iv_load_policy: 3,
-            playsinline: 1
+            cc_load_policy: 0,
+            playsinline: 1,
+            showinfo: 0
           },
           vimeo: { byline: false, portrait: false, title: false, controls: false },
           fullscreen: { enabled: false }
@@ -245,11 +266,13 @@ export function buildPlyrPlayerHtml(params: {
         player.on("play", function () {
           playing = true;
           setPlayIcon(true);
+          ui.classList.remove("paused");
           showUi(true);
         });
         player.on("pause", function () {
           playing = false;
           setPlayIcon(false);
+          ui.classList.add("paused");
           showUi(false);
           post({
             type: "progress",
@@ -271,7 +294,7 @@ export function buildPlyrPlayerHtml(params: {
           durEl.textContent = fmt(d);
           if (d > 0) seek.value = String((c / d) * 100);
           var now = Date.now();
-          if (now - lastPost >= 2000) {
+          if (now - lastPost >= 1000) {
             lastPost = now;
             post({ type: "progress", current: c, duration: d });
           }
@@ -337,7 +360,7 @@ export function buildPlyrPlayerHtml(params: {
 
       ui.addEventListener("touchstart", function () { showUi(true); }, { passive: true });
 
-      if (startAt > 0) boot();
+      if (startAt > 0 || autoPlay) boot();
     })();
   </script>
 </body>

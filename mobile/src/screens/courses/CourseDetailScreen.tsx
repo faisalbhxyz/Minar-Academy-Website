@@ -8,7 +8,6 @@ import { Iconify } from "react-native-iconify";
 
 import * as api from "@/api";
 import { AppHeader } from "@/components/AppHeader";
-import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/Button";
 import { CourseReviewsSection } from "@/components/CourseReviewsSection";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -16,7 +15,6 @@ import { Screen } from "@/components/Screen";
 import { useTranslation } from "@/i18n";
 import { formatPrice, lessonCount } from "@/lib/format";
 import {
-  downloadUrlForLesson,
   isDownloadableLesson,
 } from "@/lib/offlineDownloads";
 import {
@@ -118,8 +116,7 @@ export function CourseDetailScreen({ navigation, route }: Props) {
 
   const queueDownload = (lesson: CourseLesson) => {
     if (!course) return;
-    const remoteUrl = downloadUrlForLesson(lesson);
-    if (!remoteUrl) return;
+    if (!isDownloadableLesson(lesson)) return;
     void startDownload({
       lessonId: lesson.id,
       courseId: course.id,
@@ -128,7 +125,7 @@ export function CourseDetailScreen({ navigation, route }: Props) {
       lessonTitle: lesson.title,
       lessonDescription: lesson.description ?? null,
       sourceType: lesson.source_type,
-      remoteUrl,
+      mode: "api",
     }).catch(() => undefined);
   };
 
@@ -169,7 +166,6 @@ export function CourseDetailScreen({ navigation, route }: Props) {
             )}
           </View>
 
-          <BrandLogo size="sm" style={styles.logo} />
           <Text style={styles.title}>{course.title}</Text>
           <Text style={styles.meta}>
             {formatPrice(
@@ -284,7 +280,8 @@ export function CourseDetailScreen({ navigation, route }: Props) {
                 const isOffline = Boolean(items[lesson.id]);
                 const isDone = completedLessonIds.has(lesson.id);
                 const isContinue = continueLesson?.id === lesson.id;
-                const canSaveOffline = enrolled && isDownloadableLesson(lesson);
+                const canSaveOffline =
+                  (enrolled && isDownloadableLesson(lesson)) || isOffline;
                 const isDownloading = Boolean(downloadingMap[lesson.id]);
                 const downloadPct = Math.round(
                   (progressMap[lesson.id] ?? 0) * 100
@@ -485,17 +482,15 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   heroImageWrap: {
-    borderRadius: radii.lg,
+    marginHorizontal: -spacing.xl,
+    marginTop: -spacing.xl,
     overflow: "hidden",
-    height: 200,
+    height: 220,
     backgroundColor: colors.primarySoft,
   },
   heroImage: {
     width: "100%",
     height: "100%",
-  },
-  logo: {
-    marginTop: spacing.sm,
   },
   title: {
     fontFamily: "Outfit_700Bold",

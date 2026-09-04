@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { colors, spacing } from "@/theme";
@@ -10,7 +10,7 @@ type Props = {
   onAction?: () => void;
 };
 
-export function SectionHeader({
+export const SectionHeader = memo(function SectionHeader({
   title,
   subtitle,
   actionLabel,
@@ -29,7 +29,7 @@ export function SectionHeader({
       ) : null}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   row: {
@@ -37,12 +37,13 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     justifyContent: "space-between",
     paddingHorizontal: spacing.xl,
-    marginBottom: spacing.md,
+    marginTop: spacing.xxl,
+    marginBottom: spacing.lg,
     gap: spacing.md,
   },
   text: {
     flex: 1,
-    gap: 4,
+    gap: 6,
   },
   title: {
     fontFamily: "Outfit_700Bold",
@@ -53,6 +54,7 @@ const styles = StyleSheet.create({
     fontFamily: "DMSans_400Regular",
     fontSize: 13,
     color: colors.inkMuted,
+    lineHeight: 18,
   },
   action: {
     fontFamily: "DMSans_500Medium",

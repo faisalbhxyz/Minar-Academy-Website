@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
@@ -8,7 +8,7 @@ import { ProfileMenuRow } from "@/components/profile/ProfileMenuRow";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { Screen } from "@/components/Screen";
 import { useTranslation } from "@/i18n";
-import { HELP_CENTER_PHONE } from "@/lib/config";
+import { openHelpCenterChannel } from "@/lib/helpCenter";
 import { fullName } from "@/lib/format";
 import type { AppStackParamList } from "@/navigation/types";
 import { useAuthStore } from "@/store/authStore";
@@ -18,16 +18,6 @@ type ProfileNav = NativeStackScreenProps<
   AppStackParamList,
   "ProfileMain"
 >["navigation"];
-
-async function openCall(phone: string) {
-  try {
-    const url = `tel:${phone}`;
-    const canOpen = await Linking.canOpenURL(url);
-    if (canOpen) await Linking.openURL(url);
-  } catch {
-    // ignore unsupported links
-  }
-}
 
 export function ProfileScreen() {
   const { t } = useTranslation();
@@ -116,7 +106,7 @@ export function ProfileScreen() {
             iconColor="#16a34a"
             iconBg="#f0fdf4"
             label={t("profile.call")}
-            onPress={() => void openCall(HELP_CENTER_PHONE)}
+            onPress={() => openHelpCenterChannel("call")}
           />
           <View style={styles.divider} />
           <ProfileMenuRow

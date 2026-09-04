@@ -156,6 +156,7 @@ export default function DesktopCourseViewer({
                 videoId={activeLesson.videoEmbedId}
                 autoPlay
                 lessonId={activeLesson.id}
+                courseId={courseDetails.id}
                 courseSlug={courseSlug}
                 accessToken={accessToken}
                 studentId={studentId}

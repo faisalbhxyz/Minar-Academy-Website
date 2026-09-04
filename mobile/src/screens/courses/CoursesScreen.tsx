@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
   RefreshControl,
@@ -12,12 +12,14 @@ import { useQuery } from "@tanstack/react-query";
 
 import * as api from "@/api";
 import { BrandLogo } from "@/components/BrandLogo";
-import { CourseCard } from "@/components/CourseCard";
+import { CourseCardListItem } from "@/components/CourseCardListItem";
 import { EmptyState } from "@/components/EmptyState";
 import { Screen } from "@/components/Screen";
 import { useTranslation } from "@/i18n";
 import { colors, spacing } from "@/theme";
 import type { AppStackParamList } from "@/navigation/types";
+
+const ListSeparator = () => <View style={{ height: spacing.md }} />;
 
 export function CoursesScreen() {
   const { t } = useTranslation();
@@ -26,14 +28,17 @@ export function CoursesScreen() {
   const route = useRoute<RouteProp<AppStackParamList, "CoursesMain">>();
   const categorySlug = route.params?.categorySlug;
   const categoryName = route.params?.categoryName;
+  const filter = route.params?.filter ?? "category";
   const [refreshing, setRefreshing] = useState(false);
 
   const query = useQuery({
-    queryKey: ["courses-tab", categorySlug ?? "all"],
-    queryFn: () =>
-      categorySlug
-        ? api.fetchCoursesByCategory(categorySlug)
-        : api.fetchCourses("all"),
+    queryKey: ["courses-tab", filter, categorySlug ?? "all"],
+    queryFn: () => {
+      if (!categorySlug) return api.fetchCourses("all");
+      if (filter === "menu") return api.fetchCoursesByMenu(categorySlug);
+      return api.fetchCoursesByCategory(categorySlug);
+    },
+    staleTime: 3 * 60_000,
   });
 
   const title = useMemo(
@@ -41,11 +46,33 @@ export function CoursesScreen() {
     [categoryName, t]
   );
 
-  const onRefresh = async () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await query.refetch();
     setRefreshing(false);
-  };
+  }, [query.refetch]);
+
+  const onPressSlug = useCallback(
+    (slug: string) => navigation.navigate("CourseDetail", { slug }),
+    [navigation]
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: NonNullable<typeof query.data>[number] }) => (
+      <CourseCardListItem compact course={item} onPressSlug={onPressSlug} />
+    ),
+    [onPressSlug]
+  );
+
+  const keyExtractor = useCallback(
+    (item: NonNullable<typeof query.data>[number]) => String(item.id),
+    []
+  );
+
+  const onSearch = useCallback(
+    () => navigation.navigate("Search"),
+    [navigation]
+  );
 
   return (
     <Screen loading={query.isLoading && !query.data}>
@@ -59,33 +86,26 @@ export function CoursesScreen() {
 
       <FlatList
         data={query.data ?? []}
-        keyExtractor={(item) => String(item.id)}
+        keyExtractor={keyExtractor}
         contentContainerStyle={styles.list}
-        initialNumToRender={6}
-        maxToRenderPerBatch={6}
+        initialNumToRender={5}
+        maxToRenderPerBatch={5}
+        updateCellsBatchingPeriod={50}
         windowSize={7}
         removeClippedSubviews
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-        ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+        ItemSeparatorComponent={ListSeparator}
         ListEmptyComponent={
           <EmptyState
             title={t("courses.empty.title")}
             message={t("courses.empty.message")}
             actionLabel={t("courses.empty.searchAction")}
-            onAction={() => navigation.navigate("Search")}
+            onAction={onSearch}
           />
         }
-        renderItem={({ item }) => (
-          <CourseCard
-            compact
-            course={item}
-            onPress={() =>
-              navigation.navigate("CourseDetail", { slug: item.slug })
-            }
-          />
-        )}
+        renderItem={renderItem}
       />
     </Screen>
   );

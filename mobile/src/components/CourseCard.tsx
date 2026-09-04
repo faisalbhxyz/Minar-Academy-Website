@@ -19,6 +19,8 @@ function CourseCardInner({ course, onPress, compact }: Props) {
     course.sale_price,
     course.regular_price
   );
+  const categoryName = course.general_settings?.category?.name?.trim() ?? "";
+  const summary = course.summary?.trim() ?? "";
 
   return (
     <Pressable
@@ -50,19 +52,15 @@ function CourseCardInner({ course, onPress, compact }: Props) {
         </View>
       </View>
       <View style={styles.meta}>
-        {course.general_settings?.category?.name ? (
-          <Text style={styles.category} numberOfLines={1}>
-            {course.general_settings.category.name}
-          </Text>
-        ) : null}
+        <Text style={styles.category} numberOfLines={1}>
+          {categoryName}
+        </Text>
         <Text style={styles.title} numberOfLines={2}>
           {course.title}
         </Text>
-        {course.summary ? (
-          <Text style={styles.summary} numberOfLines={2}>
-            {course.summary}
-          </Text>
-        ) : null}
+        <Text style={styles.summary} numberOfLines={2}>
+          {summary}
+        </Text>
       </View>
     </Pressable>
   );
@@ -70,9 +68,23 @@ function CourseCardInner({ course, onPress, compact }: Props) {
 
 export const CourseCard = memo(CourseCardInner);
 
+const CARD_IMAGE_HEIGHT = 140;
+const CATEGORY_LINE_HEIGHT = 16;
+const TITLE_LINE_HEIGHT = 22;
+const SUMMARY_LINE_HEIGHT = 18;
+/** Image + meta padding + reserved text slots — keeps every card the same size. */
+const CARD_HEIGHT =
+  CARD_IMAGE_HEIGHT +
+  spacing.lg * 2 +
+  6 * 2 +
+  CATEGORY_LINE_HEIGHT +
+  TITLE_LINE_HEIGHT * 2 +
+  SUMMARY_LINE_HEIGHT * 2;
+
 const styles = StyleSheet.create({
   card: {
     width: 260,
+    height: CARD_HEIGHT,
     backgroundColor: colors.surfaceElevated,
     borderRadius: radii.lg,
     overflow: "hidden",
@@ -87,7 +99,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.985 }],
   },
   imageWrap: {
-    height: 140,
+    height: CARD_IMAGE_HEIGHT,
     position: "relative",
   },
   image: {
@@ -109,12 +121,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   meta: {
+    flex: 1,
     padding: spacing.lg,
     gap: 6,
   },
   category: {
     fontFamily: "DMSans_500Medium",
     fontSize: 12,
+    lineHeight: CATEGORY_LINE_HEIGHT,
+    height: CATEGORY_LINE_HEIGHT,
     color: colors.secondary,
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -123,12 +138,14 @@ const styles = StyleSheet.create({
     fontFamily: "Outfit_600SemiBold",
     fontSize: 17,
     color: colors.ink,
-    lineHeight: 22,
+    lineHeight: TITLE_LINE_HEIGHT,
+    height: TITLE_LINE_HEIGHT * 2,
   },
   summary: {
     fontFamily: "DMSans_400Regular",
     fontSize: 13,
     color: colors.inkMuted,
-    lineHeight: 18,
+    lineHeight: SUMMARY_LINE_HEIGHT,
+    height: SUMMARY_LINE_HEIGHT * 2,
   },
 });

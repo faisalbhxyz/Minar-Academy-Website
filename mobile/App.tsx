@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { AppState, InteractionManager, type AppStateStatus } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -16,6 +17,7 @@ import * as SplashScreen from "expo-splash-screen";
 
 import { AppLoadingScreen } from "@/components/AppLoadingScreen";
 import { PushNotificationManager } from "@/components/PushNotificationManager";
+import { SecurityProvider } from "@/context/SecurityContext";
 import { RootNavigator } from "@/navigation/RootNavigator";
 import { useAuthStore } from "@/store/authStore";
 import { useDownloadsStore } from "@/store/downloadsStore";
@@ -25,6 +27,8 @@ import { useOnboardingStore } from "@/store/onboardingStore";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
+const RESUME_LOADING_MS = 450;
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -33,6 +37,7 @@ const queryClient = new QueryClient({
       gcTime: 30 * 60_000,
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
+      structuralSharing: true,
     },
   },
 });
@@ -56,12 +61,50 @@ export default function App() {
     DMSans_500Medium,
   });
 
+  const [pushReady, setPushReady] = useState(false);
+  const [navEpoch, setNavEpoch] = useState(0);
+  const [coldResume, setColdResume] = useState(false);
+
+  useEffect(() => {
+    let fromBackground = false;
+
+    const onChange = (next: AppStateStatus) => {
+      if (next === "background") {
+        fromBackground = true;
+        return;
+      }
+      if (next !== "active" || !fromBackground) return;
+
+      fromBackground = false;
+      setColdResume(true);
+      setNavEpoch((n) => n + 1);
+      void queryClient.invalidateQueries();
+      void useAuthStore.getState().refreshStudentDetails();
+    };
+
+    const sub = AppState.addEventListener("change", onChange);
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
+    if (!coldResume) return;
+
+    const timer = setTimeout(() => setColdResume(false), RESUME_LOADING_MS);
+    return () => clearTimeout(timer);
+  }, [coldResume, navEpoch]);
+
   useEffect(() => {
     void bootstrap();
     void hydrateLocale();
-    void hydrateDownloads();
     void hydrateLearning();
-  }, [bootstrap, hydrateLocale, hydrateDownloads, hydrateLearning]);
+  }, [bootstrap, hydrateLocale, hydrateLearning]);
+
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
+      void hydrateDownloads();
+    });
+    return () => task.cancel();
+  }, [hydrateDownloads]);
 
   useEffect(() => {
     if (!bootstrapped) return;
@@ -72,16 +115,33 @@ export default function App() {
     resetOnboarding();
   }, [bootstrapped, user?.id, hydrateOnboarding, resetOnboarding]);
 
-  useEffect(() => {
+  const ready =
+    fontsLoaded && bootstrapped && localeHydrated && !(user?.id && !onboardingHydrated);
+
+  const hideNativeSplash = () => {
     void SplashScreen.hideAsync();
-  }, []);
+  };
 
-  const waitingOnboarding = Boolean(user?.id && !onboardingHydrated);
+  useEffect(() => {
+    if (ready) hideNativeSplash();
+  }, [ready]);
 
-  if (!fontsLoaded || !bootstrapped || !localeHydrated || waitingOnboarding) {
+  useEffect(() => {
+    if (!ready) {
+      setPushReady(false);
+      return;
+    }
+
+    const task = InteractionManager.runAfterInteractions(() => {
+      setPushReady(true);
+    });
+    return () => task.cancel();
+  }, [ready]);
+
+  if (!ready) {
     return (
       <SafeAreaProvider>
-        <AppLoadingScreen />
+        <AppLoadingScreen onReady={hideNativeSplash} />
       </SafeAreaProvider>
     );
   }
@@ -90,9 +150,15 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <StatusBar style="dark" />
-          <PushNotificationManager />
-          <RootNavigator />
+          <SecurityProvider>
+            <StatusBar style="dark" />
+            {pushReady ? <PushNotificationManager /> : null}
+            {coldResume ? (
+              <AppLoadingScreen />
+            ) : (
+              <RootNavigator key={navEpoch} />
+            )}
+          </SecurityProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

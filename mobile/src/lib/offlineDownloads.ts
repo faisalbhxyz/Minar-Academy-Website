@@ -2,22 +2,20 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
 import { Platform } from "react-native";
 
+import * as api from "@/api";
 import { t } from "@/i18n";
 import {
   extractGoogleDriveFileId,
-  extractGoogleDriveUrls,
-  extractHtmlFileLinks,
-  extractVimeoId,
-  extractYouTubeId,
   googleDriveDirectDownloadUrl,
   isPdfFile,
-  lessonResourceUrl,
-  normalizeLessonResources,
 } from "@/lib/format";
-import type { CourseLesson, LessonSourceType } from "@/types/api";
+import type { CourseLesson } from "@/types/api";
 
 const INDEX_KEY = "minar_offline_downloads_v1";
 const DIR_NAME = "offline_lessons";
+
+const DOWNLOAD_UA =
+  "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36";
 
 export type OfflineDownload = {
   lessonId: number;
@@ -29,6 +27,8 @@ export type OfflineDownload = {
   sourceType: string;
   remoteUrl: string;
   localUri: string;
+  fileName?: string;
+  contentType?: string;
   fileSize: number;
   downloadedAt: string;
 };
@@ -57,100 +57,85 @@ function extensionFromUrl(url: string): string {
   return "mp4";
 }
 
-function localPathForLesson(lessonId: number, remoteUrl: string): string {
-  const driveId = extractGoogleDriveFileId(remoteUrl);
-  if (driveId) {
-    return `${downloadsRoot()}lesson_${lessonId}.mp4`;
-  }
-  const ext = extensionFromUrl(remoteUrl);
+function sanitizeFileName(name: string): string {
+  const trimmed = name.trim().replace(/[/\\?%*:|"<>]/g, "_");
+  return trimmed || "lesson.mp4";
+}
+
+function localPathForLessonFile(
+  lessonId: number,
+  fileName: string
+): string {
+  const safe = sanitizeFileName(fileName);
+  const extMatch = safe.match(/\.([a-zA-Z0-9]{2,5})$/);
+  const ext = extMatch ? extMatch[1].toLowerCase() : "mp4";
   return `${downloadsRoot()}lesson_${lessonId}.${ext}`;
 }
 
-const VIDEO_FILE_RE = /\.(mp4|m4v|webm|mov)(\?|#|$)/i;
-const DOWNLOAD_UA =
-  "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36";
+function localPathForDirectUrl(
+  lessonId: number,
+  remoteUrl: string,
+  title = ""
+): string {
+  const looksPdf = isPdfFile(undefined, `${title} ${remoteUrl}`);
+  const driveId = extractGoogleDriveFileId(remoteUrl);
+  if (driveId) {
+    return `${downloadsRoot()}lesson_${lessonId}.${looksPdf ? "pdf" : "mp4"}`;
+  }
+  let ext = extensionFromUrl(remoteUrl);
+  if (ext === "mp4" && looksPdf) ext = "pdf";
+  return `${downloadsRoot()}lesson_${lessonId}.${ext}`;
+}
 
-function isHostedVideoFileUrl(url: string): boolean {
+function isDriveFileUrl(url: string): boolean {
+  return Boolean(extractGoogleDriveFileId(url));
+}
+
+function isHostedPdfUrl(url: string, title = "", mime = ""): boolean {
   const value = url.trim();
   if (!/^https?:\/\//i.test(value)) return false;
-  if (VIDEO_FILE_RE.test(value)) return true;
-  if (extractYouTubeId(value) || extractVimeoId(value)) return false;
+  return isPdfFile(mime, `${title} ${value}`);
+}
+
+/** Stable id for lesson materials so PDF downloads do not clash with lesson video ids. */
+export function offlineIdForMaterial(url: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < url.length; i++) {
+    hash ^= url.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return -(((hash >>> 0) % 1_000_000_000) + 1);
+}
+
+/** PDF / note materials only — not lesson video offline. */
+export function isDownloadableMaterial(
+  url: string,
+  title = "",
+  mime = ""
+): boolean {
+  if (Platform.OS === "web") return false;
+  const value = url.trim();
+  if (!/^https?:\/\//i.test(value)) return false;
+  if (isHostedPdfUrl(value, title, mime)) return true;
+  if (isDriveFileUrl(value) && isPdfFile(mime, `${title} ${value}`)) return true;
   return false;
 }
 
-function isDriveVideoUrl(url: string, title = "", mime = ""): boolean {
-  if (!extractGoogleDriveFileId(url)) return false;
-  return !isPdfFile(mime, `${title} ${url}`);
+/**
+ * Show Save offline only when the API marks the lesson downloadable.
+ * Do not scan source.data.data for Drive links.
+ */
+export function isDownloadableLesson(lesson: CourseLesson): boolean {
+  if (Platform.OS === "web") return false;
+  return (
+    lesson.lesson_type === "video" && lesson.offline_downloadable === true
+  );
 }
 
 function resolveRemoteDownloadUrl(url: string, confirm = "t"): string {
   const driveId = extractGoogleDriveFileId(url);
   if (driveId) return googleDriveDirectDownloadUrl(driveId, confirm);
   return url;
-}
-
-function collectLessonUrls(lesson: CourseLesson): {
-  url: string;
-  title: string;
-  mime: string;
-}[] {
-  const sourceUrl = lesson.source?.data?.data ?? "";
-  const rows: { url: string; title: string; mime: string }[] = [];
-  if (sourceUrl) {
-    rows.push({ url: sourceUrl, title: lesson.title, mime: "" });
-  }
-  for (const resource of normalizeLessonResources(lesson.resources)) {
-    rows.push({
-      url: lessonResourceUrl(resource),
-      title: resource.title,
-      mime: resource.mime_type ?? "",
-    });
-  }
-  const description = lesson.description ?? "";
-  for (const link of extractHtmlFileLinks(description)) {
-    rows.push({ url: link.href, title: link.label, mime: "" });
-  }
-  for (const url of extractGoogleDriveUrls(`${sourceUrl}\n${description}`)) {
-    rows.push({ url, title: lesson.title, mime: "" });
-  }
-  return rows.filter((row) => row.url);
-}
-
-export function isDownloadableSource(
-  sourceType: LessonSourceType | string,
-  sourceData: string
-): boolean {
-  if (Platform.OS === "web") return false;
-  const url = sourceData.trim();
-  if (!/^https?:\/\//i.test(url)) return false;
-  if (isDriveVideoUrl(url)) return true;
-  if (isHostedVideoFileUrl(url)) return true;
-  if (sourceType === "youtube" || sourceType === "vimeo") return false;
-  if (extractYouTubeId(url) || extractVimeoId(url)) return false;
-  return sourceType === "upload";
-}
-
-export function downloadUrlForLesson(lesson: CourseLesson): string | null {
-  const rows = collectLessonUrls(lesson);
-  for (const row of rows) {
-    if (isHostedVideoFileUrl(row.url)) return row.url;
-  }
-  for (const row of rows) {
-    if (isDriveVideoUrl(row.url, row.title, row.mime)) return row.url;
-  }
-  const sourceUrl = lesson.source?.data?.data ?? "";
-  if (
-    isDownloadableSource(lesson.source_type, sourceUrl) &&
-    !extractYouTubeId(sourceUrl) &&
-    !extractVimeoId(sourceUrl)
-  ) {
-    return sourceUrl;
-  }
-  return null;
-}
-
-export function isDownloadableLesson(lesson: CourseLesson): boolean {
-  return downloadUrlForLesson(lesson) !== null;
 }
 
 export async function ensureDownloadsDir(): Promise<void> {
@@ -217,10 +202,32 @@ export async function pruneMissingDownloads(
   return next;
 }
 
-const activeDownloads = new Map<
-  number,
-  FileSystem.DownloadResumable
->();
+const activeDownloads = new Map<number, FileSystem.DownloadResumable>();
+
+function mapDownloadApiError(err: unknown): Error {
+  if (!(err instanceof Error)) {
+    return new Error(t("errors.download.failed"));
+  }
+  const status = (err as Error & { status?: number }).status;
+  const code = ((err as Error & { code?: string }).code ?? err.message).toUpperCase();
+
+  if (status === 401 || code === "UNAUTHORIZED") {
+    return new Error(t("errors.download.unauthorized"));
+  }
+  if (status === 403 || code === "NOT_ENROLLED") {
+    return new Error(t("errors.download.notEnrolled"));
+  }
+  if (status === 404 || code === "LESSON_NOT_FOUND") {
+    return new Error(t("errors.download.lessonNotFound"));
+  }
+  if (status === 422 || code === "NOT_DOWNLOADABLE") {
+    return new Error(t("errors.download.notSupported"));
+  }
+  if (err.message === "MISSING_DOWNLOAD_URL") {
+    return new Error(t("errors.download.notSupported"));
+  }
+  return new Error(t("errors.download.failed"));
+}
 
 export async function downloadLessonVideo(params: {
   lessonId: number;
@@ -230,30 +237,70 @@ export async function downloadLessonVideo(params: {
   lessonTitle: string;
   lessonDescription?: string | null;
   sourceType: string;
-  remoteUrl: string;
+  /**
+   * `api` — lesson video via GET .../download?format=json (default).
+   * `direct` — PDF/material URL only (never use lesson share /view for video).
+   */
+  mode?: "api" | "direct";
+  remoteUrl?: string;
   onProgress?: (progress: number) => void;
 }): Promise<OfflineDownload> {
-  const canFetch =
-    isDriveVideoUrl(params.remoteUrl) ||
-    isDownloadableSource("upload", params.remoteUrl) ||
-    isDownloadableSource(params.sourceType, params.remoteUrl);
-  if (!canFetch) {
-    throw new Error(t("errors.download.notSupported"));
-  }
+  const mode = params.mode ?? (params.remoteUrl ? "direct" : "api");
+
   if (activeDownloads.has(params.lessonId)) {
     throw new Error(t("errors.download.inProgress"));
   }
 
   await ensureDownloadsDir();
-  const localUri = localPathForLesson(params.lessonId, params.remoteUrl);
+
+  let fileUrl: string;
+  let fileName: string;
+  let contentType: string | undefined;
+  let localUri: string;
+
+  if (mode === "api") {
+    let meta;
+    try {
+      meta = await api.fetchLessonOfflineDownload(
+        params.courseSlug,
+        params.lessonId
+      );
+    } catch (err) {
+      throw mapDownloadApiError(err);
+    }
+    fileUrl = meta.download_url;
+    fileName = sanitizeFileName(meta.file_name || `${params.lessonTitle}.mp4`);
+    contentType = meta.content_type;
+    localUri = localPathForLessonFile(params.lessonId, fileName);
+  } else {
+    const remoteUrl = (params.remoteUrl ?? "").trim();
+    if (
+      !isDownloadableMaterial(
+        remoteUrl,
+        params.lessonTitle,
+        params.sourceType === "pdf" ? "application/pdf" : ""
+      )
+    ) {
+      throw new Error(t("errors.download.notSupported"));
+    }
+    fileUrl = resolveRemoteDownloadUrl(remoteUrl);
+    fileName = sanitizeFileName(
+      `${params.lessonTitle}.${isPdfFile(undefined, remoteUrl) ? "pdf" : "mp4"}`
+    );
+    localUri = localPathForDirectUrl(
+      params.lessonId,
+      remoteUrl,
+      params.lessonTitle
+    );
+  }
 
   const existing = await FileSystem.getInfoAsync(localUri);
   if (existing.exists) {
     await FileSystem.deleteAsync(localUri, { idempotent: true });
   }
 
-  const urlsToTry = [resolveRemoteDownloadUrl(params.remoteUrl)];
-  const driveId = extractGoogleDriveFileId(params.remoteUrl);
+  const urlsToTry = [fileUrl];
+  const driveId = extractGoogleDriveFileId(fileUrl);
   if (driveId) {
     urlsToTry.push(
       `https://drive.google.com/uc?export=download&confirm=t&id=${encodeURIComponent(driveId)}`
@@ -285,8 +332,10 @@ export async function downloadLessonVideo(params: {
       lessonTitle: params.lessonTitle,
       lessonDescription: params.lessonDescription ?? null,
       sourceType: params.sourceType,
-      remoteUrl: params.remoteUrl,
+      remoteUrl: fileUrl,
       localUri: resultUri,
+      fileName,
+      contentType,
       fileSize,
       downloadedAt: new Date().toISOString(),
     };
@@ -351,7 +400,10 @@ async function downloadOnce(
     (data) => {
       if (data.totalBytesExpectedToWrite <= 0) return;
       onProgress?.(
-        Math.min(1, Math.max(0, data.totalBytesWritten / data.totalBytesExpectedToWrite))
+        Math.min(
+          1,
+          Math.max(0, data.totalBytesWritten / data.totalBytesExpectedToWrite)
+        )
       );
     }
   );
@@ -436,7 +488,13 @@ export function formatBytes(bytes: number): string {
 export type OfflineContentKind = "video" | "book";
 
 export function offlineContentKind(item: OfflineDownload): OfflineContentKind {
-  const hint = `${item.lessonTitle} ${item.remoteUrl} ${item.localUri}`;
-  if (isPdfFile(undefined, hint)) return "book";
+  const hint = `${item.lessonTitle} ${item.remoteUrl} ${item.localUri} ${item.sourceType} ${item.fileName ?? ""} ${item.contentType ?? ""}`;
+  if (
+    item.sourceType === "pdf" ||
+    (item.contentType ?? "").includes("pdf") ||
+    isPdfFile(undefined, hint)
+  ) {
+    return "book";
+  }
   return "video";
 }

@@ -24,6 +24,7 @@ import {
   type EnrollmentWithProgress,
   type LearningTimePeriod,
 } from "@/lib/learningReport";
+import { useAuthStore } from "@/store/authStore";
 import { colors, radii, spacing } from "@/theme";
 import type { AppStackParamList } from "@/navigation/types";
 
@@ -79,6 +80,7 @@ function CourseReportRow({
 
 export function LearningReportScreen() {
   const { t } = useTranslation();
+  const user = useAuthStore((s) => s.user);
   const navigation =
     useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const route = useRoute<
@@ -89,9 +91,10 @@ export function LearningReportScreen() {
   const [period, setPeriod] = useState<LearningTimePeriod>("7d");
 
   const reportQuery = useQuery({
-    queryKey: ["learning-report", period],
-    queryFn: () => fetchFullLearningReport(period),
-    staleTime: 60_000,
+    queryKey: ["learning-report", period, user?.id],
+    queryFn: () => fetchFullLearningReport(period, user?.id),
+    staleTime: 15_000,
+    refetchOnMount: "always",
   });
 
   const report = reportQuery.data;

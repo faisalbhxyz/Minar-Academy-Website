@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import * as api from "@/api";
 import { AppHeader } from "@/components/AppHeader";
-import { CourseCard } from "@/components/CourseCard";
+import { CourseCardListItem } from "@/components/CourseCardListItem";
 import { EmptyState } from "@/components/EmptyState";
 import { Screen } from "@/components/Screen";
 import { useTranslation } from "@/i18n";
@@ -34,7 +34,25 @@ export function SearchScreen({ navigation }: Props) {
     queryKey: ["search", debounced],
     queryFn: () => api.searchCourses(debounced),
     enabled: debounced.length >= 2,
+    staleTime: 60_000,
   });
+
+  const onPressSlug = useCallback(
+    (slug: string) => navigation.navigate("CourseDetail", { slug }),
+    [navigation]
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: NonNullable<typeof searchQuery.data>[number] }) => (
+      <CourseCardListItem compact course={item} onPressSlug={onPressSlug} />
+    ),
+    [onPressSlug]
+  );
+
+  const keyExtractor = useCallback(
+    (item: NonNullable<typeof searchQuery.data>[number]) => String(item.id),
+    []
+  );
 
   return (
     <Screen
@@ -65,8 +83,13 @@ export function SearchScreen({ navigation }: Props) {
       ) : (
         <FlatList
           data={searchQuery.data ?? []}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={keyExtractor}
           contentContainerStyle={styles.list}
+          initialNumToRender={6}
+          maxToRenderPerBatch={6}
+          windowSize={7}
+          removeClippedSubviews
+          keyboardShouldPersistTaps="handled"
           ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
           ListEmptyComponent={
             !searchQuery.isFetching ? (
@@ -76,15 +99,7 @@ export function SearchScreen({ navigation }: Props) {
               />
             ) : null
           }
-          renderItem={({ item }) => (
-            <CourseCard
-              compact
-              course={item}
-              onPress={() =>
-                navigation.navigate("CourseDetail", { slug: item.slug })
-              }
-            />
-          )}
+          renderItem={renderItem}
         />
       )}
     </Screen>

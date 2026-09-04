@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import {
   Pressable,
   ScrollView,
@@ -21,44 +21,54 @@ type Props = {
   items: QuickAccessItem[];
 };
 
-export function QuickAccessRow({ items }: Props) {
+export const QuickAccessRow = memo(function QuickAccessRow({ items }: Props) {
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.row}
+      contentContainerStyle={styles.scrollContent}
     >
-      {items.map((item) => (
-        <Pressable
-          key={item.key}
-          onPress={item.onPress}
-          style={({ pressed }) => [
-            styles.item,
-            pressed ? { opacity: 0.88 } : null,
-          ]}
-        >
-          <View style={[styles.iconCircle, { backgroundColor: item.color }]}>
-            {item.icon}
-          </View>
-          <Text style={styles.label} numberOfLines={2}>
-            {item.label}
-          </Text>
-        </Pressable>
-      ))}
+      <View style={styles.row}>
+        {items.map((item) => (
+          <Pressable
+            key={item.key}
+            onPress={item.onPress}
+            style={({ pressed }) => [
+              styles.item,
+              pressed ? { opacity: 0.88 } : null,
+            ]}
+          >
+            <View style={[styles.iconCircle, { backgroundColor: item.color }]}>
+              {item.icon}
+            </View>
+            <Text style={styles.label} numberOfLines={2}>
+              {item.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
     </ScrollView>
   );
-}
+});
+
+const ITEM_WIDTH = 88;
 
 const styles = StyleSheet.create({
-  row: {
+  scrollContent: {
     paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: spacing.lg,
-    paddingBottom: spacing.lg,
   },
   item: {
-    width: 72,
+    width: ITEM_WIDTH,
+    flexShrink: 0,
     alignItems: "center",
-    gap: spacing.sm,
+    gap: spacing.sm + 2,
   },
   iconCircle: {
     width: 52,
@@ -73,10 +83,12 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   label: {
+    width: "100%",
     fontFamily: "DMSans_500Medium",
     fontSize: 11,
     color: colors.ink,
     textAlign: "center",
-    lineHeight: 14,
+    lineHeight: 16,
+    minHeight: 32,
   },
 });

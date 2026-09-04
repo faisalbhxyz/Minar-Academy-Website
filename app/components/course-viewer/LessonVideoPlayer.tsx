@@ -22,15 +22,18 @@ import {
   saveWatchPosition,
   type CourseProgressData,
 } from "@/lib/courseProgressApi";
+import { flushWatchSeconds, type WatchTimeSource } from "@/lib/watchTimeApi";
 
 interface LessonVideoPlayerProps {
   provider: "youtube" | "vimeo";
   videoId: string;
   autoPlay?: boolean;
   lessonId?: number;
+  courseId?: number;
   courseSlug?: string;
   accessToken?: string;
   studentId?: string;
+  watchSource?: WatchTimeSource;
   isAlreadyCompleted?: boolean;
   onLessonCompleted?: (
     lessonId: number,
@@ -38,14 +41,19 @@ interface LessonVideoPlayerProps {
   ) => void;
 }
 
+/** Ignore gaps larger than this — pause / seek / tab blur. */
+const MAX_TICK_GAP_SECONDS = 4;
+
 export default function LessonVideoPlayer({
   provider,
   videoId,
   autoPlay = false,
   lessonId,
+  courseId,
   courseSlug,
   accessToken,
   studentId,
+  watchSource = "enrolled",
   isAlreadyCompleted = false,
   onLessonCompleted,
 }: LessonVideoPlayerProps) {
@@ -55,6 +63,8 @@ export default function LessonVideoPlayer({
   const maxPositionRef = useRef(0);
   const completePostedRef = useRef(isAlreadyCompleted);
   const lastSaveRef = useRef(0);
+  const lastTickAtRef = useRef<number | null>(null);
+  const pendingWatchSecondsRef = useRef(0);
   const onLessonCompletedRef = useRef(onLessonCompleted);
 
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
@@ -81,6 +91,8 @@ export default function LessonVideoPlayer({
     completePostedRef.current = isAlreadyCompleted;
     maxPositionRef.current = 0;
     lastSaveRef.current = 0;
+    lastTickAtRef.current = null;
+    pendingWatchSecondsRef.current = 0;
   }, [lessonId, isAlreadyCompleted]);
 
   const formatTime = (sec: number) => {
@@ -93,7 +105,6 @@ export default function LessonVideoPlayer({
   };
 
   useEffect(() => {
-    // Only proceed if the player should be visible AND the ref exists
     if (!playerRef.current || !isPlayerVisible) {
       if (playerInstance.current) {
         playerInstance.current.destroy();
@@ -125,7 +136,22 @@ export default function LessonVideoPlayer({
 
     playerInstance.current = instance;
 
+    const flushWatchTime = () => {
+      if (!trackingEnabled || !accessToken) return;
+      const seconds = Math.floor(pendingWatchSecondsRef.current);
+      if (seconds < 1) return;
+      pendingWatchSecondsRef.current -= seconds;
+      void flushWatchSeconds({
+        seconds,
+        accessToken,
+        courseId,
+        lessonId: lessonId ?? undefined,
+        source: watchSource,
+      }).catch(() => undefined);
+    };
+
     const flushWatchProgress = () => {
+      flushWatchTime();
       if (!trackingEnabled || lessonId == null || maxPositionRef.current <= 0) {
         return;
       }
@@ -159,6 +185,11 @@ export default function LessonVideoPlayer({
             maxPositionRef.current = saved;
           }
         });
+
+        void flushWatchSeconds({
+          seconds: 0,
+          accessToken: accessToken!,
+        }).catch(() => undefined);
       }
 
       if (autoPlay) {
@@ -180,6 +211,18 @@ export default function LessonVideoPlayer({
       }
 
       const now = Date.now();
+      if (instance.playing) {
+        if (lastTickAtRef.current != null) {
+          const gapSec = (now - lastTickAtRef.current) / 1000;
+          if (gapSec > 0 && gapSec <= MAX_TICK_GAP_SECONDS) {
+            pendingWatchSecondsRef.current += gapSec;
+          }
+        }
+        lastTickAtRef.current = now;
+      } else {
+        lastTickAtRef.current = null;
+      }
+
       if (now - lastSaveRef.current >= WATCH_SAVE_INTERVAL_MS) {
         lastSaveRef.current = now;
         flushWatchProgress();
@@ -199,12 +242,17 @@ export default function LessonVideoPlayer({
       }
     });
 
-    instance.on("play", () => setPlaying(true));
+    instance.on("play", () => {
+      setPlaying(true);
+      lastTickAtRef.current = Date.now();
+    });
     instance.on("pause", () => {
       setPlaying(false);
+      lastTickAtRef.current = null;
       flushWatchProgress();
     });
     instance.on("ended", () => {
+      lastTickAtRef.current = null;
       flushWatchProgress();
     });
     instance.on("volumechange", () => {
@@ -212,7 +260,6 @@ export default function LessonVideoPlayer({
       setVolume(instance.volume);
     });
 
-    // Cleanup function
     return () => {
       flushWatchProgress();
       if (playerInstance.current) playerInstance.current.destroy();
@@ -226,9 +273,11 @@ export default function LessonVideoPlayer({
     isPlayerVisible,
     autoPlay,
     lessonId,
+    courseId,
     courseSlug,
     accessToken,
     studentId,
+    watchSource,
   ]);
 
   const toggleFullscreen = () => {
@@ -281,10 +330,8 @@ export default function LessonVideoPlayer({
   const togglePlay = () => {
     const player = playerInstance.current;
     if (!player) {
-      // First click: Show player and start initialization (which will auto-play)
       setIsPlayerVisible(true);
     } else {
-      // Subsequent clicks: Use Plyr's togglePlay function
       player.togglePlay();
     }
   };
@@ -294,7 +341,6 @@ export default function LessonVideoPlayer({
     if (!player) return;
     player.muted = !player.muted;
   };
-  const restartVideo = () => playerInstance.current?.restart();
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const player = playerInstance.current;
@@ -320,14 +366,13 @@ export default function LessonVideoPlayer({
       onClick={() => {
         const player = playerInstance.current;
         if (!player) {
-          setIsPlayerVisible(true); // first click shows player
+          setIsPlayerVisible(true);
         } else {
           if (playing) player.pause();
           else player.play();
         }
       }}
     >
-      {/* 2. Plyr Container (Only mounted/visible when clicked) */}
       {isPlayerVisible && (
         <div
           ref={playerRef}
@@ -337,13 +382,11 @@ export default function LessonVideoPlayer({
         />
       )}
 
-      {/* 3. Transparent event-interception overlay (Z-index 30) */}
       <div
         className="absolute inset-0 z-30 cursor-none"
         onMouseMove={handleMouseMove}
       />
 
-      {/* 4. Controls Overlay (Z-index 40) */}
       {showControls && (
         <div className="absolute inset-0 flex flex-col justify-end px-4 py-3 z-40">
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
@@ -461,12 +504,10 @@ export default function LessonVideoPlayer({
         }
 
         .plyr--paused {
-          /* Force poster to render on pause */
-          background: #000; /* or use a custom color or image */
+          background: #000;
         }
 
         .plyr__poster {
-          /* Force poster to cover the video */
           background-size: cover;
           z-index: 2;
         }

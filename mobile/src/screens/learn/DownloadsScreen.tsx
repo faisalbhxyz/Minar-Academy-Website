@@ -20,6 +20,7 @@ import {
   offlineContentKind,
   type OfflineDownload,
 } from "@/lib/offlineDownloads";
+import { isPdfFile } from "@/lib/format";
 import type { AppStackParamList } from "@/navigation/types";
 import {
   useDownloadsStore,
@@ -34,6 +35,14 @@ type FilterKey = "latest" | "playlist" | "all" | "book";
 type DownloadRow =
   | { kind: "completed"; item: OfflineDownload }
   | { kind: "downloading"; meta: PendingDownloadMeta; progress: number };
+
+function pendingIsBook(meta: PendingDownloadMeta): boolean {
+  return (
+    meta.sourceType === "pdf" ||
+    meta.mode === "direct" ||
+    isPdfFile(undefined, `${meta.lessonTitle} ${meta.remoteUrl ?? ""}`)
+  );
+}
 
 function CircularProgress({ progress }: { progress: number }) {
   const pct = Math.round(progress * 100);
@@ -122,15 +131,19 @@ export function DownloadsScreen({ navigation }: Props) {
         return all.sort(byDate);
       case "playlist":
         return all
-          .filter(
-            (row) =>
-              row.kind === "downloading" ||
-              offlineContentKind(row.item) === "video"
+          .filter((row) =>
+            row.kind === "downloading"
+              ? !pendingIsBook(row.meta)
+              : offlineContentKind(row.item) === "video"
           )
           .sort(byDate);
       case "book":
-        return completed
-          .filter((row) => offlineContentKind(row.item) === "book")
+        return all
+          .filter((row) =>
+            row.kind === "downloading"
+              ? pendingIsBook(row.meta)
+              : offlineContentKind(row.item) === "book"
+          )
           .sort(byDate);
       case "all":
       default:
@@ -171,21 +184,34 @@ export function DownloadsScreen({ navigation }: Props) {
     );
   };
 
+  const openItem = (item: OfflineDownload) => {
+    if (offlineContentKind(item) === "book") {
+      navigation.navigate("NoteViewer", {
+        title: item.lessonTitle,
+        pdfUrl: item.localUri,
+        fileName: item.lessonTitle,
+        fitWidth: true,
+      });
+      return;
+    }
+    openLesson({
+      courseId: item.courseId,
+      courseSlug: item.courseSlug,
+      courseTitle: item.courseTitle,
+      lessonId: item.lessonId,
+      lessonTitle: item.lessonTitle,
+      lessonDescription: item.lessonDescription,
+      sourceType: item.sourceType,
+      sourceData: item.remoteUrl,
+    });
+  };
+
   const showItemMenu = (item: OfflineDownload) => {
+    const isBook = offlineContentKind(item) === "book";
     Alert.alert(item.lessonTitle, item.courseTitle, [
       {
-        text: t("common.play"),
-        onPress: () =>
-          openLesson({
-            courseId: item.courseId,
-            courseSlug: item.courseSlug,
-            courseTitle: item.courseTitle,
-            lessonId: item.lessonId,
-            lessonTitle: item.lessonTitle,
-            lessonDescription: item.lessonDescription,
-            sourceType: item.sourceType,
-            sourceData: item.remoteUrl,
-          }),
+        text: isBook ? t("common.view") : t("common.play"),
+        onPress: () => openItem(item),
       },
       {
         text: t("common.delete"),
@@ -212,28 +238,34 @@ export function DownloadsScreen({ navigation }: Props) {
         <Text style={styles.subtitle}>{t("downloads.subtitle")}</Text>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filters}
-      >
-        {filters.map(({ key, label }) => {
-          const active = filter === key;
-          return (
-            <Pressable
-              key={key}
-              onPress={() => setFilter(key)}
-              style={[styles.chip, active ? styles.chipActive : null]}
-            >
-              <Text
-                style={[styles.chipText, active ? styles.chipTextActive : null]}
+      <View style={styles.filtersWrap}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filtersScroll}
+          contentContainerStyle={styles.filters}
+        >
+          {filters.map(({ key, label }) => {
+            const active = filter === key;
+            return (
+              <Pressable
+                key={key}
+                onPress={() => setFilter(key)}
+                style={[styles.chip, active ? styles.chipActive : null]}
               >
-                {label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+                <Text
+                  style={[
+                    styles.chipText,
+                    active ? styles.chipTextActive : null,
+                  ]}
+                >
+                  {label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       <FlatList
         data={rows}
@@ -262,7 +294,9 @@ export function DownloadsScreen({ navigation }: Props) {
             const { meta, progress } = row;
             return (
               <View style={styles.row}>
-                <DownloadIcon contentKind="video" />
+                <DownloadIcon
+                  contentKind={pendingIsBook(meta) ? "book" : "video"}
+                />
                 <View style={styles.meta}>
                   <Text style={styles.lessonTitle} numberOfLines={2}>
                     {meta.lessonTitle}
@@ -286,18 +320,7 @@ export function DownloadsScreen({ navigation }: Props) {
                 styles.row,
                 pressed ? { opacity: 0.9 } : null,
               ]}
-              onPress={() =>
-                openLesson({
-                  courseId: item.courseId,
-                  courseSlug: item.courseSlug,
-                  courseTitle: item.courseTitle,
-                  lessonId: item.lessonId,
-                  lessonTitle: item.lessonTitle,
-                  lessonDescription: item.lessonDescription,
-                  sourceType: item.sourceType,
-                  sourceData: item.remoteUrl,
-                })
-              }
+              onPress={() => openItem(item)}
             >
               <DownloadIcon contentKind={contentKind} />
               <View style={styles.meta}>
@@ -350,10 +373,17 @@ const styles = StyleSheet.create({
     color: colors.inkMuted,
     lineHeight: 18,
   },
+  filtersWrap: {
+    flexGrow: 0,
+  },
+  filtersScroll: {
+    flexGrow: 0,
+  },
   filters: {
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
     gap: spacing.sm,
+    alignItems: "center",
   },
   chip: {
     paddingHorizontal: spacing.lg,
@@ -363,6 +393,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     marginRight: spacing.sm,
+    alignSelf: "center",
   },
   chipActive: {
     backgroundColor: colors.ink,

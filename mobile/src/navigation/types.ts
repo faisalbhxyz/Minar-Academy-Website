@@ -26,6 +26,8 @@ export type LessonPlayerParams = {
   lessonType?: string;
   sourceType: string;
   sourceData: string;
+  /** From curriculum — show Save offline when true and enrolled. */
+  offlineDownloadable?: boolean;
 };
 
 export type CheckoutParams = {
@@ -42,6 +44,8 @@ export type AppStackParamList = {
     | {
         categorySlug?: string;
         categoryName?: string;
+        /** `menu` = class subcategory (`/course/menu/{slug}`), like web. */
+        filter?: "menu" | "category";
       }
     | undefined;
   LearningMain: undefined;
@@ -74,7 +78,13 @@ export type AppStackParamList = {
     paperSlug: string;
     title: string;
   };
-  NoteViewer: { title: string; pdfUrl: string; fileName?: string };
+  NoteViewer: {
+    title: string;
+    pdfUrl: string;
+    fileName?: string;
+    /** Lesson/app materials: fill screen width (no side gutters). Notes omit this. */
+    fitWidth?: boolean;
+  };
   Assignments: undefined;
   AssignmentDetail: {
     courseSlug: string;
@@ -86,6 +96,29 @@ export type AppStackParamList = {
   LearningReport: undefined;
   Notifications: undefined;
   Orders: undefined;
+  FreeLessonSelect:
+    | {
+        classSlug?: string;
+        classTitle?: string;
+      }
+    | undefined;
+  FreeLessonAdded: {
+    lessons: {
+      lessonId: number;
+      lessonTitle: string;
+      chapterTitle: string;
+      courseId: number;
+      courseSlug: string;
+      courseTitle: string;
+      featuredImage?: string | null;
+      lessonDescription?: string | null;
+      lessonType?: string;
+      sourceType: string;
+      sourceData: string;
+      offlineDownloadable?: boolean;
+    }[];
+  };
+  FreeLessons: undefined;
 };
 
 export type MainTabParamList = {

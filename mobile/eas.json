@@ -10,7 +10,8 @@
         "buildType": "apk"
       },
       "env": {
-        "NODE_ENV": "production"
+        "ORG_GRADLE_PROJECT_reactNativeArchitectures": "armeabi-v7a,arm64-v8a",
+        "ORG_GRADLE_PROJECT_enableSeparateBuildPerCPUArchitecture": "false"
       }
     },
     "apk-safe": {
@@ -22,9 +23,10 @@
         "autoIncrement": true
       },
       "env": {
-        "NODE_ENV": "production",
         "EXPO_PUBLIC_API_URL": "https://api.minaracademy.com/v1",
-        "EXPO_PUBLIC_APP_KEY": "cmbwd9tis0002013i4lmol1ew"
+        "EXPO_PUBLIC_APP_KEY": "cmbwd9tis0002013i4lmol1ew",
+        "ORG_GRADLE_PROJECT_reactNativeArchitectures": "armeabi-v7a,arm64-v8a",
+        "ORG_GRADLE_PROJECT_enableSeparateBuildPerCPUArchitecture": "false"
       }
     },
     "production": {
@@ -34,9 +36,10 @@
         "autoIncrement": true
       },
       "env": {
-        "NODE_ENV": "production",
         "EXPO_PUBLIC_API_URL": "https://api.minaracademy.com/v1",
-        "EXPO_PUBLIC_APP_KEY": "cmbwd9tis0002013i4lmol1ew"
+        "EXPO_PUBLIC_APP_KEY": "cmbwd9tis0002013i4lmol1ew",
+        "ORG_GRADLE_PROJECT_reactNativeArchitectures": "armeabi-v7a,arm64-v8a",
+        "ORG_GRADLE_PROJECT_enableSeparateBuildPerCPUArchitecture": "false"
       }
     }
   },

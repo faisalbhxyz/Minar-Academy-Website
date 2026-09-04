@@ -8,7 +8,6 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 import { BrandLogo } from "@/components/BrandLogo";
@@ -26,7 +25,6 @@ type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
 export function LoginScreen({ navigation }: Props) {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const login = useAuthStore((s) => s.login);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,15 +59,14 @@ export function LoginScreen({ navigation }: Props) {
           end={{ x: 1, y: 1 }}
           style={styles.hero}
         >
-          <LanguageToggle
-            variant="dark"
-            style={[styles.langToggle, { top: insets.top + spacing.sm }]}
-          />
-          <BrandLogo size="lg" style={styles.logo} navigateHome={false} />
           <Text style={styles.tagline}>{t("auth.tagline")}</Text>
         </LinearGradient>
 
         <View style={styles.sheet}>
+          <LanguageToggle variant="light" style={styles.langToggle} />
+          <View style={styles.logoWrap}>
+            <BrandLogo size="md" navigateHome={false} style={styles.sheetLogo} />
+          </View>
           <Text style={styles.heading}>{t("auth.signIn")}</Text>
           <Text style={styles.sub}>{t("auth.signInSubtitle")}</Text>
 
@@ -118,18 +115,24 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   hero: {
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.xxxl,
-    minHeight: 280,
+    paddingTop: spacing.xxxl,
+    paddingBottom: spacing.xxl,
+    minHeight: 160,
     justifyContent: "flex-end",
   },
   langToggle: {
     position: "absolute",
-    right: spacing.lg,
+    top: spacing.lg,
+    right: spacing.xl,
     zIndex: 1,
   },
-  logo: {
-    marginBottom: spacing.md,
+  logoWrap: {
+    alignItems: "center",
+    marginTop: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  sheetLogo: {
+    alignSelf: "center",
   },
   tagline: {
     marginTop: spacing.sm,
@@ -143,7 +146,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderTopLeftRadius: radii.xl,
     borderTopRightRadius: radii.xl,
-    padding: spacing.xl,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.xl,
   },
   heading: {
     fontFamily: "Outfit_700Bold",

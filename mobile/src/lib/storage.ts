@@ -6,6 +6,7 @@ import { Platform } from "react-native";
 const DEVICE_ID_KEY = "lurnic_device_id";
 const TOKEN_KEY = "minar_access_token";
 const USER_KEY = "minar_user_json";
+const SELECTED_CLASS_SLUG_KEY = "minar_selected_class_slug";
 
 function randomId(): string {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -84,6 +85,14 @@ export async function clearUserJson(): Promise<void> {
 
 export async function clearSession(): Promise<void> {
   await Promise.all([clearToken(), clearUserJson()]);
+}
+
+export async function getSelectedClassSlug(): Promise<string | null> {
+  return AsyncStorage.getItem(SELECTED_CLASS_SLUG_KEY);
+}
+
+export async function saveSelectedClassSlug(slug: string): Promise<void> {
+  await AsyncStorage.setItem(SELECTED_CLASS_SLUG_KEY, slug);
 }
 
 export const isAndroid = Platform.OS === "android";

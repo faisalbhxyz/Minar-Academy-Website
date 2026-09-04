@@ -10,14 +10,25 @@ export type PushPlatform = "android" | "ios";
 
 const ANDROID_CHANNEL_ID = "default";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+let notificationHandlerReady = false;
+
+export function ensurePushNotificationHandler(): void {
+  if (notificationHandlerReady || Platform.OS === "web") return;
+
+  try {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }),
+    });
+    notificationHandlerReady = true;
+  } catch {
+    // Never crash app startup if notifications native module is unavailable.
+  }
+}
 
 function isPushSupported(): boolean {
   if (Platform.OS === "web") return false;
@@ -54,6 +65,8 @@ async function ensurePermission(): Promise<boolean> {
 
 export async function getPushToken(): Promise<string | null> {
   if (!isPushSupported()) return null;
+
+  ensurePushNotificationHandler();
 
   const permitted = await ensurePermission();
   if (!permitted) return null;

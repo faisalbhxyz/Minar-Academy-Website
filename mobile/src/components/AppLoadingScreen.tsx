@@ -17,12 +17,16 @@ const APP_VERSION =
   Constants.nativeAppVersion ??
   "1.0.0";
 
-export function AppLoadingScreen() {
+type Props = {
+  onReady?: () => void;
+};
+
+export function AppLoadingScreen({ onReady }: Props) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.root}>
+    <View style={styles.root} onLayout={onReady}>
       <View style={styles.centerBlock}>
         <Image
           source={require("../../assets/logo.png")}
@@ -46,7 +50,7 @@ export function AppLoadingScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: "#FFFFFF",
   },
   centerBlock: {
     flex: 1,
@@ -57,14 +61,14 @@ const styles = StyleSheet.create({
   logo: {
     width: 220,
     height: 94,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
   welcome: {
-    fontSize: 16,
-    lineHeight: 26,
-    color: colors.ink,
+    fontSize: 32,
+    lineHeight: 46,
+    color: "#000000",
     textAlign: "center",
-    maxWidth: 320,
+    maxWidth: 360,
   },
   footer: {
     alignItems: "center",

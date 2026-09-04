@@ -12,8 +12,12 @@ import type {
   CourseProgressData,
   CourseReview,
   CourseReviewsSummary,
+  LessonOfflineDownloadData,
   LessonVideoProgressData,
   Enrollment,
+  FreeLessonCatalogApiItem,
+  FreeLessonLibraryApiItem,
+  FreeLessonsMeta,
   Instructor,
   LearningReportPeriod,
   LoginResponse,
@@ -22,12 +26,17 @@ import type {
   QuizSubmissionResult,
   Student,
   StudentAssignmentDetail,
+  StudentClassProfile,
   StudentLearningReportData,
   StudentNotification,
   StudentOrder,
   SubmitCourseReviewPayload,
+  WatchTimeAcceptData,
+  WatchTimeBatchData,
+  WatchTimeEventPayload,
 } from "@/types/api";
 import { getDeviceId, getDeviceName } from "@/lib/storage";
+import { isAxiosError } from "axios";
 
 export async function login(email: string, password: string) {
   const device_id = await getDeviceId();
@@ -202,6 +211,36 @@ export async function markLessonComplete(
   return data.data;
 }
 
+/** Authenticated direct file URL for offline save (not the lesson share /view link). */
+export async function fetchLessonOfflineDownload(
+  courseSlug: string,
+  lessonId: number
+): Promise<LessonOfflineDownloadData> {
+  try {
+    const { data } = await api.get<ApiEnvelope<LessonOfflineDownloadData>>(
+      `/course/${courseSlug}/lessons/${lessonId}/download`,
+      { params: { format: "json" } }
+    );
+    if (!data.data?.download_url) {
+      throw new Error("MISSING_DOWNLOAD_URL");
+    }
+    return data.data;
+  } catch (err) {
+    if (isAxiosError(err)) {
+      const status = err.response?.status ?? 0;
+      const body = err.response?.data as
+        | { error?: string; code?: string; message?: string }
+        | undefined;
+      const code = body?.error ?? body?.code ?? "";
+      const error = new Error(code || `DOWNLOAD_HTTP_${status}`);
+      (error as Error & { status?: number; code?: string }).status = status;
+      (error as Error & { status?: number; code?: string }).code = code;
+      throw error;
+    }
+    throw err;
+  }
+}
+
 export async function fetchLessonVideoProgress(
   courseSlug: string,
   lessonId: number
@@ -272,8 +311,83 @@ export async function fetchCoursesByCategory(slug: string) {
   return data.data ?? [];
 }
 
+/** Web parity: filter courses by class subcategory slug. */
+export async function fetchCoursesByMenu(slug: string) {
+  const { data } = await api.get<ApiEnvelope<CourseDetails[]>>(
+    `/course/menu/${slug}`
+  );
+  return data.data ?? [];
+}
+
+export async function fetchFreeLessonsCatalog(params?: {
+  classSlug?: string;
+  limit?: number;
+  offset?: number;
+}) {
+  const { data } = await api.get<{
+    data: FreeLessonCatalogApiItem[];
+    meta?: FreeLessonsMeta;
+    message?: string;
+  }>("/free-lessons", {
+    params: {
+      class_slug: params?.classSlug || undefined,
+      limit: params?.limit ?? 50,
+      offset: params?.offset ?? 0,
+    },
+  });
+  return {
+    items: data.data ?? [],
+    meta: data.meta,
+  };
+}
+
+export async function fetchMyFreeLessons() {
+  const { data } = await api.get<ApiEnvelope<FreeLessonLibraryApiItem[]>>(
+    "/student/free-lessons"
+  );
+  return data.data ?? [];
+}
+
+export async function addMyFreeLessons(lessonIds: number[]) {
+  const { data } = await api.post<ApiEnvelope<FreeLessonLibraryApiItem[]>>(
+    "/student/free-lessons",
+    { lesson_ids: lessonIds }
+  );
+  return data.data ?? [];
+}
+
+export async function removeMyFreeLesson(lessonId: number) {
+  const { data } = await api.delete<{ message?: string }>(
+    `/student/free-lessons/${lessonId}`
+  );
+  return data;
+}
+
 export async function fetchStudentDetails() {
   const { data } = await api.get<ApiEnvelope<Student>>("/student/details");
+  return data.data;
+}
+
+export async function fetchClassProfile() {
+  const { data } = await api.get<ApiEnvelope<StudentClassProfile | null>>(
+    "/student/class-profile"
+  );
+  return data.data ?? null;
+}
+
+export type UpdateClassProfilePayload = {
+  class_level?: string;
+  hsc_batch?: string | null;
+  department?: string | null;
+  preferred_class_slug?: string | null;
+  onboarding_completed?: boolean;
+};
+
+export async function updateClassProfile(payload: UpdateClassProfilePayload) {
+  const { data } = await api.put<ApiEnvelope<StudentClassProfile>>(
+    "/student/class-profile",
+    payload
+  );
   return data.data;
 }
 
@@ -383,6 +497,22 @@ export async function fetchLearningReport(period: LearningReportPeriod = "7d") {
   return data.data;
 }
 
+export async function postWatchTime(payload: WatchTimeEventPayload) {
+  const { data } = await api.post<ApiEnvelope<WatchTimeAcceptData>>(
+    "/student/watch-time",
+    payload
+  );
+  return data.data;
+}
+
+export async function postWatchTimeBatch(events: WatchTimeEventPayload[]) {
+  const { data } = await api.post<ApiEnvelope<WatchTimeBatchData>>(
+    "/student/watch-time/batch",
+    { events }
+  );
+  return data.data;
+}
+
 export async function fetchNotifications() {
   const { data } = await api.get<ApiEnvelope<StudentNotification[]>>(
     "/student/notifications"
@@ -415,4 +545,24 @@ export async function fetchStudentOrders() {
     "/student/orders"
   );
   return data.data ?? [];
+}
+
+export type DeviceFlagPayload = {
+  device_id: string;
+  user_id: number | null;
+  timestamp: string;
+  flags?: {
+    isRooted: boolean;
+    isDebugged: boolean;
+    canMockLocation: boolean;
+    isEmulator: boolean;
+    isExternalStorage: boolean;
+  };
+};
+
+/** Logs rooted / suspicious devices for server-side review. */
+export async function reportDeviceFlag(
+  payload: DeviceFlagPayload
+): Promise<void> {
+  await api.post("/device-flag", payload);
 }

@@ -306,17 +306,46 @@ export async function fetchEnrollmentsWithProgress(): Promise<
   return withProgress;
 }
 
+function normalizeApiDateKey(raw: string): string {
+  const trimmed = raw.trim();
+  return trimmed.length >= 10 ? trimmed.slice(0, 10) : trimmed;
+}
+
 export function buildLearningTimeFromApi(
   period: LearningTimePeriod,
-  apiData: StudentLearningReportData | null | undefined
+  apiData: StudentLearningReportData | null | undefined,
+  localWatchByDate?: Record<string, number> | null,
+  preferServer = false
 ): LearningTimeSnapshot | null {
-  if (!apiData?.daily_watch_seconds?.length) return null;
+  const hasApi = Boolean(apiData?.daily_watch_seconds?.length);
+  const hasLocal = Boolean(
+    localWatchByDate && Object.keys(localWatchByDate).length > 0
+  );
+  if (!hasApi && !hasLocal) return null;
 
   const dayCount = PERIOD_DAYS[period];
   const today = startOfDay(new Date());
-  const secondsByDate = new Map(
-    apiData.daily_watch_seconds.map((row) => [row.date, row.seconds] as const)
-  );
+  const secondsByDate = new Map<string, number>();
+
+  if (apiData?.daily_watch_seconds) {
+    for (const row of apiData.daily_watch_seconds) {
+      const key = normalizeApiDateKey(row.date);
+      if (!key) continue;
+      secondsByDate.set(key, Math.max(secondsByDate.get(key) ?? 0, row.seconds));
+    }
+  }
+
+  // After ingest ships: successful GET is source of truth. Local only fills gaps offline.
+  if (!preferServer && localWatchByDate) {
+    for (const [key, seconds] of Object.entries(localWatchByDate)) {
+      secondsByDate.set(key, Math.max(secondsByDate.get(key) ?? 0, seconds));
+    }
+  } else if (preferServer && !hasApi && localWatchByDate) {
+    for (const [key, seconds] of Object.entries(localWatchByDate)) {
+      secondsByDate.set(key, Math.max(secondsByDate.get(key) ?? 0, seconds));
+    }
+  }
+
   const buckets: DailyLearningTime[] = [];
 
   for (let offset = dayCount - 1; offset >= 0; offset -= 1) {
@@ -357,9 +386,12 @@ export function mergeMetricsWithApi(
 }
 
 export async function fetchFullLearningReport(
-  period: LearningTimePeriod = "7d"
+  period: LearningTimePeriod = "7d",
+  userId?: number
 ): Promise<FullLearningReport> {
   const api = await import("@/api");
+  const { useLearningStore } = await import("@/store/learningStore");
+
   const [items, certificates, quizSubmissions, assignmentSubmissions, apiInsights] =
     await Promise.all([
       fetchEnrollmentsWithProgress(),
@@ -383,13 +415,36 @@ export async function fetchFullLearningReport(
     apiInsights
   );
 
+  const dayCount = PERIOD_DAYS[period];
+  const today = startOfDay(new Date());
+  const periodStart = new Date(today);
+  periodStart.setDate(today.getDate() - (dayCount - 1));
+  const localWatch =
+    userId != null
+      ? useLearningStore
+          .getState()
+          .getDailyWatchSeconds(userId, dateKey(periodStart), dateKey(today))
+      : null;
+
+  const fromApi = buildLearningTimeFromApi(
+    period,
+    apiInsights,
+    localWatch,
+    Boolean(apiInsights)
+  );
+  const fromFallback = buildLearningTimeSnapshot(
+    period,
+    quizSubmissions,
+    assignmentSubmissions
+  );
+
+  // Prefer API/local video time; if still empty, keep quiz/assignment estimates.
   const learningTime =
-    buildLearningTimeFromApi(period, apiInsights) ??
-    buildLearningTimeSnapshot(
-      period,
-      quizSubmissions,
-      assignmentSubmissions
-    );
+    fromApi && fromApi.totalSeconds > 0
+      ? fromApi
+      : fromFallback.totalSeconds > 0
+        ? fromFallback
+        : fromApi ?? fromFallback;
 
   return {
     items,

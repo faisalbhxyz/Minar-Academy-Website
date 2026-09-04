@@ -1,9 +1,10 @@
-import React from "react";
+import React, { type ReactNode } from "react";
 import {
   ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
+  View,
   type PressableProps,
   type StyleProp,
   type ViewStyle,
@@ -18,6 +19,8 @@ type Props = PressableProps & {
   loading?: boolean;
   variant?: Variant;
   style?: StyleProp<ViewStyle>;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
 };
 
 export function Button({
@@ -26,6 +29,8 @@ export function Button({
   variant = "primary",
   disabled,
   style,
+  leftIcon,
+  rightIcon,
   ...rest
 }: Props) {
   const isDisabled = disabled || loading;
@@ -48,15 +53,19 @@ export function Button({
           color={variant === "ghost" ? colors.primary : "#fff"}
         />
       ) : (
-        <Text
-          style={[
-            styles.label,
-            variant === "ghost" ? styles.ghostLabel : null,
-            variant === "secondary" ? styles.secondaryLabel : null,
-          ]}
-        >
-          {title}
-        </Text>
+        <View style={styles.content}>
+          {leftIcon}
+          <Text
+            style={[
+              styles.label,
+              variant === "ghost" ? styles.ghostLabel : null,
+              variant === "secondary" ? styles.secondaryLabel : null,
+            ]}
+          >
+            {title}
+          </Text>
+          {rightIcon}
+        </View>
       )}
     </Pressable>
   );
@@ -69,6 +78,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.xl,
+  },
+  content: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
   },
   primary: {
     backgroundColor: colors.primary,

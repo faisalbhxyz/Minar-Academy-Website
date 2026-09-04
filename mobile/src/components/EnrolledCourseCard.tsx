@@ -1,12 +1,8 @@
-import React, { useMemo } from "react";
+import React, { memo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Iconify } from "react-native-iconify";
 
 import { useTranslation } from "@/i18n";
-import {
-  estimateCertificateRemainingSeconds,
-  formatEstimatedDuration,
-} from "@/lib/certificateTime";
 import { toBengaliNumerals } from "@/lib/format";
 import type { EnrollmentWithProgress } from "@/lib/learningReport";
 import { useLocaleStore } from "@/store/localeStore";
@@ -19,7 +15,7 @@ type Props = {
   onCertificatePress?: (certificateId: number) => void;
 };
 
-export function EnrolledCourseCard({
+function EnrolledCourseCardInner({
   item,
   certificateId,
   onPress,
@@ -35,27 +31,6 @@ export function EnrolledCourseCard({
   const hasCertificate = certificateId != null;
 
   const markerLeft = hasCertificate ? Math.min(clamped, 92) : 92;
-
-  const certificateTimeLabel = useMemo(() => {
-    if (hasCertificate) {
-      return t("home.enrolled.certificateReady");
-    }
-
-    const remainingSeconds = estimateCertificateRemainingSeconds(
-      enrollment.course.general_settings?.duration,
-      progress
-    );
-    if (remainingSeconds == null || remainingSeconds <= 0) return null;
-
-    const time = formatEstimatedDuration(remainingSeconds, locale);
-    return t("home.enrolled.certificateTimeRemaining", { time });
-  }, [
-    enrollment.course.general_settings?.duration,
-    hasCertificate,
-    locale,
-    progress,
-    t,
-  ]);
 
   const statusText =
     percent >= 100
@@ -92,17 +67,6 @@ export function EnrolledCourseCard({
             {t("common.percentComplete", { percent: percentLabel })}
           </Text>
         </View>
-
-        {certificateTimeLabel ? (
-          <Text
-            style={[
-              styles.certificateTime,
-              hasCertificate ? styles.certificateTimeReady : null,
-            ]}
-          >
-            {certificateTimeLabel}
-          </Text>
-        ) : null}
       </View>
 
       <View style={styles.statusRow}>
@@ -154,6 +118,8 @@ export function EnrolledCourseCard({
     </View>
   );
 }
+
+export const EnrolledCourseCard = memo(EnrolledCourseCardInner);
 
 const styles = StyleSheet.create({
   card: {
@@ -218,14 +184,6 @@ const styles = StyleSheet.create({
     color: colors.inkMuted,
     minWidth: 88,
     textAlign: "right",
-  },
-  certificateTime: {
-    fontFamily: "DMSans_400Regular",
-    fontSize: 12,
-    color: colors.primary,
-  },
-  certificateTimeReady: {
-    color: colors.success,
   },
   statusRow: {
     flexDirection: "row",

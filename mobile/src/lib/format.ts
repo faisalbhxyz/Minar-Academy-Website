@@ -228,7 +228,7 @@ export function extractYouTubeId(raw: string): string | null {
 export function youtubeEmbedUrl(raw: string): string | null {
   const id = extractYouTubeId(raw);
   if (!id) return null;
-  return `https://www.youtube.com/embed/${id}?playsinline=1&rel=0&modestbranding=1&controls=1`;
+  return `https://www.youtube-nocookie.com/embed/${id}?playsinline=1&rel=0&modestbranding=1&controls=0&fs=0&iv_load_policy=3&cc_load_policy=0&disablekb=1&showinfo=0`;
 }
 
 /** HTML player — fixes YouTube Error 153 in Android WebView (needs Referer/origin). */
@@ -236,7 +236,7 @@ export function youtubePlayerHtml(raw: string): string | null {
   const id = extractYouTubeId(raw);
   if (!id) return null;
 
-  const src = `https://www.youtube.com/embed/${id}?playsinline=1&rel=0&modestbranding=1&controls=1&fs=1`;
+  const src = `https://www.youtube-nocookie.com/embed/${id}?playsinline=1&rel=0&modestbranding=1&controls=0&fs=0&iv_load_policy=3&cc_load_policy=0&disablekb=1&showinfo=0`;
 
   return `<!DOCTYPE html>
 <html>
@@ -246,8 +246,11 @@ export function youtubePlayerHtml(raw: string): string | null {
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <style>
       html, body { margin: 0; padding: 0; background: #000; height: 100%; overflow: hidden; }
-      .wrap { position: fixed; inset: 0; }
-      iframe { width: 100%; height: 100%; border: 0; }
+      .wrap { position: fixed; inset: 0; overflow: hidden; }
+      iframe {
+        position: absolute; left: 0; top: -6%;
+        width: 100%; height: 112%; border: 0; pointer-events: none;
+      }
     </style>
   </head>
   <body>

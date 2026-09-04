@@ -1,10 +1,9 @@
-import React from "react";
+import React, { memo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Iconify } from "react-native-iconify";
 
-import { LanguageToggle } from "@/components/LanguageToggle";
 import { useTranslation } from "@/i18n";
 import { fullName } from "@/lib/format";
 import type { Student } from "@/types/api";
@@ -20,7 +19,7 @@ type Props = {
   onEditProfile?: () => void;
 };
 
-export function DashboardHeader({
+export const DashboardHeader = memo(function DashboardHeader({
   user,
   classLabel,
   onSearch,
@@ -82,8 +81,6 @@ export function DashboardHeader({
             </Pressable>
           ) : null}
         </View>
-
-        <LanguageToggle variant="light" />
       </Pressable>
 
       <View style={styles.toolbar}>
@@ -93,6 +90,8 @@ export function DashboardHeader({
             styles.classPill,
             pressed ? { opacity: 0.9 } : null,
           ]}
+          accessibilityRole="button"
+          accessibilityLabel={t("home.classSelect.title")}
         >
           <Text style={styles.classText} numberOfLines={1}>
             {classLabel ?? t("common.myCourses")}
@@ -142,7 +141,7 @@ export function DashboardHeader({
       </View>
     </LinearGradient>
   );
-}
+});
 
 const styles = StyleSheet.create({
   wrap: {

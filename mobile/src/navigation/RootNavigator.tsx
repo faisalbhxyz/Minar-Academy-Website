@@ -23,6 +23,9 @@ import { CourseDetailScreen } from "@/screens/courses/CourseDetailScreen";
 import { CourseReviewScreen } from "@/screens/courses/CourseReviewScreen";
 import { CoursesScreen } from "@/screens/courses/CoursesScreen";
 import { SearchScreen } from "@/screens/courses/SearchScreen";
+import { FreeLessonAddedScreen } from "@/screens/home/FreeLessonAddedScreen";
+import { FreeLessonSelectScreen } from "@/screens/home/FreeLessonSelectScreen";
+import { FreeLessonsScreen } from "@/screens/home/FreeLessonsScreen";
 import { HomeScreen } from "@/screens/home/HomeScreen";
 import { NotificationsScreen } from "@/screens/home/NotificationsScreen";
 import { OrdersScreen } from "@/screens/profile/OrdersScreen";
@@ -112,6 +115,9 @@ function sharedAppScreens(Stack: AppStack) {
       <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       <Stack.Screen name="DeviceManager" component={DeviceManagerScreen} />
       <Stack.Screen name="MyLearning" component={MyLearningScreen} />
+      <Stack.Screen name="FreeLessons" component={FreeLessonsScreen} />
+      <Stack.Screen name="FreeLessonSelect" component={FreeLessonSelectScreen} />
+      <Stack.Screen name="FreeLessonAdded" component={FreeLessonAddedScreen} />
     </>
   );
 }
@@ -191,6 +197,7 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
+        lazy: true,
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
           height: 56 + bottom,

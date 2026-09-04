@@ -13,7 +13,6 @@ import {
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 import { useVideoPlayer, VideoView } from "expo-video";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Iconify } from "react-native-iconify";
 import { useQuery } from "@tanstack/react-query";
 
@@ -23,6 +22,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/Button";
 import { ProgressBar } from "@/components/ProgressBar";
 import { Screen } from "@/components/Screen";
+import { withDRMProtection } from "@/components/withDRMProtection";
 import { useTranslation } from "@/i18n";
 import {
   extractHtmlFileLinks,
@@ -35,7 +35,7 @@ import {
   sameMediaUrl,
   stripHtml,
 } from "@/lib/format";
-import { downloadUrlForLesson } from "@/lib/offlineDownloads";
+import { isDownloadableMaterial, isDownloadableLesson, offlineIdForMaterial } from "@/lib/offlineDownloads";
 import {
   dismissReviewPrompt,
   isReviewPromptDismissed,
@@ -49,7 +49,6 @@ import {
   lessonToPlayerParams,
 } from "@/lib/watchProgress";
 import { colors, radii, spacing } from "@/theme";
-import type { CourseLesson } from "@/types/api";
 import type { AppStackParamList } from "@/navigation/types";
 import { useAuthStore } from "@/store/authStore";
 import { useDownloadsStore } from "@/store/downloadsStore";
@@ -60,6 +59,15 @@ type Props = NativeStackScreenProps<AppStackParamList, "LessonPlayer">;
 const PLAYER_ORIGIN = "https://minaracademy.com";
 const SCREEN_W = Dimensions.get("window").width;
 const PLAYER_H = Math.round((SCREEN_W * 9) / 16);
+
+function FileTypeIcon({ isPdf }: { isPdf: boolean }) {
+  return (
+    <View style={styles.resourceIcon}>
+      <View style={styles.fileFold} />
+      <Text style={styles.fileTypeLabel}>{isPdf ? "PDF" : "FILE"}</Text>
+    </View>
+  );
+}
 
 type ProgressHandler = (current: number, duration: number) => void;
 
@@ -120,10 +128,15 @@ function ResumableVideoPlayer({
   );
 }
 
+function DRMLessonPlayerSlot({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
+}
+
+const ProtectedDRMLessonPlayerSlot = withDRMProtection(DRMLessonPlayerSlot);
+
 export function LessonPlayerScreen({ navigation, route }: Props) {
   const { t } = useTranslation();
   const notesScrollRef = useRef<ScrollView>(null);
-  const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
   const setLastLesson = useLearningStore((s) => s.setLastLesson);
   const {
@@ -136,6 +149,7 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
     lessonType,
     sourceType,
     sourceData,
+    offlineDownloadable: routeOfflineDownloadable,
   } = route.params;
   const cachedProgress = useLearningStore((s) =>
     user?.id ? s.progressByUserCourse[userCourseKey(user.id, courseSlug)] : undefined
@@ -146,6 +160,8 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
   const offline = useDownloadsStore((s) => s.items[lessonId]);
   const downloading = useDownloadsStore((s) => s.downloading[lessonId]);
   const downloadProgress = useDownloadsStore((s) => s.progress[lessonId] ?? 0);
+  const downloadItems = useDownloadsStore((s) => s.items);
+  const downloadingMap = useDownloadsStore((s) => s.downloading);
   const startDownload = useDownloadsStore((s) => s.startDownload);
   const removeDownload = useDownloadsStore((s) => s.remove);
 
@@ -154,12 +170,23 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
     queryFn: () => api.fetchCourseBySlug(courseSlug),
     staleTime: 5 * 60_000,
   });
+  const enrollmentsQuery = useQuery({
+    queryKey: ["enrollments"],
+    queryFn: api.fetchEnrollments,
+    staleTime: 60_000,
+    enabled: Boolean(user?.id),
+  });
   const progressQuery = useQuery({
     queryKey: ["course-progress", courseSlug],
     queryFn: () => api.fetchCourseProgress(courseSlug),
     enabled: Boolean(user?.id),
     staleTime: 30_000,
   });
+
+  const enrolled = useMemo(() => {
+    if (!user?.id || !enrollmentsQuery.data) return false;
+    return enrollmentsQuery.data.some((e) => e.course_id === courseId);
+  }, [courseId, enrollmentsQuery.data, user?.id]);
 
   const alreadyCompleted = Boolean(
     progressQuery.data?.completed_lesson_ids?.some(
@@ -206,7 +233,9 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
   const watch = useLessonWatch({
     courseSlug,
     lessonId,
+    courseId,
     userId: user?.id,
+    source: enrolled ? "enrolled" : "free_lesson",
     alreadyCompleted,
     onCourseCompleted: () => {
       void handleCourseCompleted();
@@ -221,6 +250,25 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
     if (!downloadsReady) void hydrateDownloads();
   }, [downloadsReady, hydrateDownloads]);
 
+  const lessons = useMemo(
+    () =>
+      flattenLessonsForNavigation(
+        courseQuery.data?.course_chapters,
+        lessonId
+      ),
+    [courseQuery.data?.course_chapters, lessonId]
+  );
+  const liveLesson = useMemo(() => {
+    const chapters = courseQuery.data?.course_chapters ?? [];
+    for (const chapter of chapters) {
+      const match = (chapter.course_lessons ?? []).find(
+        (lesson) => Number(lesson.id) === Number(lessonId)
+      );
+      if (match) return match;
+    }
+    return undefined;
+  }, [courseQuery.data?.course_chapters, lessonId]);
+
   useEffect(() => {
     if (!user?.id) return;
     setLastLesson(user.id, {
@@ -233,6 +281,9 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
       lessonType,
       sourceType,
       sourceData,
+      offlineDownloadable:
+        liveLesson?.offline_downloadable === true ||
+        routeOfflineDownloadable === true,
       updatedAt: new Date().toISOString(),
     });
   }, [
@@ -243,6 +294,8 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
     lessonId,
     lessonTitle,
     lessonType,
+    liveLesson?.offline_downloadable,
+    routeOfflineDownloadable,
     setLastLesson,
     sourceData,
     sourceType,
@@ -303,24 +356,6 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
     youtubeId,
   ]);
 
-  const lessons = useMemo(
-    () =>
-      flattenLessonsForNavigation(
-        courseQuery.data?.course_chapters,
-        lessonId
-      ),
-    [courseQuery.data?.course_chapters, lessonId]
-  );
-  const liveLesson = useMemo(() => {
-    const chapters = courseQuery.data?.course_chapters ?? [];
-    for (const chapter of chapters) {
-      const match = (chapter.course_lessons ?? []).find(
-        (lesson) => Number(lesson.id) === Number(lessonId)
-      );
-      if (match) return match;
-    }
-    return undefined;
-  }, [courseQuery.data?.course_chapters, lessonId]);
   const { prev, next, index } = useMemo(
     () => lessonNeighbors(lessons, lessonId),
     [lessonId, lessons]
@@ -339,44 +374,48 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
   const autoCompleteThreshold = Math.round(LESSON_COMPLETE_THRESHOLD * 100);
 
   const htmlDescription = liveLesson?.description ?? lessonDescription ?? "";
-  const downloadUrl = downloadUrlForLesson({
-    id: lessonId,
-    title: lessonTitle,
-    description: htmlDescription || lessonDescription,
-    lesson_type: lessonType === "text" ? "text" : "video",
-    source_type: sourceType as CourseLesson["source_type"],
-    source: { data: { data: sourceData, is_file: false } },
-    is_published: true,
-    is_public: true,
-    resources: liveLesson?.resources,
-    position: 0,
-    chapter_id: 0,
-  });
-  const canDownload = Boolean(downloadUrl);
+  const canDownload =
+    enrolled &&
+    (liveLesson
+      ? isDownloadableLesson(liveLesson)
+      : lessonType !== "text" && routeOfflineDownloadable === true);
 
   const notes = useMemo(() => {
     if (!htmlDescription.trim()) return "";
+    const shareUrl = liveLesson?.download_url ?? "";
+    const driveUrl = liveLesson?.source?.data?.drive_url ?? "";
     let text = stripHtml(htmlDescription);
-    if (downloadUrl) {
-      text = text.replace(downloadUrl, " ");
+    for (const url of [shareUrl, driveUrl]) {
+      if (url) text = text.replace(url, " ");
     }
     text = text
       .replace(
         /https?:\/\/(?:drive\.google\.com|docs\.google\.com|drive\.usercontent\.google\.com)\/\S+/gi,
         (url) =>
-          downloadUrl && sameMediaUrl(url, downloadUrl) ? " " : url
+          (shareUrl && sameMediaUrl(url, shareUrl)) ||
+          (driveUrl && sameMediaUrl(url, driveUrl))
+            ? " "
+            : url
       )
       .replace(/\s{2,}/g, " ")
       .trim();
     return text;
-  }, [downloadUrl, htmlDescription]);
+  }, [htmlDescription, liveLesson?.download_url, liveLesson?.source?.data?.drive_url]);
 
   const materials = useMemo(() => {
+    const shareUrl = liveLesson?.download_url ?? "";
+    const driveUrl = liveLesson?.source?.data?.drive_url ?? "";
+    const isOfflineDriveLink = (url: string) =>
+      Boolean(
+        (shareUrl && sameMediaUrl(url, shareUrl)) ||
+          (driveUrl && sameMediaUrl(url, driveUrl))
+      );
+
     const fromApi = normalizeLessonResources(liveLesson?.resources)
       .map((resource) => {
         const url = lessonResourceUrl(resource);
         if (!url) return null;
-        if (downloadUrl && sameMediaUrl(url, downloadUrl)) return null;
+        if (isOfflineDriveLink(url)) return null;
         return {
           key: `resource-${resource.id}`,
           title: resource.title || t("common.classNotes"),
@@ -390,9 +429,7 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
     const seen = new Set(fromApi.map((item) => item.url));
     const fromHtml = extractHtmlFileLinks(htmlDescription)
       .filter((link) => !seen.has(link.href))
-      .filter(
-        (link) => !downloadUrl || !sameMediaUrl(link.href, downloadUrl)
-      )
+      .filter((link) => !isOfflineDriveLink(link.href))
       .map((link, index) => ({
         key: `html-${index}-${link.href}`,
         title: link.label,
@@ -402,7 +439,13 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
       }));
 
     return [...fromApi, ...fromHtml];
-  }, [downloadUrl, htmlDescription, liveLesson?.resources, t]);
+  }, [
+    htmlDescription,
+    liveLesson?.download_url,
+    liveLesson?.resources,
+    liveLesson?.source?.data?.drive_url,
+    t,
+  ]);
 
   const courseMeta = useMemo(
     () =>
@@ -426,7 +469,7 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
   );
 
   const onDownloadPress = async () => {
-    if (!downloadUrl) return;
+    if (!canDownload && !offline) return;
     if (offline) {
       Alert.alert(
         t("learning.lesson.offlineDeleteTitle"),
@@ -454,7 +497,7 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
         lessonTitle,
         lessonDescription: lessonDescription ?? null,
         sourceType,
-        remoteUrl: downloadUrl,
+        mode: "api",
       });
     } catch (err) {
       Alert.alert(
@@ -478,7 +521,7 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
       }
       if (payload.type === "ended") {
         watch.onTick(Math.max(current, duration), duration);
-        void watch.completeLesson();
+        void watch.completeLesson().catch(() => undefined);
       }
     } catch {
       // Ignore malformed WebView messages.
@@ -498,10 +541,13 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
 
   const openMaterial = async (material: (typeof materials)[number]) => {
     if (isPdfFile(material.mimeType, `${material.url} ${material.title}`)) {
+      const materialId = offlineIdForMaterial(material.url);
+      const local = downloadItems[materialId];
       navigation.navigate("NoteViewer", {
         title: material.title,
-        pdfUrl: material.url,
+        pdfUrl: local?.localUri ?? material.url,
         fileName: material.title,
+        fitWidth: true,
       });
       return;
     }
@@ -513,6 +559,57 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
     }
   };
 
+  const onMaterialDownloadPress = async (
+    material: (typeof materials)[number]
+  ) => {
+    if (
+      !isDownloadableMaterial(material.url, material.title, material.mimeType)
+    ) {
+      return;
+    }
+    const materialId = offlineIdForMaterial(material.url);
+    if (downloadItems[materialId]) {
+      Alert.alert(
+        t("learning.lesson.offlineDeleteTitle"),
+        t("learning.lesson.offlineDeleteMessage", { title: material.title }),
+        [
+          { text: t("common.no"), style: "cancel" },
+          {
+            text: t("common.delete"),
+            style: "destructive",
+            onPress: () => {
+              void removeDownload(materialId);
+            },
+          },
+        ]
+      );
+      return;
+    }
+    if (downloadingMap[materialId]) return;
+    try {
+      await startDownload({
+        lessonId: materialId,
+        courseId,
+        courseSlug,
+        courseTitle,
+        lessonTitle: material.title,
+        lessonDescription: lessonDescription ?? null,
+        sourceType: "pdf",
+        mode: "direct",
+        remoteUrl: material.url,
+      });
+    } catch (err) {
+      Alert.alert(
+        t("learning.lesson.saveFailed"),
+        err instanceof Error ? err.message : t("learning.lesson.saveFailedRetry")
+      );
+    }
+  };
+
+  /**
+   * Prefer local offline file when saved. Otherwise stream YouTube/Vimeo
+   * (or upload URL) — never use Drive share links for playback.
+   */
   const nativeVideoUri = localUri ?? (sourceType === "upload" ? sourceData : null);
   const resumeHint =
     watch.ready && watch.startAt > 3 ? t("learning.lesson.resumeHint") : null;
@@ -532,29 +629,6 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
         <AppHeader
           title={lessonTitle}
           onBack={() => navigation.goBack()}
-          right={
-            canDownload ? (
-              <Pressable
-                onPress={() => void onDownloadPress()}
-                hitSlop={8}
-                accessibilityLabel={t("learning.lesson.saveOffline")}
-                style={({ pressed }) => [
-                  styles.headerDownload,
-                  pressed ? { opacity: 0.7 } : null,
-                ]}
-              >
-                <Iconify
-                  icon={
-                    offline
-                      ? "solar:check-circle-bold"
-                      : "solar:download-minimalistic-bold"
-                  }
-                  size={22}
-                  color={offline ? colors.success : colors.primary}
-                />
-              </Pressable>
-            ) : undefined
-          }
         />
       }
     >
@@ -567,6 +641,40 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
           {localUri ? <Text style={styles.offlineBadge}>{t("common.offline")}</Text> : null}
           {watch.completed ? (
             <Text style={styles.doneBadge}>{t("common.completed")}</Text>
+          ) : null}
+          {canDownload || offline ? (
+            <Pressable
+              onPress={() => void onDownloadPress()}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel={t("learning.lesson.saveOffline")}
+              style={({ pressed }) => [
+                styles.courseDownload,
+                pressed ? { opacity: 0.7 } : null,
+              ]}
+            >
+              <Iconify
+                icon={
+                  offline
+                    ? "solar:check-circle-bold"
+                    : "solar:download-minimalistic-bold"
+                }
+                size={16}
+                color={offline ? colors.success : colors.primary}
+              />
+              <Text
+                style={[
+                  styles.courseDownloadText,
+                  offline ? { color: colors.success } : null,
+                ]}
+              >
+                {downloading
+                  ? `${downloadPct}%`
+                  : offline
+                    ? t("common.offline")
+                    : t("learning.lesson.download")}
+              </Text>
+            </Pressable>
           ) : null}
         </View>
 
@@ -589,47 +697,49 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
 
         {isTextLesson ? null : (
           <View style={styles.player}>
-            {nativeVideoUri && watch.ready ? (
-              <ResumableVideoPlayer
-                key={`${lessonId}-${nativeVideoUri}`}
-                uri={nativeVideoUri}
-                startAt={watch.startAt}
-                onProgress={watch.onTick}
-                onEnded={() => void watch.completeLesson()}
-              />
-            ) : playerHtml && watch.ready ? (
-              <WebView
-                key={`webview-${lessonId}`}
-                source={{ html: playerHtml, baseUrl: PLAYER_ORIGIN }}
-                style={styles.webview}
-                containerStyle={styles.webview}
-                allowsFullscreenVideo
-                allowsInlineMediaPlayback
-                mediaPlaybackRequiresUserAction={false}
-                javaScriptEnabled
-                domStorageEnabled
-                mixedContentMode="always"
-                setSupportMultipleWindows={false}
-                scrollEnabled={false}
-                bounces={false}
-                onMessage={onPlayerMessage}
-                userAgent="Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
-              />
-            ) : !watch.ready ? (
-              <View style={styles.fallback}>
-                <Text style={styles.fallbackMsg}>{t("learning.lesson.playerPreparing")}</Text>
-              </View>
-            ) : (
-              <View style={styles.fallback}>
-                <Text style={styles.fallbackTitle}>{t("learning.lesson.videoNotFound")}</Text>
-                <Text style={styles.fallbackMsg}>
-                  {t("learning.lesson.videoPlayFailed")}
-                </Text>
-                {sourceData ? (
-                  <Button title={t("learning.lesson.openExternal")} onPress={openExternal} />
-                ) : null}
-              </View>
-            )}
+            <ProtectedDRMLessonPlayerSlot drmCheckKey={lessonId}>
+              {nativeVideoUri && watch.ready ? (
+                <ResumableVideoPlayer
+                  key={`${lessonId}-${nativeVideoUri}`}
+                  uri={nativeVideoUri}
+                  startAt={watch.startAt}
+                  onProgress={watch.onTick}
+                  onEnded={() => void watch.completeLesson().catch(() => undefined)}
+                />
+              ) : playerHtml && watch.ready ? (
+                <WebView
+                  key={`webview-${lessonId}`}
+                  source={{ html: playerHtml, baseUrl: PLAYER_ORIGIN }}
+                  style={styles.webview}
+                  containerStyle={styles.webview}
+                  allowsFullscreenVideo
+                  allowsInlineMediaPlayback
+                  mediaPlaybackRequiresUserAction={false}
+                  javaScriptEnabled
+                  domStorageEnabled
+                  mixedContentMode="always"
+                  setSupportMultipleWindows={false}
+                  scrollEnabled={false}
+                  bounces={false}
+                  onMessage={onPlayerMessage}
+                  userAgent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                />
+              ) : !watch.ready ? (
+                <View style={styles.fallback}>
+                  <Text style={styles.fallbackMsg}>{t("learning.lesson.playerPreparing")}</Text>
+                </View>
+              ) : (
+                <View style={styles.fallback}>
+                  <Text style={styles.fallbackTitle}>{t("learning.lesson.videoNotFound")}</Text>
+                  <Text style={styles.fallbackMsg}>
+                    {t("learning.lesson.videoPlayFailed")}
+                  </Text>
+                  {sourceData ? (
+                    <Button title={t("learning.lesson.openExternal")} onPress={openExternal} />
+                  ) : null}
+                </View>
+              )}
+            </ProtectedDRMLessonPlayerSlot>
           </View>
         )}
 
@@ -654,10 +764,7 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
           style={styles.notesScroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.notesContent,
-            { paddingBottom: spacing.xl + Math.max(insets.bottom, 8) },
-          ]}
+          contentContainerStyle={styles.notesContent}
         >
           {resumeHint ? <Text style={styles.resumeHint}>{resumeHint}</Text> : null}
           {saveHint ? <Text style={styles.streamHint}>{saveHint}</Text> : null}
@@ -669,6 +776,13 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
               disabled={!prev}
               onPress={() => prev && openLesson(prev)}
               style={styles.navBtn}
+              leftIcon={
+                <Iconify
+                  icon="solar:alt-arrow-left-linear"
+                  size={18}
+                  color={colors.ink}
+                />
+              }
             />
             <Button
               title={t("learning.lesson.nextLesson")}
@@ -676,44 +790,93 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
               disabled={!next}
               onPress={() => next && openLesson(next)}
               style={styles.navBtn}
+              rightIcon={
+                <Iconify
+                  icon="solar:alt-arrow-right-linear"
+                  size={18}
+                  color={colors.primaryDark}
+                />
+              }
             />
           </View>
 
           <Text style={styles.notesHeading}>{t("learning.lesson.notesHeading")}</Text>
           {materials.length > 0
-            ? materials.map((material) => (
-                <Pressable
-                  key={material.key}
-                  onPress={() => void openMaterial(material)}
-                  style={({ pressed }) => [
-                    styles.resourceRow,
-                    pressed ? { opacity: 0.88 } : null,
-                  ]}
-                >
-                  <View style={styles.resourceIcon}>
-                    <Iconify
-                      icon="solar:document-text-bold"
-                      size={22}
-                      color={colors.secondary}
-                    />
+            ? materials.map((material) => {
+                const isPdf = isPdfFile(
+                  material.mimeType,
+                  `${material.url} ${material.title}`
+                );
+                const canSaveMaterial =
+                  isPdf &&
+                  isDownloadableMaterial(
+                    material.url,
+                    material.title,
+                    material.mimeType
+                  );
+                const materialId = canSaveMaterial
+                  ? offlineIdForMaterial(material.url)
+                  : null;
+                const materialSaved = materialId
+                  ? Boolean(downloadItems[materialId])
+                  : false;
+                const materialDownloading = materialId
+                  ? Boolean(downloadingMap[materialId])
+                  : false;
+                return (
+                  <View key={material.key} style={styles.resourceRow}>
+                    <Pressable
+                      onPress={() => void openMaterial(material)}
+                      style={({ pressed }) => [
+                        styles.resourceMain,
+                        pressed ? { opacity: 0.88 } : null,
+                      ]}
+                    >
+                      <FileTypeIcon isPdf={isPdf} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.resourceTitle} numberOfLines={2}>
+                          {material.title}
+                        </Text>
+                        <Text style={styles.resourceMeta}>
+                          {isPdf ? t("common.pdf") : t("common.file")}
+                          {material.size
+                            ? ` · ${formatFileSize(material.size)}`
+                            : ""}
+                          {t("learning.lesson.viewSuffix")}
+                        </Text>
+                      </View>
+                    </Pressable>
+                    {canSaveMaterial ? (
+                      <Pressable
+                        onPress={() => void onMaterialDownloadPress(material)}
+                        hitSlop={8}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("learning.lesson.saveOffline")}
+                        style={({ pressed }) => [
+                          styles.resourceDownloadBtn,
+                          pressed ? { opacity: 0.7 } : null,
+                        ]}
+                      >
+                        {materialDownloading ? (
+                          <Text style={styles.resourceDownloadPct}>…</Text>
+                        ) : (
+                          <Iconify
+                            icon={
+                              materialSaved
+                                ? "solar:check-circle-bold"
+                                : "solar:download-minimalistic-bold"
+                            }
+                            size={20}
+                            color={
+                              materialSaved ? colors.success : colors.primary
+                            }
+                          />
+                        )}
+                      </Pressable>
+                    ) : null}
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.resourceTitle} numberOfLines={2}>
-                      {material.title}
-                    </Text>
-                    <Text style={styles.resourceMeta}>
-                      {isPdfFile(
-                        material.mimeType,
-                        `${material.url} ${material.title}`
-                      )
-                        ? t("common.pdf")
-                        : t("common.file")}
-                      {material.size ? ` · ${formatFileSize(material.size)}` : ""}
-                      {t("learning.lesson.viewSuffix")}
-                    </Text>
-                  </View>
-                </Pressable>
-              ))
+                );
+              })
             : null}
           {notes ? <Text style={styles.notesBody}>{notes}</Text> : null}
           {!notes && materials.length === 0 && !canDownload ? (
@@ -723,7 +886,7 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
                 : t("learning.lesson.noNotes")}
             </Text>
           ) : null}
-          {canDownload ? (
+          {canDownload || offline ? (
             <Button
               title={
                 downloading
@@ -737,18 +900,6 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
               onPress={() => void onDownloadPress()}
             />
           ) : null}
-          <Button
-            title={
-              watch.completed
-                ? t("learning.lesson.lessonCompleted")
-                : watch.completing
-                  ? t("learning.lesson.markingComplete")
-                  : t("learning.lesson.markComplete")
-            }
-            loading={watch.completing}
-            disabled={watch.completed}
-            onPress={() => void watch.completeLesson()}
-          />
         </ScrollView>
       </View>
     </Screen>
@@ -823,6 +974,7 @@ const styles = StyleSheet.create({
     height: PLAYER_H,
     backgroundColor: "#000",
     alignSelf: "center",
+    overflow: "hidden",
   },
   webview: {
     width: SCREEN_W,
@@ -835,6 +987,7 @@ const styles = StyleSheet.create({
   notesContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
     gap: spacing.sm,
   },
   resumeHint: {
@@ -871,20 +1024,60 @@ const styles = StyleSheet.create({
   resourceRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.sm,
     padding: spacing.md,
     borderRadius: radii.md,
     backgroundColor: colors.secondarySoft,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  resourceIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.sm,
-    backgroundColor: colors.surfaceElevated,
+  resourceMain: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  resourceDownloadBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  resourceDownloadPct: {
+    fontFamily: "DMSans_500Medium",
+    fontSize: 14,
+    color: colors.primary,
+  },
+  resourceIcon: {
+    width: 40,
+    height: 48,
+    borderRadius: 6,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "flex-end",
+    paddingBottom: 7,
+    overflow: "hidden",
+  },
+  fileFold: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    width: 0,
+    height: 0,
+    borderTopWidth: 10,
+    borderLeftWidth: 10,
+    borderTopColor: colors.secondarySoft,
+    borderLeftColor: colors.primaryDark,
+  },
+  fileTypeLabel: {
+    fontFamily: "Outfit_600SemiBold",
+    fontSize: 9,
+    letterSpacing: 0.5,
+    color: "#fff",
   },
   resourceTitle: {
     fontFamily: "DMSans_500Medium",
@@ -927,10 +1120,18 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.7)",
     lineHeight: 20,
   },
-  headerDownload: {
-    width: 40,
-    height: 40,
+  courseDownload: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: colors.primarySoft,
+  },
+  courseDownloadText: {
+    fontFamily: "DMSans_500Medium",
+    fontSize: 12,
+    color: colors.primary,
   },
 });

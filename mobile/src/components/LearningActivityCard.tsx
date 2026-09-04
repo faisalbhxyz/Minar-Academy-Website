@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { memo, useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Iconify } from "react-native-iconify";
 
@@ -20,7 +20,10 @@ type Props = {
   onPress?: () => void;
 };
 
-export function LearningActivityCard({ streakDays = 0, onPress }: Props) {
+export const LearningActivityCard = memo(function LearningActivityCard({
+  streakDays = 0,
+  onPress,
+}: Props) {
   const { t } = useTranslation();
   const todayIndex = useMemo(() => new Date().getDay(), []);
 
@@ -106,18 +109,18 @@ export function LearningActivityCard({ streakDays = 0, onPress }: Props) {
       </Pressable>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   section: {
     paddingHorizontal: spacing.xl,
-    marginTop: spacing.lg,
+    marginTop: spacing.xl,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   sectionTitle: {
     fontFamily: "Outfit_600SemiBold",

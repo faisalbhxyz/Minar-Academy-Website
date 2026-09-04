@@ -1,8 +1,11 @@
 import { useEffect } from "react";
-import { Platform } from "react-native";
+import { InteractionManager, Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 
-import { registerPushTokenWithBackend } from "@/lib/pushNotifications";
+import {
+  ensurePushNotificationHandler,
+  registerPushTokenWithBackend,
+} from "@/lib/pushNotifications";
 import { navigateFromNotificationData } from "@/navigation/notificationRouting";
 import { useAuthStore } from "@/store/authStore";
 
@@ -25,29 +28,45 @@ export function PushNotificationManager() {
   useEffect(() => {
     if (Platform.OS === "web") return undefined;
 
-    if (token) {
-      void registerPushTokenWithBackend();
+    const task = InteractionManager.runAfterInteractions(() => {
+      try {
+        ensurePushNotificationHandler();
+
+        if (token) {
+          void registerPushTokenWithBackend();
+        }
+
+        void Notifications.getLastNotificationResponseAsync().then((response) => {
+          if (response) {
+            navigateFromNotificationData(readNotificationData(response));
+          }
+        });
+      } catch {
+        // Notifications must never crash the app shell.
+      }
+    });
+
+    let receivedSub: Notifications.Subscription | undefined;
+    let responseSub: Notifications.Subscription | undefined;
+
+    try {
+      ensurePushNotificationHandler();
+      receivedSub = Notifications.addNotificationReceivedListener(() => {
+        // Foreground display handled by setNotificationHandler.
+      });
+      responseSub = Notifications.addNotificationResponseReceivedListener(
+        (response) => {
+          navigateFromNotificationData(readNotificationData(response));
+        }
+      );
+    } catch {
+      // Ignore listener setup failures on devices with broken push stacks.
     }
 
-    const receivedSub = Notifications.addNotificationReceivedListener(() => {
-      // Foreground display handled by setNotificationHandler.
-    });
-
-    const responseSub = Notifications.addNotificationResponseReceivedListener(
-      (response) => {
-        navigateFromNotificationData(readNotificationData(response));
-      }
-    );
-
-    void Notifications.getLastNotificationResponseAsync().then((response) => {
-      if (response) {
-        navigateFromNotificationData(readNotificationData(response));
-      }
-    });
-
     return () => {
-      receivedSub.remove();
-      responseSub.remove();
+      task.cancel();
+      receivedSub?.remove();
+      responseSub?.remove();
     };
   }, [token]);
 

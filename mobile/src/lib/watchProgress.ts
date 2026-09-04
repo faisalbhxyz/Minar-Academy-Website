@@ -2,7 +2,10 @@ import type { LessonPlayerParams } from "@/navigation/types";
 import type { CourseChapter, CourseDetails, CourseLesson } from "@/types/api";
 
 export const LESSON_COMPLETE_THRESHOLD = 0.8;
-export const WATCH_SAVE_INTERVAL_MS = 15_000;
+/** Heartbeat while playing — short enough that ~1 min sessions are recorded. */
+export const WATCH_SAVE_INTERVAL_MS = 8_000;
+/** On re-open, start slightly before quit point so the viewer has context. */
+export const RESUME_REWIND_SECONDS = 60;
 
 export type LastLessonSnapshot = LessonPlayerParams & {
   updatedAt: string;
@@ -105,6 +108,7 @@ export function lessonToPlayerParams(
     lessonType: lesson.lesson_type,
     sourceType: lesson.source_type,
     sourceData: lesson.source?.data?.data ?? "",
+    offlineDownloadable: lesson.offline_downloadable === true,
   };
 }
 
@@ -121,6 +125,7 @@ export function snapshotToPlayerParams(
     lessonType: snapshot.lessonType,
     sourceType: snapshot.sourceType,
     sourceData: snapshot.sourceData,
+    offlineDownloadable: snapshot.offlineDownloadable,
   };
 }
 
@@ -130,5 +135,6 @@ export function shouldResumeAt(
 ): number {
   if (savedSeconds <= 3) return 0;
   if (durationSeconds > 0 && savedSeconds >= durationSeconds - 5) return 0;
-  return savedSeconds;
+  const resumed = Math.max(0, savedSeconds - RESUME_REWIND_SECONDS);
+  return resumed <= 3 ? 0 : resumed;
 }

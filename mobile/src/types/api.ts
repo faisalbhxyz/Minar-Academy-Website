@@ -5,6 +5,7 @@ export type LessonSourceType =
   | "vimeo"
   | "custom_code"
   | "upload"
+  | "google_drive"
   | "sound_cloud"
   | "spotify";
 
@@ -24,6 +25,15 @@ export interface Category {
   sub_categories?: Category[];
 }
 
+export interface StudentClassProfile {
+  class_level: string;
+  hsc_batch?: string | null;
+  department?: string | null;
+  preferred_class_slug?: string | null;
+  onboarding_completed: boolean;
+  updated_at: string;
+}
+
 export interface Student {
   id: number;
   user_id: string;
@@ -34,12 +44,16 @@ export interface Student {
   profile_image?: string | null;
   status: string;
   enrollments?: { id: number; course_id: number; student_id: number }[];
+  class_profile?: StudentClassProfile | null;
 }
 
 export interface LessonSource {
   data: string;
   is_file: boolean;
   playback_times?: string | null;
+  /** Admin Drive link for offline — do not use for playback. */
+  drive_url?: string | null;
+  drive_file_id?: string | null;
 }
 
 export interface LessonResource {
@@ -66,6 +80,21 @@ export interface CourseLesson {
   resources?: LessonResource[] | Record<string, string> | null;
   position: number;
   chapter_id: number;
+  /** When true, enrolled students may save offline via the download API. */
+  offline_downloadable?: boolean;
+  /**
+   * Drive share/preview link — do not fetch this for file save.
+   * Use GET /course/{slug}/lessons/{id}/download?format=json instead.
+   */
+  download_url?: string | null;
+}
+
+export interface LessonOfflineDownloadData {
+  download_url: string;
+  file_name: string;
+  content_type?: string;
+  file_size?: number;
+  expires_at?: string;
 }
 
 export type AssignmentTimeLimitOption =
@@ -470,6 +499,37 @@ export interface ApiEnvelope<T> {
   message?: string;
 }
 
+export interface FreeLessonCatalogApiItem {
+  lesson_id: number;
+  lesson_title: string;
+  chapter_id?: number;
+  chapter_title: string;
+  course_id: number;
+  course_slug: string;
+  course_title: string;
+  featured_image?: string | null;
+  lesson_type?: string;
+  source_type: string;
+  source?: { data?: { data?: string; is_file?: boolean } } | null;
+  is_public?: boolean;
+  class_slugs?: string[];
+  duration_seconds?: number | null;
+}
+
+export interface FreeLessonLibraryApiItem extends FreeLessonCatalogApiItem {
+  added_at?: string;
+  watch_percent?: number;
+  watch_seconds?: number;
+  duration_seconds?: number | null;
+  completed?: boolean;
+}
+
+export interface FreeLessonsMeta {
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export interface CourseReviewStudent {
   id: number;
   first_name: string;
@@ -517,6 +577,35 @@ export interface StudentLearningReportData {
   quiz_accuracy_percent: number;
   courses_in_progress: number;
   courses_completed: number;
+}
+
+export type WatchTimeSource = "enrolled" | "free_lesson" | "offline";
+
+export interface WatchTimeEventPayload {
+  client_event_id: string;
+  watched_seconds: number;
+  watch_date: string;
+  timezone: string;
+  watched_at?: string;
+  course_id?: number;
+  lesson_id?: number;
+  source?: WatchTimeSource;
+  device_platform?: "ios" | "android" | "web";
+}
+
+export interface WatchTimeAcceptData {
+  accepted: boolean;
+  watch_date: string;
+  day_video_seconds: number;
+  duplicate: boolean;
+  client_event_id?: string;
+}
+
+export interface WatchTimeBatchData {
+  accepted_count: number;
+  duplicate_count: number;
+  results: WatchTimeAcceptData[];
+  daily_totals: DailyWatchSeconds[];
 }
 
 export interface StudentNotification {

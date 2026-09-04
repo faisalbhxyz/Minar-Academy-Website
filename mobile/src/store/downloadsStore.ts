@@ -18,7 +18,13 @@ export type PendingDownloadMeta = {
   lessonTitle: string;
   lessonDescription?: string | null;
   sourceType: string;
-  remoteUrl: string;
+  /**
+   * `api` — authenticated lesson offline video (default).
+   * `direct` — PDF/material URL only.
+   */
+  mode?: "api" | "direct";
+  /** Required when mode is `direct`. */
+  remoteUrl?: string;
 };
 
 type DownloadsState = {
@@ -63,6 +69,7 @@ export const useDownloadsStore = create<DownloadsState>((set, get) => ({
     try {
       const item = await downloadLessonVideo({
         ...params,
+        mode: params.mode ?? (params.remoteUrl ? "direct" : "api"),
         onProgress: (p) => {
           set((s) => ({
             progress: { ...s.progress, [lessonId]: p },

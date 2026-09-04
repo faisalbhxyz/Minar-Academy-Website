@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { memo, useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 
-import { EnrolledCourseCard } from "@/components/EnrolledCourseCard";
+import { EnrolledCourseListItem } from "@/components/EnrolledCourseListItem";
 import { useTranslation } from "@/i18n";
 import type { EnrollmentWithProgress } from "@/lib/learningReport";
 import { colors, radii, spacing } from "@/theme";
@@ -56,7 +56,7 @@ function buildCategoryFilters(
     }));
 }
 
-export function EnrolledCoursesSection({
+export const EnrolledCoursesSection = memo(function EnrolledCoursesSection({
   items,
   certificateByCourseId,
   onCoursePress,
@@ -121,11 +121,11 @@ export function EnrolledCoursesSection({
 
       <View style={styles.list}>
         {visibleItems.map((item) => (
-          <EnrolledCourseCard
+          <EnrolledCourseListItem
             key={item.enrollment.id}
             item={item}
             certificateId={certificateByCourseId?.get(item.enrollment.course.id)}
-            onPress={() => onCoursePress(item.enrollment.course.slug)}
+            onPressSlug={onCoursePress}
             onCertificatePress={onCertificatePress}
           />
         ))}
@@ -148,7 +148,7 @@ export function EnrolledCoursesSection({
       ) : null}
     </View>
   );
-}
+});
 
 function FilterChip({
   label,

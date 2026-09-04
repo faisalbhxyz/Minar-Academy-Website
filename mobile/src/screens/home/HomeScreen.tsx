@@ -1,10 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Dimensions,
-  FlatList,
-  Linking,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -12,70 +7,120 @@ import {
   Text,
   View,
 } from "react-native";
-import { Image } from "expo-image";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
-import { Iconify } from "react-native-iconify";
 
 import * as api from "@/api";
-import { CourseCard } from "@/components/CourseCard";
+import { ClassSelectModal } from "@/components/ClassSelectModal";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import { EmptyState } from "@/components/EmptyState";
 import { EnrolledCoursesSection } from "@/components/EnrolledCoursesSection";
 import { LearningActivityCard } from "@/components/LearningActivityCard";
 import { QuickAccessRow } from "@/components/QuickAccessRow";
+import { HelpCenterModal } from "@/components/HelpCenterModal";
 import { Screen } from "@/components/Screen";
 import { SectionHeader } from "@/components/SectionHeader";
 import { useTranslation } from "@/i18n";
-import { showHelpCenterOptions } from "@/lib/helpCenter";
 import {
   buildCertificateIdByCourseId,
   buildLearningReportSummary,
   fetchEnrollmentsWithProgress,
 } from "@/lib/learningReport";
-import { snapshotToPlayerParams } from "@/lib/watchProgress";
+import {
+  findClassOption,
+  getClassSubcategories,
+  type ClassOption,
+} from "@/lib/classCategories";
+import { fetchFreeLessonCatalog } from "@/lib/freeLessons";
+import { HomeBannerSection } from "@/screens/home/components/HomeBannerSection";
+import { HomeContinueLesson } from "@/screens/home/components/HomeContinueLesson";
+import { HomeFreeClasses } from "@/screens/home/components/HomeFreeClasses";
+import { HomePopularCourses } from "@/screens/home/components/HomePopularCourses";
 import { useAuthStore } from "@/store/authStore";
-import { useLatestLastLesson } from "@/store/learningStore";
+import { useOnboardingStore } from "@/store/onboardingStore";
+import { useLatestLastLesson, useLearningStore } from "@/store/learningStore";
 import { colors, radii, spacing } from "@/theme";
-import type { Banner } from "@/types/api";
+import { snapshotToPlayerParams } from "@/lib/watchProgress";
 import type { AppStackParamList } from "@/navigation/types";
+import { Iconify } from "react-native-iconify";
 
-const SCREEN_WIDTH = Dimensions.get("window").width;
-const BANNER_SIDE = spacing.xl;
-const BANNER_WIDTH = SCREEN_WIDTH - BANNER_SIDE * 2;
-const BANNER_HEIGHT = 160;
-const AUTO_PLAY_MS = 3000;
-const SLIDE_ANIM_MS = 350;
+const CategoryChip = memo(function CategoryChip({
+  name,
+  onPress,
+}: {
+  name: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable style={styles.chip} onPress={onPress}>
+      <Text style={styles.chipText}>{name}</Text>
+    </Pressable>
+  );
+});
 
 export function HomeScreen() {
   const { t } = useTranslation();
   const navigation =
     useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const user = useAuthStore((s) => s.user);
+  const preferredClassSlug = useOnboardingStore((s) => s.preferredClassSlug);
+  const setPreferredClassSlug = useOnboardingStore(
+    (s) => s.setPreferredClassSlug
+  );
   const lastLesson = useLatestLastLesson(user?.id);
   const [refreshing, setRefreshing] = useState(false);
-  const [bannerIndex, setBannerIndex] = useState(0);
-  const bannerListRef = useRef<FlatList<Banner>>(null);
-  const bannerIndexRef = useRef(0);
-  const isBannerFocused = useRef(true);
-  const loopResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [helpCenterOpen, setHelpCenterOpen] = useState(false);
+  const [classSelectOpen, setClassSelectOpen] = useState(false);
+  const [selectedClassSlug, setSelectedClassSlug] = useState<string | null>(
+    null
+  );
+
+  useEffect(() => {
+    const fromServer =
+      preferredClassSlug ?? user?.class_profile?.preferred_class_slug ?? null;
+    if (fromServer) {
+      setSelectedClassSlug(fromServer);
+    }
+  }, [preferredClassSlug, user?.class_profile?.preferred_class_slug]);
 
   const bannersQuery = useQuery({
     queryKey: ["banners"],
     queryFn: api.fetchBanners,
-  });
-  const coursesQuery = useQuery({
-    queryKey: ["courses", 12],
-    queryFn: () => api.fetchCourses(12),
+    staleTime: 5 * 60_000,
   });
   const categoriesQuery = useQuery({
     queryKey: ["categories"],
     queryFn: api.fetchCategories,
+    staleTime: 10 * 60_000,
   });
-  const academicClassesQuery = useQuery({
-    queryKey: ["academic-note-classes"],
-    queryFn: api.fetchAcademicNoteClasses,
+  const classOptions = useMemo(
+    () => getClassSubcategories(categoriesQuery.data),
+    [categoriesQuery.data]
+  );
+  const activeClassSlug = useMemo(() => {
+    if (
+      selectedClassSlug &&
+      classOptions.some((c) => c.slug === selectedClassSlug)
+    ) {
+      return selectedClassSlug;
+    }
+    return classOptions[0]?.slug ?? null;
+  }, [classOptions, selectedClassSlug]);
+
+  const coursesQuery = useQuery({
+    queryKey: ["courses-by-menu", activeClassSlug ?? "all"],
+    queryFn: () =>
+      activeClassSlug
+        ? api.fetchCoursesByMenu(activeClassSlug)
+        : api.fetchCourses(12),
+    staleTime: 3 * 60_000,
+  });
+  const freeLessonsQuery = useQuery({
+    queryKey: ["free-lesson-catalog", activeClassSlug ?? "all"],
+    queryFn: () =>
+      fetchFreeLessonCatalog({
+        classSlug: activeClassSlug ?? undefined,
+      }),
     staleTime: 5 * 60_000,
   });
   const learningReportQuery = useQuery({
@@ -96,203 +141,270 @@ export function HomeScreen() {
   });
 
   const learningInsightsQuery = useQuery({
-    queryKey: ["learning-report-api", "7d"],
+    queryKey: ["learning-report-api", "7d", user?.id],
     queryFn: () => api.fetchLearningReport("7d"),
-    enabled: Boolean(user?.id),
-    staleTime: 2 * 60_000,
+    enabled: Boolean(user?.id) && Boolean(learningReportQuery.data),
+    staleTime: 30_000,
   });
 
+  const localDailyWatch = useLearningStore((s) => s.dailyWatchByUserDate);
+  const streakDays = useMemo(() => {
+    const apiStreak = learningInsightsQuery.data?.streak_days ?? 0;
+    // Server report is authoritative once GET succeeds.
+    if (learningInsightsQuery.data && !learningInsightsQuery.isError) {
+      return apiStreak;
+    }
+    if (!user?.id) return apiStreak;
+
+    const prefix = `${user.id}:`;
+    let localStreak = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let i = 0; i < 90; i++) {
+      const day = new Date(today);
+      day.setDate(today.getDate() - i);
+      const y = day.getFullYear();
+      const m = String(day.getMonth() + 1).padStart(2, "0");
+      const d = String(day.getDate()).padStart(2, "0");
+      const key = `${prefix}${y}-${m}-${d}`;
+      const localSec = localDailyWatch[key] ?? 0;
+      if (localSec > 0) {
+        localStreak += 1;
+        continue;
+      }
+      break;
+    }
+    return Math.max(apiStreak, localStreak);
+  }, [
+    learningInsightsQuery.data,
+    learningInsightsQuery.isError,
+    localDailyWatch,
+    user?.id,
+  ]);
+
   const summary = learningReportQuery.data?.summary;
+  const selectedClass = useMemo(
+    () => findClassOption(classOptions, activeClassSlug),
+    [classOptions, activeClassSlug]
+  );
+
   const classLabel =
-    academicClassesQuery.data?.[0]?.title ??
+    selectedClass?.title ??
     (summary && summary.enrolledCourses > 0
       ? t("common.enrolledCoursesCount", { count: summary.enrolledCourses })
       : t("common.chooseCourse"));
 
   const banners = bannersQuery.data ?? [];
-  // Clone first slide at end so last → first slides in from the side (website loop)
-  const sliderData =
-    banners.length > 1 ? [...banners, banners[0]] : banners;
-
-  useFocusEffect(
-    useCallback(() => {
-      isBannerFocused.current = true;
-      return () => {
-        isBannerFocused.current = false;
-      };
-    }, [])
+  const categories = useMemo(
+    () =>
+      (categoriesQuery.data ?? [])
+        .filter((cat) => cat.slug !== "classes")
+        .slice(0, 12),
+    [categoriesQuery.data]
   );
 
-  useEffect(() => {
-    bannerIndexRef.current = 0;
-    setBannerIndex(0);
-    bannerListRef.current?.scrollToOffset({ offset: 0, animated: false });
-  }, [banners.length]);
+  const popularCourses = useMemo(() => {
+    const list = coursesQuery.data ?? [];
+    return list.slice(0, 12);
+  }, [coursesQuery.data]);
 
-  useEffect(() => {
-    if (banners.length <= 1) return;
-
-    const timer = setInterval(() => {
-      if (!isBannerFocused.current) return;
-      const next = bannerIndexRef.current + 1;
-      bannerListRef.current?.scrollToOffset({
-        offset: next * BANNER_WIDTH,
-        animated: true,
+  const navigateToSearch = useCallback(
+    () => navigation.navigate("Search"),
+    [navigation]
+  );
+  const navigateToNotifications = useCallback(
+    () => navigation.navigate("Notifications"),
+    [navigation]
+  );
+  const navigateToProfile = useCallback(
+    () => navigation.getParent()?.navigate("Profile"),
+    [navigation]
+  );
+  const navigateToResources = useCallback(
+    () => navigation.navigate("Resources"),
+    [navigation]
+  );
+  const openClassSelect = useCallback(() => {
+    setClassSelectOpen(true);
+  }, []);
+  const onSelectClass = useCallback(
+    (classItem: ClassOption) => {
+      setSelectedClassSlug(classItem.slug);
+      void setPreferredClassSlug(classItem.slug);
+      setClassSelectOpen(false);
+    },
+    [setPreferredClassSlug]
+  );
+  const navigateToEditProfile = useCallback(
+    () => navigation.navigate("EditProfile"),
+    [navigation]
+  );
+  const navigateToLearningTab = useCallback(
+    () => navigation.getParent()?.navigate("Learning"),
+    [navigation]
+  );
+  const navigateToLearningReport = useCallback(
+    () => navigation.navigate("LearningReport"),
+    [navigation]
+  );
+  const navigateToCertificates = useCallback(
+    () => navigation.navigate("Certificates"),
+    [navigation]
+  );
+  const navigateToCoursesTab = useCallback(() => {
+    if (selectedClass) {
+      navigation.getParent()?.navigate("Courses", {
+        screen: "CoursesMain",
+        params: {
+          categorySlug: selectedClass.slug,
+          categoryName: selectedClass.title,
+          filter: "menu",
+        },
       });
-
-      if (next >= banners.length) {
-        bannerIndexRef.current = 0;
-        setBannerIndex(0);
-        if (loopResetTimer.current) clearTimeout(loopResetTimer.current);
-        loopResetTimer.current = setTimeout(() => {
-          bannerListRef.current?.scrollToOffset({
-            offset: 0,
-            animated: false,
-          });
-        }, SLIDE_ANIM_MS);
-      } else {
-        bannerIndexRef.current = next;
-        setBannerIndex(next);
-      }
-    }, AUTO_PLAY_MS);
-
-    return () => {
-      clearInterval(timer);
-      if (loopResetTimer.current) clearTimeout(loopResetTimer.current);
-    };
-  }, [banners.length]);
-
-  const onBannerScrollEnd = (
-    e: NativeSyntheticEvent<NativeScrollEvent>
-  ) => {
-    const x = e.nativeEvent.contentOffset.x;
-    const index = Math.round(x / BANNER_WIDTH);
-    if (index >= banners.length) {
-      bannerIndexRef.current = 0;
-      setBannerIndex(0);
-      bannerListRef.current?.scrollToOffset({ offset: 0, animated: false });
       return;
     }
-    if (index >= 0 && index < banners.length) {
-      bannerIndexRef.current = index;
-      setBannerIndex(index);
-    }
-  };
+    navigation.getParent()?.navigate("Courses");
+  }, [navigation, selectedClass]);
+  const navigateToFreeLessons = useCallback(() => {
+    navigation.navigate("FreeLessons");
+  }, [navigation]);
+  const onCoursePress = useCallback(
+    (slug: string) => navigation.navigate("CourseDetail", { slug }),
+    [navigation]
+  );
+  const onCertificatePress = useCallback(
+    (certificateId: number) =>
+      navigation.navigate("CertificateDetail", { certificateId }),
+    [navigation]
+  );
+  const onContinueLesson = useCallback(() => {
+    if (!lastLesson) return;
+    navigation.navigate("LessonPlayer", snapshotToPlayerParams(lastLesson));
+  }, [lastLesson, navigation]);
 
-  const openBanner = async (banner: Banner) => {
-    if (!banner.url) return;
-    try {
-      const canOpen = await Linking.canOpenURL(banner.url);
-      if (canOpen) await Linking.openURL(banner.url);
-    } catch {
-      // ignore invalid banner links
-    }
-  };
+  const quickAccessItems = useMemo(
+    () => [
+      {
+        key: "courses",
+        label: t("home.quickAccess.myCourses"),
+        color: "#f97316",
+        icon: <Iconify icon="solar:book-2-bold" size={24} color="#fff" />,
+        onPress: navigateToLearningTab,
+      },
+      {
+        key: "notes",
+        label: t("home.quickAccess.academicNotes"),
+        color: "#ef4444",
+        icon: <Iconify icon="solar:notebook-bold" size={24} color="#fff" />,
+        onPress: navigateToResources,
+      },
+      {
+        key: "freeClass",
+        label: t("home.quickAccess.freeClass"),
+        color: "#246962",
+        icon: <Iconify icon="solar:play-circle-bold" size={24} color="#fff" />,
+        onPress: navigateToFreeLessons,
+      },
+      {
+        key: "report",
+        label: t("home.quickAccess.learningReport"),
+        color: "#8b5cf6",
+        icon: <Iconify icon="solar:chart-2-bold" size={24} color="#fff" />,
+        onPress: navigateToLearningReport,
+      },
+      {
+        key: "certificates",
+        label: t("home.quickAccess.certificates"),
+        color: "#f59e0b",
+        icon: (
+          <Iconify
+            icon="solar:medal-ribbons-star-bold"
+            size={24}
+            color="#fff"
+          />
+        ),
+        onPress: navigateToCertificates,
+      },
+      {
+        key: "help",
+        label: t("home.quickAccess.helpCenter"),
+        color: "#22c55e",
+        icon: (
+          <Iconify icon="solar:phone-calling-bold" size={24} color="#fff" />
+        ),
+        onPress: () => setHelpCenterOpen(true),
+      },
+    ],
+    [
+      t,
+      navigateToLearningTab,
+      navigateToResources,
+      navigateToFreeLessons,
+      navigateToLearningReport,
+      navigateToCertificates,
+    ]
+  );
 
-  const onRefresh = async () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await Promise.all([
       bannersQuery.refetch(),
       coursesQuery.refetch(),
+      freeLessonsQuery.refetch(),
       categoriesQuery.refetch(),
-      academicClassesQuery.refetch(),
-      learningReportQuery.refetch(),
+      user?.id ? learningReportQuery.refetch() : Promise.resolve(),
     ]);
     setRefreshing(false);
-  };
+  }, [
+    bannersQuery.refetch,
+    coursesQuery.refetch,
+    freeLessonsQuery.refetch,
+    categoriesQuery.refetch,
+    learningReportQuery.refetch,
+    user?.id,
+  ]);
 
-  const loading =
-    (bannersQuery.isLoading || coursesQuery.isLoading) &&
-    !bannersQuery.data &&
-    !coursesQuery.data;
+  const navigateToCategory = useCallback(
+    (categorySlug: string, categoryName: string) => {
+      navigation.getParent()?.navigate("Courses", {
+        screen: "CoursesMain",
+        params: {
+          categorySlug,
+          categoryName,
+          filter: "category",
+        },
+      });
+    },
+    [navigation]
+  );
 
   return (
-    <Screen loading={loading}>
+    <Screen>
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         contentContainerStyle={styles.content}
+        removeClippedSubviews
       >
         <DashboardHeader
           user={user}
           classLabel={classLabel}
-          onSearch={() => navigation.navigate("Search")}
-          onNotifications={() => navigation.navigate("Notifications")}
-          onProfilePress={() => navigation.getParent()?.navigate("Profile")}
-          onClassPress={() => navigation.navigate("Resources")}
-          onEditProfile={() => navigation.navigate("EditProfile")}
+          onSearch={navigateToSearch}
+          onNotifications={navigateToNotifications}
+          onProfilePress={navigateToProfile}
+          onClassPress={openClassSelect}
+          onEditProfile={navigateToEditProfile}
         />
 
-        <QuickAccessRow
-          items={[
-            {
-              key: "courses",
-              label: t("home.quickAccess.myCourses"),
-              color: "#f97316",
-              icon: (
-                <Iconify
-                  icon="solar:book-2-bold"
-                  size={24}
-                  color="#fff"
-                />
-              ),
-              onPress: () => navigation.getParent()?.navigate("Learning"),
-            },
-            {
-              key: "notes",
-              label: t("home.quickAccess.academicNotes"),
-              color: "#ef4444",
-              icon: (
-                <Iconify
-                  icon="solar:notebook-bold"
-                  size={24}
-                  color="#fff"
-                />
-              ),
-              onPress: () => navigation.navigate("Resources"),
-            },
-            {
-              key: "report",
-              label: t("home.quickAccess.learningReport"),
-              color: "#8b5cf6",
-              icon: (
-                <Iconify
-                  icon="solar:chart-2-bold"
-                  size={24}
-                  color="#fff"
-                />
-              ),
-              onPress: () => navigation.navigate("LearningReport"),
-            },
-            {
-              key: "certificates",
-              label: t("home.quickAccess.certificates"),
-              color: "#f59e0b",
-              icon: (
-                <Iconify
-                  icon="solar:medal-ribbons-star-bold"
-                  size={24}
-                  color="#fff"
-                />
-              ),
-              onPress: () => navigation.navigate("Certificates"),
-            },
-            {
-              key: "help",
-              label: t("home.quickAccess.helpCenter"),
-              color: "#22c55e",
-              icon: (
-                <Iconify
-                  icon="solar:phone-calling-bold"
-                  size={24}
-                  color="#fff"
-                />
-              ),
-              onPress: () => showHelpCenterOptions(t),
-            },
-          ]}
+        <QuickAccessRow items={quickAccessItems} />
+
+        <HomeBannerSection banners={banners} />
+
+        <HomeFreeClasses
+          lessons={freeLessonsQuery.data ?? []}
+          onOpenSelect={navigateToFreeLessons}
         />
 
         {learningReportQuery.data?.items &&
@@ -302,99 +414,28 @@ export function HomeScreen() {
             certificateByCourseId={
               learningReportQuery.data.certificateByCourseId
             }
-            onCoursePress={(slug) =>
-              navigation.navigate("CourseDetail", { slug })
-            }
-            onCertificatePress={(certificateId) =>
-              navigation.navigate("CertificateDetail", { certificateId })
-            }
-            onViewAll={() => navigation.getParent()?.navigate("Learning")}
+            onCoursePress={onCoursePress}
+            onCertificatePress={onCertificatePress}
+            onViewAll={navigateToLearningTab}
           />
-        ) : null}
-
-        {banners.length > 0 ? (
-          <View style={styles.bannerSection}>
-            <View style={styles.bannerFrame}>
-              <FlatList
-                ref={bannerListRef}
-                horizontal
-                data={sliderData}
-                keyExtractor={(item, index) => `${item.id}-${index}`}
-                showsHorizontalScrollIndicator={false}
-                pagingEnabled
-                bounces={false}
-                decelerationRate="fast"
-                onMomentumScrollEnd={onBannerScrollEnd}
-                getItemLayout={(_, index) => ({
-                  length: BANNER_WIDTH,
-                  offset: BANNER_WIDTH * index,
-                  index,
-                })}
-                renderItem={({ item }) => (
-                  <Pressable
-                    style={styles.bannerSlide}
-                    onPress={() => void openBanner(item)}
-                  >
-                    <Image
-                      source={{ uri: item.image }}
-                      style={styles.bannerImage}
-                      contentFit="cover"
-                      cachePolicy="memory-disk"
-                      recyclingKey={String(item.id)}
-                    />
-                  </Pressable>
-                )}
-              />
-            </View>
-            {banners.length > 1 ? (
-              <View style={styles.dots}>
-                {banners.map((banner, index) => (
-                  <View
-                    key={banner.id}
-                    style={[
-                      styles.dot,
-                      index === bannerIndex && styles.dotActive,
-                    ]}
-                  />
-                ))}
-              </View>
-            ) : null}
-          </View>
         ) : null}
 
         {user ? (
           <LearningActivityCard
-            streakDays={learningInsightsQuery.data?.streak_days ?? 0}
-            onPress={() => navigation.navigate("LearningReport")}
+            streakDays={streakDays}
+            onPress={navigateToLearningReport}
           />
         ) : null}
 
         {lastLesson ? (
-          <Pressable
-            onPress={() =>
-              navigation.navigate(
-                "LessonPlayer",
-                snapshotToPlayerParams(lastLesson)
-              )
-            }
-            style={({ pressed }) => [
-              styles.continueCard,
-              pressed ? { opacity: 0.92 } : null,
-            ]}
-          >
-            <Text style={styles.continueKicker}>
-              {t("home.continueLesson.kicker")}
-            </Text>
-            <Text style={styles.continueTitle} numberOfLines={2}>
-              {lastLesson.lessonTitle}
-            </Text>
-            <Text style={styles.continueCourse} numberOfLines={1}>
-              {lastLesson.courseTitle}
-            </Text>
-          </Pressable>
+          <HomeContinueLesson
+            lesson={lastLesson}
+            kicker={t("home.continueLesson.kicker")}
+            onPress={onContinueLesson}
+          />
         ) : null}
 
-        {categoriesQuery.data && categoriesQuery.data.length > 0 ? (
+        {categories.length > 0 ? (
           <>
             <SectionHeader
               title={t("home.categories.title")}
@@ -405,22 +446,12 @@ export function HomeScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.chips}
             >
-              {categoriesQuery.data.slice(0, 12).map((cat) => (
-                <Pressable
+              {categories.map((cat) => (
+                <CategoryChip
                   key={cat.id}
-                  style={styles.chip}
-                  onPress={() =>
-                    navigation.getParent()?.navigate("Courses", {
-                      screen: "CoursesMain",
-                      params: {
-                        categorySlug: cat.slug,
-                        categoryName: cat.name,
-                      },
-                    })
-                  }
-                >
-                  <Text style={styles.chipText}>{cat.name}</Text>
-                </Pressable>
+                  name={cat.name}
+                  onPress={() => navigateToCategory(cat.slug, cat.name)}
+                />
               ))}
             </ScrollView>
           </>
@@ -430,35 +461,29 @@ export function HomeScreen() {
           title={t("home.popular.title")}
           subtitle={t("home.popular.subtitle")}
           actionLabel={t("common.viewAll")}
-          onAction={() => navigation.getParent()?.navigate("Courses")}
+          onAction={navigateToCoursesTab}
         />
 
-        {coursesQuery.data && coursesQuery.data.length > 0 ? (
-          <FlatList
-            horizontal
-            data={coursesQuery.data}
-            keyExtractor={(item) => String(item.id)}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.courseList}
-            initialNumToRender={4}
-            windowSize={5}
-            ItemSeparatorComponent={() => <View style={{ width: spacing.md }} />}
-            renderItem={({ item }) => (
-              <CourseCard
-                course={item}
-                onPress={() =>
-                  navigation.navigate("CourseDetail", { slug: item.slug })
-                }
-              />
-            )}
-          />
-        ) : (
-          <EmptyState
-            title={t("home.empty.coursesNotFound")}
-            message={t("home.empty.tryAgainLater")}
-          />
-        )}
+        <HomePopularCourses
+          courses={popularCourses}
+          isPending={coursesQuery.isPending}
+          onPressSlug={onCoursePress}
+          emptyTitle={t("home.empty.coursesNotFound")}
+          emptyMessage={t("home.empty.tryAgainLater")}
+        />
       </ScrollView>
+      <HelpCenterModal
+        visible={helpCenterOpen}
+        onClose={() => setHelpCenterOpen(false)}
+      />
+      <ClassSelectModal
+        visible={classSelectOpen}
+        classes={classOptions}
+        selectedSlug={selectedClass?.slug}
+        loading={categoriesQuery.isPending}
+        onClose={() => setClassSelectOpen(false)}
+        onSelect={onSelectClass}
+      />
     </Screen>
   );
 }
@@ -467,74 +492,10 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: spacing.xxxl,
   },
-  continueCard: {
-    marginHorizontal: spacing.xl,
-    marginTop: spacing.xl,
-    padding: spacing.lg,
-    borderRadius: radii.lg,
-    backgroundColor: colors.surfaceElevated,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: 4,
-  },
-  continueKicker: {
-    fontFamily: "DMSans_500Medium",
-    fontSize: 12,
-    color: colors.secondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-  },
-  continueTitle: {
-    fontFamily: "Outfit_600SemiBold",
-    fontSize: 18,
-    color: colors.ink,
-    lineHeight: 24,
-  },
-  continueCourse: {
-    fontFamily: "DMSans_400Regular",
-    fontSize: 13,
-    color: colors.inkMuted,
-  },
-  bannerSection: {
-    paddingHorizontal: BANNER_SIDE,
-    paddingTop: spacing.md,
-  },
-  bannerFrame: {
-    width: BANNER_WIDTH,
-    height: BANNER_HEIGHT,
-    borderRadius: radii.lg,
-    overflow: "hidden",
-    backgroundColor: colors.primarySoft,
-  },
-  bannerSlide: {
-    width: BANNER_WIDTH,
-    height: BANNER_HEIGHT,
-  },
-  bannerImage: {
-    width: BANNER_WIDTH,
-    height: BANNER_HEIGHT,
-  },
-  dots: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 6,
-    marginTop: spacing.md,
-  },
-  dot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: colors.border,
-  },
-  dotActive: {
-    width: 18,
-    backgroundColor: colors.primary,
-  },
   chips: {
     paddingHorizontal: spacing.xl,
     gap: spacing.sm,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.sm,
   },
   chip: {
     backgroundColor: colors.surfaceElevated,
@@ -548,8 +509,5 @@ const styles = StyleSheet.create({
     fontFamily: "DMSans_500Medium",
     fontSize: 13,
     color: colors.ink,
-  },
-  courseList: {
-    paddingHorizontal: spacing.xl,
   },
 });
