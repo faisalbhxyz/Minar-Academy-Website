@@ -4,7 +4,17 @@ import { auth, signIn, signOut } from "@/lib/auth";
 import axiosInstance from "@/lib/axiosInstance";
 import { buildLearningReportSummary } from "@/lib/learningReport";
 import type { EnrollmentWithProgress } from "@/lib/learningReport";
+import { normalizeMediaUrl } from "@/lib/mediaUrl";
 import { Session } from "next-auth";
+
+function withNormalizedCourseMedia<T extends { featured_image?: string | null }>(
+  course: T
+): T {
+  return {
+    ...course,
+    featured_image: normalizeMediaUrl(course.featured_image) ?? course.featured_image,
+  };
+}
 
 export const doCretendentialLogin = async (
   email: string,
@@ -60,7 +70,7 @@ export const getAllCourses = async (
       },
     });
 
-    return res.data.data ?? [];
+    return (res.data.data ?? []).map(withNormalizedCourseMedia);
   } catch (error) {
     console.error("Failed to fetch courses:", error);
     return [];
@@ -77,7 +87,7 @@ export const getCourseBySlug = async (
         "app-key": process.env.NEXT_PUBLIC_APP_KEY,
       },
     });
-    return res.data.data;
+    return res.data.data ? withNormalizedCourseMedia(res.data.data) : null;
   } catch (error) {
     console.log(error);
     return null;
@@ -141,14 +151,13 @@ export const getStudentEnrollments = async (
         Authorization: `Bearer ${session.accessToken}`,
       },
     });
-    return res.data.data ?? [];
-  } catch (error) {
-    console.log(error);
-    return [];
-  }
-};
-
-export const getPaymentMethods = async (): Promise<IPaymentMethod[]> => {
+    return (res.data.data ?? []).map((enrollment: Enrollment) => {
+      if (!enrollment?.course) return enrollment;
+      return {
+        ...enrollment,
+        course: withNormalizedCourseMedia(enrollment.course),
+      };
+    });
   try {
     const res = await axiosInstance.get("/payment-methods", {
       headers: {

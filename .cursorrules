@@ -19,3 +19,8 @@
 
 ## NextAuth/Auth.js v5 required env
 - Always set `AUTH_SECRET` in `.env`/deployment envs and wire `secret: process.env.AUTH_SECRET` in `NextAuth(...)`; otherwise Auth.js throws `MissingSecret` and login/auth routes 500.
+
+## Media / R2 images
+- Storefront media should load from Cloudflare R2 (`NEXT_PUBLIC_R2_PUBLIC_BASE`, default `pub-efd14717a6e64bf5b80aaba8bb8cdfce.r2.dev`).
+- Legacy Bunny URLs (`nextrike.b-cdn.net/lurnic/...`) are rewritten via `lib/mediaUrl.ts` → R2 object key (strip `lurnic/`). Prefer `SafeImage` for remote images.
+- If rewritten URLs 404, the object is missing from R2 — re-upload in admin / fix API DB URLs; do not reintroduce Bunny as the primary origin.

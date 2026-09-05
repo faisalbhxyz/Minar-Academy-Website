@@ -1,7 +1,7 @@
 "use client";
 import useOrderStore from "@/hooks/useOrderStore";
-import Image from "next/image";
 import React from "react";
+import SafeImage from "@/app/components/SafeImage";
 
 export default function CheckoutItem() {
   const { item } = useOrderStore();
@@ -14,13 +14,9 @@ export default function CheckoutItem() {
     <>
       <div className="border border-primary p-4 w-fit rounded-md">
         <div className="mb-2">
-          <Image
-            src={
-              item?.featured_image
-                ? item.featured_image
-                : "/images/placeholder.svg"
-            }
-            alt={"image"}
+          <SafeImage
+            src={item?.featured_image}
+            alt={item?.title || "Course image"}
             width={300}
             height={300}
             className="object-scale-down"

@@ -359,40 +359,59 @@ export default function LessonVideoPlayer({
     setSpeedMenu(false);
   };
 
+  const handleSurfaceToggle = () => {
+    const player = playerInstance.current;
+    if (!player) {
+      setIsPlayerVisible(true);
+      return;
+    }
+    if (playing) player.pause();
+    else void player.play();
+  };
+
+  const stopControlBubble = (
+    event: React.SyntheticEvent,
+    action?: () => void
+  ) => {
+    event.stopPropagation();
+    action?.();
+  };
+
   return (
     <div
       ref={wrapperRef}
-      className="relative w-full aspect-video bg-black select-none overflow-hidden"
-      onClick={() => {
-        const player = playerInstance.current;
-        if (!player) {
-          setIsPlayerVisible(true);
-        } else {
-          if (playing) player.pause();
-          else player.play();
-        }
-      }}
+      className="relative w-full aspect-video bg-black select-none overflow-hidden touch-manipulation"
     >
       {isPlayerVisible && (
         <div
           ref={playerRef}
           data-plyr-provider={provider}
           data-plyr-embed-id={videoId}
-          className={`w-full h-full relative z-20`}
+          className="relative z-20 h-full w-full"
         />
       )}
 
       <div
-        className="absolute inset-0 z-30 cursor-none"
+        className="absolute inset-0 z-30"
+        onClick={handleSurfaceToggle}
         onMouseMove={handleMouseMove}
+        onTouchStart={handleMouseMove}
+        aria-hidden
       />
 
       {showControls && (
-        <div className="absolute inset-0 flex flex-col justify-end px-4 py-3 z-40">
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
+        <div
+          className="absolute inset-0 z-40 flex flex-col justify-end px-4 py-3 pointer-events-none"
+          onMouseMove={handleMouseMove}
+        >
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
 
-          <div className="relative flex flex-col justify-end h-full pointer-events-auto">
-            <div className="flex justify-between text-white text-sm mb-1">
+          <div
+            className="relative mt-auto w-full pointer-events-auto"
+            onClick={(event) => event.stopPropagation()}
+            onTouchStart={(event) => event.stopPropagation()}
+          >
+            <div className="mb-1 flex justify-between text-sm text-white">
               <span>{currentTime}</span>
               <span>{duration}</span>
             </div>
@@ -409,9 +428,12 @@ export default function LessonVideoPlayer({
               }`}
             />
 
-            <div className="mt-3 flex justify-between items-center text-white">
+            <div className="mt-3 flex items-center justify-between text-white">
               <div className="flex items-center gap-4">
-                <button onClick={togglePlay}>
+                <button
+                  type="button"
+                  onClick={(event) => stopControlBubble(event, togglePlay)}
+                >
                   {playing ? <Pause size={22} /> : <Play size={22} />}
                 </button>
 
@@ -421,7 +443,10 @@ export default function LessonVideoPlayer({
                     onMouseEnter={() => setShowVolume(true)}
                     onMouseLeave={() => setShowVolume(false)}
                   >
-                    <button onClick={toggleMute}>
+                    <button
+                      type="button"
+                      onClick={(event) => stopControlBubble(event, toggleMute)}
+                    >
                       {muted || volume === 0 ? (
                         <VolumeX size={22} />
                       ) : (
@@ -430,7 +455,7 @@ export default function LessonVideoPlayer({
                     </button>
 
                     {showVolume && (
-                      <div className="absolute -bottom-1.5 left-5 flex flex-col items-center p-2 rounded">
+                      <div className="absolute -bottom-1.5 left-5 flex flex-col items-center rounded p-2">
                         <input
                           type="range"
                           min={0}
@@ -450,20 +475,27 @@ export default function LessonVideoPlayer({
                 {isPlayerVisible && (
                   <div className="relative">
                     <button
+                      type="button"
                       className="flex items-center gap-1"
-                      onClick={() => setSpeedMenu((p) => !p)}
+                      onClick={(event) =>
+                        stopControlBubble(event, () =>
+                          setSpeedMenu((prev) => !prev)
+                        )
+                      }
                     >
                       {currentSpeed}x{" "}
                       {speedMenu ? <ChevronUp /> : <ChevronDown />}
                     </button>
 
                     {speedMenu && (
-                      <div className="absolute bottom-7 right-0 bg-black/80 rounded p-2 text-sm space-y-1">
+                      <div className="absolute bottom-7 right-0 space-y-1 rounded bg-black/80 p-2 text-sm">
                         {[0.5, 0.75, 1, 1.25, 1.5, 2].map((s) => (
                           <div
                             key={s}
-                            onClick={() => changeSpeed(s)}
-                            className={`px-2 py-1 rounded hover:bg-white/20 cursor-pointer ${
+                            onClick={(event) =>
+                              stopControlBubble(event, () => changeSpeed(s))
+                            }
+                            className={`cursor-pointer rounded px-2 py-1 hover:bg-white/20 ${
                               currentSpeed === s ? "bg-white/20" : ""
                             }`}
                           >
@@ -475,7 +507,13 @@ export default function LessonVideoPlayer({
                   </div>
                 )}
 
-                <button onClick={toggleFullscreen} disabled={!isPlayerVisible}>
+                <button
+                  type="button"
+                  onClick={(event) =>
+                    stopControlBubble(event, toggleFullscreen)
+                  }
+                  disabled={!isPlayerVisible}
+                >
                   {isFullscreen ? (
                     <Minimize
                       size={22}

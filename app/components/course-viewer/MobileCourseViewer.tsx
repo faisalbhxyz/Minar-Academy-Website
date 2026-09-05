@@ -322,7 +322,7 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({
       onMouseMove={handleVideoAreaInteract}
     >
       {/* Video Player */}
-      <div className="min-w-full bg-black aspect-video relative -m-3">
+      <div className="relative w-full aspect-video bg-black">
         {activeLesson.videoProvider && activeLesson.videoEmbedId ? (
           <LessonVideoPlayer
             key={activeLesson.id}

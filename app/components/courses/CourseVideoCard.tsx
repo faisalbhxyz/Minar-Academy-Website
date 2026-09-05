@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import SafeImage from "@/app/components/SafeImage";
 
 type CourseVideoCardProps = {
   title: string;
@@ -80,7 +81,7 @@ export default function CourseVideoCard({
     if (image) {
       return (
         <div className="w-full h-full bg-black relative">
-          <Image
+          <SafeImage
             src={image}
             alt={title}
             width={1920}

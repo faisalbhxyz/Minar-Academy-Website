@@ -1,6 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
-import placeholder from "@/public/images/placeholder.svg";
+import SafeImage from "@/app/components/SafeImage";
 
 export default function InProgressCourseCard({
   course,
@@ -18,8 +17,8 @@ export default function InProgressCourseCard({
     <Link href={`/user/course/${course.slug}`}>
       <div className="border border-gray-200 p-2 rounded-lg flex flex-col md:flex-row gap-4 bg-white mb-4 last:mb-0 hover:border-purple-300 hover:shadow-sm transition-colors">
         <div className="w-full md:w-40 md:h-28 flex-shrink-0">
-          <Image
-            src={course.featured_image || placeholder}
+          <SafeImage
+            src={course.featured_image}
             alt={course.title}
             width={1080}
             height={1080}

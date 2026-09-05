@@ -35,3 +35,9 @@ export const publicApiBaseUrl = ensureAbsoluteApiBaseUrl(
 export const publicAppKey = normalizePublicEnvValue(
   process.env.NEXT_PUBLIC_APP_KEY
 );
+
+/** Cloudflare R2 public base for storefront media (banners/course images). */
+export const publicR2BaseUrl = (
+  normalizePublicEnvValue(process.env.NEXT_PUBLIC_R2_PUBLIC_BASE) ||
+  "https://pub-efd14717a6e64bf5b80aaba8bb8cdfce.r2.dev"
+).replace(/\/+$/, "");

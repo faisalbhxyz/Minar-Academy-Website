@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import SafeImage from "@/app/components/SafeImage";
 
 type ProgramCardProps = {
   item: CourseDetails;
@@ -12,13 +12,12 @@ export default function ProgramCard({ item }: ProgramCardProps) {
       href={`/course/${item.slug}`}
       className="border rounded-xl overflow-hidden hover:shadow-xl duration-300 hover:-translate-y-2"
     >
-      <Image
-        src={
-          item.featured_image ? item.featured_image : "/images/placeholder.svg"
-        }
+      <SafeImage
+        src={item.featured_image}
         alt={item.title}
         width={800}
         height={500}
+        className="h-auto w-full object-cover"
       />
       <div className="p-4 space-y-3">
         <p className="mt-2 text-lg font-medium">{item.title}</p>

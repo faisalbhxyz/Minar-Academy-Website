@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 import DesktopCourseViewer from "./DesktopCourseViewer";
 import MobileCourseViewer from "./MobileCourseViewer";
-import { CourseDetails, AssignmentSubmissionStatusMap, QuizSubmissionStatusMap } from "./types";
+import {
+  CourseDetails,
+  AssignmentSubmissionStatusMap,
+  QuizSubmissionStatusMap,
+} from "./types";
 
 interface VideoWrapperProps {
   courseDetails: CourseDetails;
@@ -30,16 +34,16 @@ export default function VideoWrapper({
   completedQuizIds,
   courseCertificate,
 }: VideoWrapperProps) {
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+  // Mobile-first default avoids a blank screen while hydrating on phones.
+  const [isMobile, setIsMobile] = useState(true);
 
   useEffect(() => {
-    const update = () => setIsMobile(window.innerWidth < 768);
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
     update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
   }, []);
-
-  if (isMobile === null) return null;
 
   const viewerProps = {
     courseDetails,

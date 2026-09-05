@@ -8,6 +8,7 @@ import MoreTips from "../components/home/MoreTips";
 import AboutMinarAcademy from "../components/home/AboutMinarAcademy";
 import axiosInstance from "@/lib/axiosInstance";
 import { getAllCategories, getAllCourses } from "../actions";
+import { normalizeMediaUrl } from "@/lib/mediaUrl";
 
 const getAllBanners = async () => {
   try {
@@ -17,7 +18,11 @@ const getAllBanners = async () => {
         "app-key": process.env.NEXT_PUBLIC_APP_KEY,
       },
     });
-    return res.data.data ?? [];
+    const banners = res.data.data ?? [];
+    return banners.map((banner: Banner) => ({
+      ...banner,
+      image: normalizeMediaUrl(banner.image) ?? banner.image,
+    }));
   } catch (error) {
     console.log(error);
     return [];

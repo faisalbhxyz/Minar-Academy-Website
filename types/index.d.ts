@@ -436,9 +436,9 @@ interface CourseProgressData {
 
 interface Banner {
   id: number;
-  title: string;
+  title: string | null;
   image: string;
-  url: string;
+  url: string | null;
   created_at: Date;
   updated_at: Date;
 }

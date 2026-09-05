@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { HiMiniArrowSmallRight } from "react-icons/hi2";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -9,8 +8,8 @@ import { Navigation } from "swiper/modules";
 import { MdKeyboardArrowRight, MdKeyboardArrowLeft } from "react-icons/md";
 import "swiper/css";
 import "swiper/css/navigation";
-import CoursesMenu from "@/app/(home)/courses/CoursesMenu";
 import { useRouter } from "next/navigation";
+import SafeImage from "@/app/components/SafeImage";
 
 export default function Course({
   courses,
@@ -23,12 +22,12 @@ export default function Course({
 
   return (
     <div className="wrapper py-10 mt-0 md:mt-10 relative">
-      <p className="text-center text-4xl md:text-5xl font-bold mb-10">
+      <p className="text-center text-3xl sm:text-4xl md:text-5xl font-bold mb-10 px-2">
         অনলাইন ব্যাচে ভর্তি চলছে — এখনই আপনার পছন্দের কোর্সে এনরোল করুন!
       </p>
 
-      <div className="mb-8 overflow-x-auto no-scrollbar">
-        <nav className="flex items-center justify-center gap-3 px-2">
+      <div className="mb-8 -mx-2 overflow-x-auto no-scrollbar">
+        <nav className="flex w-max min-w-full items-center justify-start gap-3 px-4 md:justify-center">
           {(categories ?? []).map((category) => (
             <Link
               key={category.id}
@@ -44,7 +43,10 @@ export default function Course({
       <Swiper
         modules={[Navigation]}
         spaceBetween={20}
-        slidesPerView={1}
+        slidesPerView={1.15}
+        centeredSlides={false}
+        touchStartPreventDefault={false}
+        threshold={8}
         navigation={{
           prevEl: ".swiper-button-prev-custom",
           nextEl: ".swiper-button-next-custom",
@@ -54,34 +56,40 @@ export default function Course({
           768: { slidesPerView: 3 },
           1024: { slidesPerView: 4 },
         }}
-        className="relative"
+        className="relative !overflow-visible px-1"
       >
-        <button className="swiper-button-prev-custom absolute left-0 top-[50%] -translate-y-1/2 z-10 p-2 bg-white/40 shadow rounded-full">
+        <button
+          type="button"
+          aria-label="Previous courses"
+          className="swiper-button-prev-custom absolute left-0 top-[50%] z-10 hidden -translate-y-1/2 rounded-full bg-white/40 p-2 shadow md:block"
+        >
           <MdKeyboardArrowLeft size={24} />
         </button>
-        <button className="swiper-button-next-custom absolute right-0 top-[50%] -translate-y-1/2 z-10 p-2 bg-white/40 shadow rounded-full">
+        <button
+          type="button"
+          aria-label="Next courses"
+          className="swiper-button-next-custom absolute right-0 top-[50%] z-10 hidden -translate-y-1/2 rounded-full bg-white/40 p-2 shadow md:block"
+        >
           <MdKeyboardArrowRight size={24} />
         </button>
 
         {(courses ?? []).map((course) => (
-          <SwiperSlide key={course.id}>
-            <div className="bg-white border rounded-2xl shadow hover:shadow-lg transition flex flex-col h-full overflow-hidden">
-              <Link href={`/course/${course.slug}`}>
-                <Image
-                  src={course.featured_image || "/images/placeholder.svg"}
-                  alt={course.title}
-                  width={300}
-                  height={200}
-                  className="w-full h-[200px] object-cover rounded-t-xl"
-                />
-              </Link>
-              <div className="p-4 flex flex-col justify-between h-full">
-                <Link
-                  href={`/course/${course.slug}`}
-                  className="text-lg font-semibold text-gray-800 hover:text-primary"
-                >
+          <SwiperSlide key={course.id} className="!h-auto">
+            <Link
+              href={`/course/${course.slug}`}
+              className="bg-white border rounded-2xl shadow hover:shadow-lg transition flex flex-col h-full overflow-hidden"
+            >
+              <SafeImage
+                src={course.featured_image}
+                alt={course.title}
+                width={300}
+                height={200}
+                className="w-full h-[200px] object-cover rounded-t-xl"
+              />
+              <div className="p-4 flex flex-col justify-between flex-1">
+                <p className="text-lg font-semibold text-gray-800 hover:text-primary">
                   {course.title}
-                </Link>
+                </p>
 
                 <div className="mt-3">
                   {course.regular_price === 0 ? (
@@ -107,20 +115,18 @@ export default function Course({
                     </div>
                   )}
 
-                  <Link
-                    href={`/course/${course.slug}`}
-                    className="text-primary text-sm flex items-center mt-3"
-                  >
+                  <span className="text-primary text-sm flex items-center mt-3">
                     বিস্তারিত <HiMiniArrowSmallRight size={20} />
-                  </Link>
+                  </span>
                 </div>
               </div>
-            </div>
+            </Link>
           </SwiperSlide>
         ))}
       </Swiper>
       <div className="flex justify-center">
         <button
+          type="button"
           className="text-white text-lg flex items-center mt-3 border border-primary px-4 py-2 rounded-full bg-primary"
           onClick={() => router.push("/courses/all")}
         >

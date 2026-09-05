@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, ChangeEvent } from "react";
 import axios from "axios";
 import { Search } from "lucide-react";
 import axiosInstance from "@/lib/axiosInstance";
-import Image from "next/image";
+import SafeImage from "@/app/components/SafeImage";
 import Link from "next/link";
 
 export default function CourseSearch() {
@@ -91,11 +91,10 @@ export default function CourseSearch() {
                   setShowDropdown(false);
                 }}
               >
-                <Image
-                  src={course.featured_image || "/placeholder.png"}
+                <SafeImage
+                  src={course.featured_image}
                   alt={course.title}
                   className="w-8 h-8 object-cover rounded"
-                  loading="lazy"
                   width={1080}
                   height={1080}
                 />
