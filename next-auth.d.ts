@@ -1,10 +1,7 @@
-import NextAuth from "next-auth";
-import { JWT } from "next-auth/jwt";
-
 declare module "next-auth" {
   interface Session {
     accessToken: string;
-    refreshToken: string;
+    refreshToken?: string;
     user: {
       user_id: string;
       name: string;
@@ -12,9 +9,11 @@ declare module "next-auth" {
       phone: string;
       role: string;
       permissions: string[];
-      // subscriptionToken: string;
-      // subscriptionIAT: number;
-      // subscriptionExpiry: number;
+      first_name?: string;
+      last_name?: string | null;
+      profile_image?: string | null;
     };
   }
 }
+
+export {};

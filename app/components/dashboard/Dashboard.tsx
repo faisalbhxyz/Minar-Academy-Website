@@ -159,7 +159,13 @@ export default function Dashboard({
               className="w-14 h-14 rounded-md"
             />
             <div>
-              <p>{session.user.name}</p>
+              <p>
+                {session.user.name ||
+                  [session.user.first_name, session.user.last_name]
+                    .filter(Boolean)
+                    .join(" ") ||
+                  session.user.email}
+              </p>
               {/* <p>Class</p> */}
             </div>
           </div>
