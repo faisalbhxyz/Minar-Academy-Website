@@ -158,6 +158,13 @@ export const getStudentEnrollments = async (
         course: withNormalizedCourseMedia(enrollment.course),
       };
     });
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+};
+
+export const getPaymentMethods = async (): Promise<IPaymentMethod[]> => {
   try {
     const res = await axiosInstance.get("/payment-methods", {
       headers: {
