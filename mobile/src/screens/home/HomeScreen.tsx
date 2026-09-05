@@ -31,7 +31,11 @@ import {
   getClassSubcategories,
   type ClassOption,
 } from "@/lib/classCategories";
-import { fetchFreeLessonCatalog } from "@/lib/freeLessons";
+import {
+  fetchFreeLessonCatalog,
+  freeLessonToPlayerParams,
+  type FreeLessonCatalogItem,
+} from "@/lib/freeLessons";
 import { HomeBannerSection } from "@/screens/home/components/HomeBannerSection";
 import { HomeContinueLesson } from "@/screens/home/components/HomeContinueLesson";
 import { HomeFreeClasses } from "@/screens/home/components/HomeFreeClasses";
@@ -120,6 +124,7 @@ export function HomeScreen() {
     queryFn: () =>
       fetchFreeLessonCatalog({
         classSlug: activeClassSlug ?? undefined,
+        fallbackAll: true,
       }),
     staleTime: 5 * 60_000,
   });
@@ -268,6 +273,21 @@ export function HomeScreen() {
   const navigateToFreeLessons = useCallback(() => {
     navigation.navigate("FreeLessons");
   }, [navigation]);
+  const navigateToFreeLessonSelect = useCallback(() => {
+    navigation.navigate("FreeLessonSelect", {
+      classSlug: activeClassSlug ?? undefined,
+      classTitle: selectedClass?.title,
+    });
+  }, [activeClassSlug, navigation, selectedClass?.title]);
+  const onFreeLessonPress = useCallback(
+    (lesson: FreeLessonCatalogItem) => {
+      navigation.navigate(
+        "LessonPlayer",
+        freeLessonToPlayerParams(lesson)
+      );
+    },
+    [navigation]
+  );
   const onCoursePress = useCallback(
     (slug: string) => navigation.navigate("CourseDetail", { slug }),
     [navigation]
@@ -353,6 +373,11 @@ export function HomeScreen() {
       freeLessonsQuery.refetch(),
       categoriesQuery.refetch(),
       user?.id ? learningReportQuery.refetch() : Promise.resolve(),
+      user?.id ? learningInsightsQuery.refetch() : Promise.resolve(),
+      user?.id
+        ? useAuthStore.getState().refreshStudentDetails()
+        : Promise.resolve(),
+      useOnboardingStore.getState().syncPendingToServer(),
     ]);
     setRefreshing(false);
   }, [
@@ -361,6 +386,7 @@ export function HomeScreen() {
     freeLessonsQuery.refetch,
     categoriesQuery.refetch,
     learningReportQuery.refetch,
+    learningInsightsQuery.refetch,
     user?.id,
   ]);
 
@@ -404,7 +430,8 @@ export function HomeScreen() {
 
         <HomeFreeClasses
           lessons={freeLessonsQuery.data ?? []}
-          onOpenSelect={navigateToFreeLessons}
+          onPressLesson={onFreeLessonPress}
+          onOpenSelect={navigateToFreeLessonSelect}
         />
 
         {learningReportQuery.data?.items &&

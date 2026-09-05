@@ -317,11 +317,18 @@ export function buildLearningTimeFromApi(
   localWatchByDate?: Record<string, number> | null,
   preferServer = false
 ): LearningTimeSnapshot | null {
-  const hasApi = Boolean(apiData?.daily_watch_seconds?.length);
+  const serverFetched = apiData != null;
+  const hasApiRows = Boolean(apiData?.daily_watch_seconds?.length);
   const hasLocal = Boolean(
     localWatchByDate && Object.keys(localWatchByDate).length > 0
   );
-  if (!hasApi && !hasLocal) return null;
+  // Successful empty GET still yields a zero snapshot when preferServer.
+  if (!serverFetched && !hasLocal) return null;
+  if (preferServer && serverFetched && !hasApiRows && !hasLocal) {
+    // Fall through to build zero buckets from empty API.
+  } else if (!hasApiRows && !hasLocal && !preferServer) {
+    return null;
+  }
 
   const dayCount = PERIOD_DAYS[period];
   const today = startOfDay(new Date());
@@ -335,12 +342,8 @@ export function buildLearningTimeFromApi(
     }
   }
 
-  // After ingest ships: successful GET is source of truth. Local only fills gaps offline.
+  // Server wins after successful GET (including empty). Local only when offline / GET failed.
   if (!preferServer && localWatchByDate) {
-    for (const [key, seconds] of Object.entries(localWatchByDate)) {
-      secondsByDate.set(key, Math.max(secondsByDate.get(key) ?? 0, seconds));
-    }
-  } else if (preferServer && !hasApi && localWatchByDate) {
     for (const [key, seconds] of Object.entries(localWatchByDate)) {
       secondsByDate.set(key, Math.max(secondsByDate.get(key) ?? 0, seconds));
     }
@@ -426,11 +429,12 @@ export async function fetchFullLearningReport(
           .getDailyWatchSeconds(userId, dateKey(periodStart), dateKey(today))
       : null;
 
+  const reportFetchedOk = apiInsights != null;
   const fromApi = buildLearningTimeFromApi(
     period,
     apiInsights,
     localWatch,
-    Boolean(apiInsights)
+    reportFetchedOk
   );
   const fromFallback = buildLearningTimeSnapshot(
     period,
@@ -438,9 +442,19 @@ export async function fetchFullLearningReport(
     assignmentSubmissions
   );
 
-  // Prefer API/local video time; if still empty, keep quiz/assignment estimates.
-  const learningTime =
-    fromApi && fromApi.totalSeconds > 0
+  // Successful GET is authoritative (even zeros). Estimates only when GET failed.
+  const learningTime = reportFetchedOk
+    ? fromApi ?? {
+        period,
+        days: fromFallback.days.map((day) => ({
+          ...day,
+          byCategory: emptyCategoryTotals(),
+          totalSeconds: 0,
+        })),
+        totalSeconds: 0,
+        averageSecondsPerDay: 0,
+      }
+    : fromApi && fromApi.totalSeconds > 0
       ? fromApi
       : fromFallback.totalSeconds > 0
         ? fromFallback

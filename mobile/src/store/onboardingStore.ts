@@ -26,6 +26,9 @@ import type { StudentClassProfile } from "@/types/api";
 type OnboardingState = {
   hydrated: boolean;
   pending: boolean;
+  /** Local profile/slug changed but server PUT has not succeeded yet. */
+  profileSyncPending: boolean;
+  preferredSlugDirty: boolean;
   profile: OnboardingProfile | null;
   preferredClassSlug: string | null;
   draftClassLevel: ClassLevel | null;
@@ -35,6 +38,8 @@ type OnboardingState = {
   applyServerProfile: (
     remote: StudentClassProfile | null | undefined
   ) => Promise<void>;
+  /** Retry failed PUT(s) — call on app resume / login. */
+  syncPendingToServer: () => Promise<void>;
   startOnboarding: (userId: number) => Promise<void>;
   setDraftClassLevel: (level: ClassLevel) => void;
   setDraftHscBatch: (batch: HscBatch) => void;
@@ -61,9 +66,22 @@ function applyLocalState(
   });
 }
 
+async function applyAuthClassProfile(saved: StudentClassProfile) {
+  const { useAuthStore } = await import("@/store/authStore");
+  const user = useAuthStore.getState().user;
+  if (user) {
+    useAuthStore.getState().setUser({
+      ...user,
+      class_profile: saved,
+    });
+  }
+}
+
 export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   hydrated: false,
   pending: false,
+  profileSyncPending: false,
+  preferredSlugDirty: false,
   profile: null,
   preferredClassSlug: null,
   draftClassLevel: null,
@@ -83,15 +101,20 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
         const profile = onboardingProfileFromServer(remote);
         if (profile) {
           await saveOnboardingProfile(userId, profile);
-          if (remote.preferred_class_slug) {
-            await saveSelectedClassSlug(remote.preferred_class_slug);
+          const { preferredSlugDirty } = get();
+          const slug = preferredSlugDirty
+            ? get().preferredClassSlug ?? remote.preferred_class_slug ?? null
+            : remote.preferred_class_slug ??
+              get().preferredClassSlug ??
+              null;
+          if (slug) {
+            await saveSelectedClassSlug(slug);
           }
-          applyLocalState(
-            set,
-            profile,
-            false,
-            remote.preferred_class_slug ?? null
-          );
+          applyLocalState(set, profile, false, slug);
+          set({ profileSyncPending: false });
+          if (preferredSlugDirty) {
+            void get().syncPendingToServer();
+          }
           return;
         }
       }
@@ -123,6 +146,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
             false,
             saved.preferred_class_slug ?? null
           );
+          set({ profileSyncPending: false, preferredSlugDirty: false });
           return;
         } catch {
           applyLocalState(
@@ -131,17 +155,37 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
             false,
             localProfile.preferredClassSlug ?? null
           );
+          set({ profileSyncPending: true });
           return;
         }
       }
 
       // Server has slug-only row (onboarding not finished).
       if (remote && !remote.onboarding_completed) {
-        if (remote.preferred_class_slug) {
+        if (remote.preferred_class_slug && !get().preferredSlugDirty) {
           await saveSelectedClassSlug(remote.preferred_class_slug);
         }
-        applyLocalState(set, null, true, remote.preferred_class_slug ?? null);
+        applyLocalState(
+          set,
+          null,
+          true,
+          get().preferredSlugDirty
+            ? get().preferredClassSlug
+            : remote.preferred_class_slug ?? null
+        );
         await setOnboardingPending(userId, true);
+        return;
+      }
+
+      // Local completed but server missing — keep local, mark dirty for retry.
+      if (localProfile && !remote) {
+        applyLocalState(
+          set,
+          localProfile,
+          false,
+          localProfile.preferredClassSlug ?? null
+        );
+        set({ profileSyncPending: true });
         return;
       }
 
@@ -157,23 +201,35 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   },
 
   applyServerProfile: async (remote) => {
+    const { preferredSlugDirty, profileSyncPending, profile, preferredClassSlug } =
+      get();
+
+    // Don't clobber local pending writes with stale server data.
+    if (preferredSlugDirty || profileSyncPending) {
+      if (remote?.onboarding_completed) {
+        const parsed = onboardingProfileFromServer(remote);
+        if (parsed && !profile) {
+          applyLocalState(set, parsed, false, preferredClassSlug);
+        }
+      }
+      void get().syncPendingToServer();
+      return;
+    }
+
     if (remote?.onboarding_completed) {
-      const profile = onboardingProfileFromServer(remote);
-      if (profile) {
+      const parsed = onboardingProfileFromServer(remote);
+      if (parsed) {
         const { useAuthStore } = await import("@/store/authStore");
         const userId = useAuthStore.getState().user?.id;
         if (userId) {
-          await saveOnboardingProfile(userId, profile);
+          await saveOnboardingProfile(userId, parsed);
         }
+        const slug =
+          remote.preferred_class_slug ?? preferredClassSlug ?? null;
         if (remote.preferred_class_slug) {
           await saveSelectedClassSlug(remote.preferred_class_slug);
         }
-        applyLocalState(
-          set,
-          profile,
-          false,
-          remote.preferred_class_slug ?? null
-        );
+        applyLocalState(set, parsed, false, slug);
         return;
       }
     }
@@ -182,17 +238,82 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       if (remote.preferred_class_slug) {
         await saveSelectedClassSlug(remote.preferred_class_slug);
       }
-      applyLocalState(set, null, true, remote.preferred_class_slug ?? null);
+      applyLocalState(
+        set,
+        null,
+        true,
+        remote.preferred_class_slug ?? preferredClassSlug
+      );
       return;
     }
 
     // null remote on resume — don't force pending if we already completed locally.
-    const { profile } = get();
     if (profile) {
-      applyLocalState(set, profile, false, get().preferredClassSlug);
+      applyLocalState(set, profile, false, preferredClassSlug);
       return;
     }
-    applyLocalState(set, null, true, null);
+    applyLocalState(set, null, true, preferredClassSlug);
+  },
+
+  syncPendingToServer: async () => {
+    const {
+      profile,
+      preferredClassSlug,
+      profileSyncPending,
+      preferredSlugDirty,
+    } = get();
+
+    if (profileSyncPending && profile) {
+      try {
+        const payload = {
+          ...toClassProfilePayload(profile),
+          preferred_class_slug:
+            preferredClassSlug ?? profile.preferredClassSlug ?? undefined,
+        };
+        const saved = await api.updateClassProfile(payload);
+        const migrated = onboardingProfileFromServer(saved) ?? {
+          ...profile,
+          preferredClassSlug:
+            saved.preferred_class_slug ?? profile.preferredClassSlug,
+          completedAt: saved.updated_at,
+        };
+        const { useAuthStore } = await import("@/store/authStore");
+        const userId = useAuthStore.getState().user?.id;
+        if (userId) {
+          await saveOnboardingProfile(userId, migrated);
+        }
+        if (saved.preferred_class_slug) {
+          await saveSelectedClassSlug(saved.preferred_class_slug);
+        }
+        applyLocalState(
+          set,
+          migrated,
+          false,
+          saved.preferred_class_slug ?? preferredClassSlug
+        );
+        set({ profileSyncPending: false, preferredSlugDirty: false });
+        await applyAuthClassProfile(saved);
+        return;
+      } catch {
+        return;
+      }
+    }
+
+    if (preferredSlugDirty && preferredClassSlug) {
+      try {
+        const saved = await api.updateClassProfile({
+          preferred_class_slug: preferredClassSlug,
+        });
+        set({
+          preferredSlugDirty: false,
+          preferredClassSlug:
+            saved.preferred_class_slug ?? preferredClassSlug,
+        });
+        await applyAuthClassProfile(saved);
+      } catch {
+        // Keep dirty for next resume.
+      }
+    }
   },
 
   startOnboarding: async (userId) => {
@@ -204,6 +325,8 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       draftClassLevel: null,
       draftHscBatch: null,
       draftDepartment: null,
+      profileSyncPending: false,
+      preferredSlugDirty: false,
     });
   },
 
@@ -232,6 +355,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
     let preferredSlug: string | null = null;
     let savedRemote: StudentClassProfile | null = null;
+    let syncPending = false;
 
     try {
       savedRemote = await api.updateClassProfile(
@@ -241,7 +365,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       profile.preferredClassSlug = preferredSlug ?? undefined;
       profile.completedAt = savedRemote.updated_at;
     } catch {
-      // Still finish onboarding locally so the user isn't stuck; retry on next hydrate.
+      syncPending = true;
     }
 
     await saveOnboardingProfile(userId, profile);
@@ -253,42 +377,30 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       profile,
       pending: false,
       preferredClassSlug: preferredSlug,
+      profileSyncPending: syncPending,
+      preferredSlugDirty: false,
     });
 
-    // Keep auth user in sync when PUT succeeded.
     if (savedRemote) {
-      const { useAuthStore } = await import("@/store/authStore");
-      const user = useAuthStore.getState().user;
-      if (user) {
-        useAuthStore.getState().setUser({
-          ...user,
-          class_profile: savedRemote,
-        });
-      }
+      await applyAuthClassProfile(savedRemote);
     }
   },
 
   setPreferredClassSlug: async (slug) => {
-    set({ preferredClassSlug: slug });
+    set({ preferredClassSlug: slug, preferredSlugDirty: true });
     await saveSelectedClassSlug(slug);
 
     try {
       const saved = await api.updateClassProfile({
         preferred_class_slug: slug,
       });
-      const { useAuthStore } = await import("@/store/authStore");
-      const user = useAuthStore.getState().user;
-      if (user) {
-        useAuthStore.getState().setUser({
-          ...user,
-          class_profile: saved,
-        });
-      }
-      if (saved.preferred_class_slug) {
-        set({ preferredClassSlug: saved.preferred_class_slug });
-      }
+      set({
+        preferredSlugDirty: false,
+        preferredClassSlug: saved.preferred_class_slug ?? slug,
+      });
+      await applyAuthClassProfile(saved);
     } catch {
-      // Local slug already saved; server sync on next resume.
+      // Local slug already saved; syncPendingToServer on resume.
     }
   },
 
@@ -296,6 +408,8 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     set({
       hydrated: false,
       pending: false,
+      profileSyncPending: false,
+      preferredSlugDirty: false,
       profile: null,
       preferredClassSlug: null,
       draftClassLevel: null,

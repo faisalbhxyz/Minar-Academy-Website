@@ -17,8 +17,10 @@ import { EmptyState } from "@/components/EmptyState";
 import { Screen } from "@/components/Screen";
 import { useTranslation } from "@/i18n";
 import {
+  FREE_LESSON_LIBRARY_MAX,
   FREE_LESSON_MAX_SELECT,
   fetchFreeLessonCatalog,
+  getMyFreeLessons,
   mergeMyFreeLessons,
   type FreeLessonCatalogItem,
 } from "@/lib/freeLessons";
@@ -76,12 +78,26 @@ export function FreeLessonSelectScreen() {
     route.params?.classTitle?.trim() || t("home.freeClasses.defaultClass");
 
   const catalogQuery = useQuery({
-    queryKey: ["free-lesson-catalog", classSlug ?? "all"],
-    queryFn: () => fetchFreeLessonCatalog({ classSlug }),
+    queryKey: ["free-lesson-catalog", classSlug ?? "all", "select"],
+    queryFn: () =>
+      fetchFreeLessonCatalog({
+        classSlug,
+        fallbackAll: true,
+      }),
     staleTime: 5 * 60_000,
   });
 
+  const libraryQuery = useQuery({
+    queryKey: ["my-free-lessons"],
+    queryFn: getMyFreeLessons,
+    staleTime: 30_000,
+  });
+
   const lessons = catalogQuery.data ?? [];
+  const libraryIds = useMemo(
+    () => new Set((libraryQuery.data ?? []).map((item) => item.lessonId)),
+    [libraryQuery.data]
+  );
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -105,6 +121,17 @@ export function FreeLessonSelectScreen() {
 
   const onConfirm = useCallback(async () => {
     if (selectedLessons.length === 0) return;
+    const alreadyCount = libraryQuery.data?.length ?? 0;
+    const newIds = selectedLessons.filter(
+      (item) => !libraryIds.has(item.lessonId)
+    );
+    if (alreadyCount + newIds.length > FREE_LESSON_LIBRARY_MAX) {
+      Alert.alert(
+        t("home.freeClasses.selectTitle"),
+        t("home.freeClasses.libraryFull", { max: FREE_LESSON_LIBRARY_MAX })
+      );
+      return;
+    }
     setSaving(true);
     try {
       const saved = await mergeMyFreeLessons(selectedLessons);
@@ -127,21 +154,32 @@ export function FreeLessonSelectScreen() {
     } finally {
       setSaving(false);
     }
-  }, [navigation, queryClient, selectedLessons, t]);
+  }, [
+    libraryIds,
+    libraryQuery.data?.length,
+    navigation,
+    queryClient,
+    selectedLessons,
+    t,
+  ]);
 
   const renderItem = useCallback(
     ({ item }: { item: FreeLessonCatalogItem }) => {
       const selected = selectedIds.includes(item.lessonId);
+      const inLibrary = libraryIds.has(item.lessonId);
       return (
         <LessonSelectRow
           item={item}
-          selected={selected}
-          disabled={atLimit}
-          onToggle={() => toggle(item.lessonId)}
+          selected={selected || inLibrary}
+          disabled={atLimit || inLibrary}
+          onToggle={() => {
+            if (inLibrary) return;
+            toggle(item.lessonId);
+          }}
         />
       );
     },
-    [atLimit, selectedIds, toggle]
+    [atLimit, libraryIds, selectedIds, toggle]
   );
 
   return (
@@ -181,10 +219,24 @@ export function FreeLessonSelectScreen() {
         contentContainerStyle={styles.list}
         ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
         ListEmptyComponent={
-          <EmptyState
-            title={t("home.freeClasses.emptyTitle")}
-            message={t("home.freeClasses.emptyMessage")}
-          />
+          catalogQuery.isLoading ? (
+            <EmptyState
+              title={t("home.freeClasses.loadingCatalog")}
+              message={t("home.freeClasses.emptyMessage")}
+            />
+          ) : catalogQuery.isError ? (
+            <EmptyState
+              title={t("home.freeClasses.loadFailed")}
+              message={t("home.freeClasses.emptyMessage")}
+              actionLabel={t("common.retry")}
+              onAction={() => void catalogQuery.refetch()}
+            />
+          ) : (
+            <EmptyState
+              title={t("home.freeClasses.emptyTitle")}
+              message={t("home.freeClasses.emptyMessage")}
+            />
+          )
         }
       />
 

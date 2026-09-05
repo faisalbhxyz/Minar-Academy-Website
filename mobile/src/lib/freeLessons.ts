@@ -61,11 +61,21 @@ export function mapFreeLessonApiItem(
 
 export async function fetchFreeLessonCatalog(options?: {
   classSlug?: string;
+  /** When class filter returns empty, fall back to full catalog. */
+  fallbackAll?: boolean;
 }): Promise<FreeLessonCatalogItem[]> {
   const { items } = await api.fetchFreeLessonsCatalog({
     classSlug: options?.classSlug,
     limit: 100,
   });
+  if (
+    items.length === 0 &&
+    options?.fallbackAll &&
+    options.classSlug
+  ) {
+    const all = await api.fetchFreeLessonsCatalog({ limit: 100 });
+    return all.items.map(mapFreeLessonApiItem);
+  }
   return items.map(mapFreeLessonApiItem);
 }
 

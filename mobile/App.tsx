@@ -80,6 +80,10 @@ export default function App() {
       setNavEpoch((n) => n + 1);
       void queryClient.invalidateQueries();
       void useAuthStore.getState().refreshStudentDetails();
+      void useOnboardingStore.getState().syncPendingToServer();
+      void import("@/lib/watchTime").then(({ flushPendingWatchQueue }) =>
+        flushPendingWatchQueue().catch(() => undefined)
+      );
     };
 
     const sub = AppState.addEventListener("change", onChange);

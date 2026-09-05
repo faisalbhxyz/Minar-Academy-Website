@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from "react";
 import {
+  Alert,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -11,8 +12,10 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Image } from "expo-image";
 import { Iconify } from "react-native-iconify";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { AppHeader } from "@/components/AppHeader";
+import { EmptyState } from "@/components/EmptyState";
 import { Screen } from "@/components/Screen";
 import { useTranslation } from "@/i18n";
 import { getClassSubcategories } from "@/lib/classCategories";
@@ -20,6 +23,7 @@ import {
   freeLessonToPlayerParams,
   freeLessonWatchLabel,
   getMyFreeLessons,
+  removeMyFreeLesson,
   type FreeLessonCatalogItem,
 } from "@/lib/freeLessons";
 import type { AppStackParamList } from "@/navigation/types";
@@ -31,9 +35,11 @@ import * as api from "@/api";
 function AddedLessonCard({
   item,
   onPress,
+  onRemove,
 }: {
   item: FreeLessonCatalogItem;
   onPress: () => void;
+  onRemove: () => void;
 }) {
   const { t } = useTranslation();
   const statusLabel = freeLessonWatchLabel(item, t);
@@ -41,6 +47,7 @@ function AddedLessonCard({
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onRemove}
       style={({ pressed }) => [styles.card, pressed ? { opacity: 0.92 } : null]}
     >
       <View style={styles.thumb}>
@@ -61,6 +68,15 @@ function AddedLessonCard({
         </Text>
         <Text style={styles.cardStatus}>{statusLabel}</Text>
       </View>
+      <Pressable
+        onPress={onRemove}
+        hitSlop={10}
+        accessibilityRole="button"
+        accessibilityLabel={t("common.delete")}
+        style={({ pressed }) => [pressed ? { opacity: 0.6 } : null]}
+      >
+        <Iconify icon="solar:trash-bin-trash-linear" size={20} color={colors.inkMuted} />
+      </Pressable>
     </Pressable>
   );
 }
@@ -69,6 +85,7 @@ export function FreeLessonsScreen() {
   const { t } = useTranslation();
   const navigation =
     useNavigation<NativeStackNavigationProp<AppStackParamList>>();
+  const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const preferredClassSlug = useOnboardingStore((s) => s.preferredClassSlug);
   const [refreshing, setRefreshing] = useState(false);
@@ -96,9 +113,12 @@ export function FreeLessonsScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    if (user?.id) await myLessonsQuery.refetch();
+    await Promise.all([
+      user?.id ? myLessonsQuery.refetch() : Promise.resolve(),
+      categoriesQuery.refetch(),
+    ]);
     setRefreshing(false);
-  }, [myLessonsQuery.refetch, user?.id]);
+  }, [categoriesQuery.refetch, myLessonsQuery.refetch, user?.id]);
 
   const openSelect = useCallback(() => {
     const slug =
@@ -128,20 +148,46 @@ export function FreeLessonsScreen() {
     [navigation]
   );
 
+  const confirmRemove = useCallback(
+    (item: FreeLessonCatalogItem) => {
+      Alert.alert(
+        t("home.freeClasses.removeConfirmTitle"),
+        t("home.freeClasses.removeConfirmMessage", { title: item.lessonTitle }),
+        [
+          { text: t("common.cancel"), style: "cancel" },
+          {
+            text: t("common.delete"),
+            style: "destructive",
+            onPress: () => {
+              void (async () => {
+                try {
+                  await removeMyFreeLesson(item.lessonId);
+                  await queryClient.invalidateQueries({
+                    queryKey: ["my-free-lessons"],
+                  });
+                } catch {
+                  Alert.alert(
+                    t("home.freeClasses.hubTitle"),
+                    t("home.freeClasses.removeFailed")
+                  );
+                }
+              })();
+            },
+          },
+        ]
+      );
+    },
+    [queryClient, t]
+  );
+
   return (
-    <Screen>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t("home.freeClasses.hubTitle")}</Text>
-        <Pressable
-          onPress={() => navigation.navigate("Search")}
-          hitSlop={12}
-          style={({ pressed }) => [pressed ? { opacity: 0.7 } : null]}
-          accessibilityRole="button"
-          accessibilityLabel={t("common.search")}
-        >
-          <Iconify icon="solar:magnifer-linear" size={22} color={colors.ink} />
-        </Pressable>
-      </View>
+    <Screen
+      loading={Boolean(user?.id) && myLessonsQuery.isLoading && !myLessonsQuery.data}
+    >
+      <AppHeader
+        title={t("home.freeClasses.hubTitle")}
+        onBack={() => navigation.goBack()}
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -158,6 +204,13 @@ export function FreeLessonsScreen() {
           <View style={styles.emptyBox}>
             <Text style={styles.emptyText}>{t("home.freeClasses.loginRequired")}</Text>
           </View>
+        ) : myLessonsQuery.isError ? (
+          <EmptyState
+            title={t("home.freeClasses.loadFailed")}
+            message={t("home.freeClasses.emptyMessage")}
+            actionLabel={t("common.retry")}
+            onAction={() => void myLessonsQuery.refetch()}
+          />
         ) : lessons.length === 0 ? (
           <View style={styles.emptyBox}>
             <Text style={styles.emptyText}>{t("home.freeClasses.hubEmpty")}</Text>
@@ -169,6 +222,7 @@ export function FreeLessonsScreen() {
                 key={item.lessonId}
                 item={item}
                 onPress={() => playLesson(item)}
+                onRemove={() => confirmRemove(item)}
               />
             ))}
           </View>
@@ -201,19 +255,6 @@ export function FreeLessonsScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
-  },
-  headerTitle: {
-    fontFamily: "Outfit_700Bold",
-    fontSize: 26,
-    color: colors.ink,
-  },
   content: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xxxl,

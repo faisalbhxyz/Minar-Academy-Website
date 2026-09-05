@@ -111,6 +111,12 @@ export function FreeLessonAddedScreen() {
           onPress={playFirst}
           disabled={lessons.length === 0}
         />
+        <Button
+          title={t("home.freeClasses.goToHub")}
+          onPress={() => navigation.navigate("FreeLessons")}
+          variant="secondary"
+          style={{ marginTop: spacing.sm }}
+        />
       </View>
     </Screen>
   );

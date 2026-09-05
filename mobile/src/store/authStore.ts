@@ -77,6 +77,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     void registerPushTokenWithBackend();
     // App.tsx hydrate(userId) will fetch class-profile; also apply nested login payload now.
     await syncClassProfileFromUser(result.user);
+    void useOnboardingStore.getState().syncPendingToServer();
+    void import("@/lib/watchTime").then(({ flushPendingWatchQueue }) =>
+      flushPendingWatchQueue().catch(() => undefined)
+    );
   },
 
   logout: async () => {

@@ -230,16 +230,26 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
     );
   }, [courseSlug, courseTitle, navigation, t]);
 
+  const localUriEarly = offline?.localUri ?? null;
+  const watchSource =
+    localUriEarly != null
+      ? "offline"
+      : enrolled
+        ? "enrolled"
+        : "free_lesson";
+
   const watch = useLessonWatch({
     courseSlug,
     lessonId,
     courseId,
     userId: user?.id,
-    source: enrolled ? "enrolled" : "free_lesson",
+    source: watchSource,
     alreadyCompleted,
-    onCourseCompleted: () => {
-      void handleCourseCompleted();
-    },
+    onCourseCompleted: enrolled
+      ? () => {
+          void handleCourseCompleted();
+        }
+      : undefined,
   });
 
   useEffect(() => {
@@ -254,9 +264,10 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
     () =>
       flattenLessonsForNavigation(
         courseQuery.data?.course_chapters,
-        lessonId
+        lessonId,
+        { publicOnly: !enrolled }
       ),
-    [courseQuery.data?.course_chapters, lessonId]
+    [courseQuery.data?.course_chapters, enrolled, lessonId]
   );
   const liveLesson = useMemo(() => {
     const chapters = courseQuery.data?.course_chapters ?? [];
@@ -268,6 +279,13 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
     }
     return undefined;
   }, [courseQuery.data?.course_chapters, lessonId]);
+
+  const effectiveSourceType = liveLesson?.source_type ?? sourceType;
+  const effectiveSourceData =
+    (sourceData?.trim() ? sourceData : null) ??
+    liveLesson?.source?.data?.data?.trim() ??
+    "";
+  const effectiveLessonType = liveLesson?.lesson_type ?? lessonType;
 
   useEffect(() => {
     if (!user?.id) return;
@@ -313,21 +331,27 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
   }, [watch.flush]);
 
   const localUri = offline?.localUri ?? null;
-  const isTextLesson = lessonType === "text";
+  const isTextLesson = effectiveLessonType === "text";
   const downloadPct = Math.round(downloadProgress * 100);
 
   const youtubeId = useMemo(
-    () => (sourceType === "vimeo" ? null : extractYouTubeId(sourceData)),
-    [sourceData, sourceType]
+    () =>
+      effectiveSourceType === "vimeo"
+        ? null
+        : extractYouTubeId(effectiveSourceData),
+    [effectiveSourceData, effectiveSourceType]
   );
   const vimeoId = useMemo(
-    () => (sourceType === "vimeo" ? extractVimeoId(sourceData) : null),
-    [sourceData, sourceType]
+    () =>
+      effectiveSourceType === "vimeo"
+        ? extractVimeoId(effectiveSourceData)
+        : null,
+    [effectiveSourceData, effectiveSourceType]
   );
 
   const playerHtml = useMemo(() => {
     if (localUri || isTextLesson) return null;
-    if (sourceType === "vimeo" && vimeoId) {
+    if (effectiveSourceType === "vimeo" && vimeoId) {
       return buildPlyrPlayerHtml({
         provider: "vimeo",
         videoId: vimeoId,
@@ -350,7 +374,7 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
     isTextLesson,
     lessonTitle,
     localUri,
-    sourceType,
+    effectiveSourceType,
     vimeoId,
     watch.startAt,
     youtubeId,
@@ -610,7 +634,9 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
    * Prefer local offline file when saved. Otherwise stream YouTube/Vimeo
    * (or upload URL) — never use Drive share links for playback.
    */
-  const nativeVideoUri = localUri ?? (sourceType === "upload" ? sourceData : null);
+  const nativeVideoUri =
+    localUri ??
+    (effectiveSourceType === "upload" ? effectiveSourceData : null);
   const resumeHint =
     watch.ready && watch.startAt > 3 ? t("learning.lesson.resumeHint") : null;
   const saveHint =
@@ -734,7 +760,7 @@ export function LessonPlayerScreen({ navigation, route }: Props) {
                   <Text style={styles.fallbackMsg}>
                     {t("learning.lesson.videoPlayFailed")}
                   </Text>
-                  {sourceData ? (
+                  {effectiveSourceData ? (
                     <Button title={t("learning.lesson.openExternal")} onPress={openExternal} />
                   ) : null}
                 </View>

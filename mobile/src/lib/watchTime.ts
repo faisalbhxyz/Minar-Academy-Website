@@ -11,6 +11,8 @@ const MAX_BATCH = 50;
 
 export type WatchTimeSource = "enrolled" | "free_lesson" | "offline";
 
+let flushChain: Promise<void> = Promise.resolve();
+
 export function createClientEventId(): string {
   const cryptoObj = globalThis.crypto as { randomUUID?: () => string } | undefined;
   if (cryptoObj?.randomUUID) return cryptoObj.randomUUID();
@@ -70,9 +72,10 @@ function buildEvents(params: {
   courseId?: number;
   lessonId?: number;
   source: WatchTimeSource;
+  watchDate?: string;
 }): WatchTimeEventPayload[] {
   const timezone = deviceTimezone();
-  const watchDate = localDateKey();
+  const watchDate = params.watchDate ?? localDateKey();
   const watchedAt = new Date().toISOString();
   const platform = devicePlatform();
 
@@ -89,12 +92,12 @@ function buildEvents(params: {
   }));
 }
 
-/** Flush seconds to API; queue offline on failure. Also drains prior queue. */
-export async function flushWatchSeconds(params: {
+async function doFlush(params: {
   seconds: number;
   courseId?: number;
   lessonId?: number;
   source?: WatchTimeSource;
+  watchDate?: string;
 }): Promise<void> {
   const source = params.source ?? "enrolled";
   const fresh =
@@ -104,12 +107,16 @@ export async function flushWatchSeconds(params: {
           courseId: params.courseId,
           lessonId: params.lessonId,
           source,
+          watchDate: params.watchDate,
         })
       : [];
 
   const queued = await readQueue();
   const all = [...queued, ...fresh];
   if (all.length === 0) return;
+
+  // Persist before network so a kill mid-request does not drop seconds.
+  await writeQueue(all);
 
   const remaining: WatchTimeEventPayload[] = [];
 
@@ -128,6 +135,20 @@ export async function flushWatchSeconds(params: {
   }
 
   await writeQueue(remaining);
+}
+
+/** Flush seconds to API; queue offline on failure. Also drains prior queue. */
+export function flushWatchSeconds(params: {
+  seconds: number;
+  courseId?: number;
+  lessonId?: number;
+  source?: WatchTimeSource;
+  watchDate?: string;
+}): Promise<void> {
+  flushChain = flushChain
+    .then(() => doFlush(params))
+    .catch(() => undefined);
+  return flushChain;
 }
 
 export async function flushPendingWatchQueue(): Promise<void> {

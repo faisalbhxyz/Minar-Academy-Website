@@ -38,9 +38,13 @@ export function flattenPlayableLessons(
 /** Navigation list — includes enrolled-only lessons when the current lesson is not public. */
 export function flattenLessonsForNavigation(
   chapters: CourseChapter[] | undefined,
-  currentLessonId?: number
+  currentLessonId?: number,
+  options?: { publicOnly?: boolean }
 ): CourseLesson[] {
   const all = flattenChapterLessons(chapters);
+  if (options?.publicOnly) {
+    return all.filter((lesson) => lesson.is_public === true);
+  }
   const publicLessons = all.filter(
     (lesson) => lesson.is_published || lesson.is_public
   );

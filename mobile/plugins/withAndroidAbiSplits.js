@@ -13,6 +13,8 @@ const PROP_ARCHITECTURES = 'reactNativeArchitectures';
  *
  * Default OFF so `bundleRelease` / Play Store AAB works.
  * Enable only for APK profiles via ORG_GRADLE_PROJECT_enableSeparateBuildPerCPUArchitecture=true.
+ *
+ * Also forces V1+V2 APK signing so sideloaded installs parse on older OEM Android builds.
  */
 function upsertGradleProperty(properties, key, value) {
   const index = properties.findIndex(
@@ -44,34 +46,50 @@ function ensureAbiSplitsInAppBuildGradle(contents) {
       ),
       `findProperty('${PROP_ENABLE_SPLITS}') ?: 'false'`
     );
-    return contents;
-  }
-
-  if (!contents.includes(`findProperty('${PROP_ENABLE_SPLITS}')`)) {
+    // Prefer a single installable APK when splits are on (avoid ABI-only APKs).
     contents = contents.replace(
-      /\nandroid\s*\{/,
-      `\n\ndef enableSeparateBuildPerCPUArchitecture = (findProperty('${PROP_ENABLE_SPLITS}') ?: 'false').toBoolean()\n\nandroid {`
+      /universalApk\s+false/,
+      'universalApk true'
     );
-  }
+  } else {
+    if (!contents.includes(`findProperty('${PROP_ENABLE_SPLITS}')`)) {
+      contents = contents.replace(
+        /\nandroid\s*\{/,
+        `\n\ndef enableSeparateBuildPerCPUArchitecture = (findProperty('${PROP_ENABLE_SPLITS}') ?: 'false').toBoolean()\n\nandroid {`
+      );
+    }
 
-  if (!/splits\s*\{\s*abi\s*\{/.test(contents)) {
-    const splitsBlock = `
+    if (!/splits\s*\{\s*abi\s*\{/.test(contents)) {
+      const splitsBlock = `
     splits {
         abi {
             reset()
             enable enableSeparateBuildPerCPUArchitecture
-            universalApk false
+            universalApk true
             include "armeabi-v7a", "arm64-v8a"
         }
     }
 `;
-    const withDefaultConfig = contents.replace(
-      /(defaultConfig\s*\{[\s\S]*?\n    \}\n)/,
-      `$1${splitsBlock}`
-    );
-    contents = withDefaultConfig.includes('splits {')
-      ? withDefaultConfig
-      : contents.replace(/\nandroid\s*\{/, `\nandroid {${splitsBlock}`);
+      const withDefaultConfig = contents.replace(
+        /(defaultConfig\s*\{[\s\S]*?\n    \}\n)/,
+        `$1${splitsBlock}`
+      );
+      contents = withDefaultConfig.includes('splits {')
+        ? withDefaultConfig
+        : contents.replace(/\nandroid\s*\{/, `\nandroid {${splitsBlock}`);
+    }
+  }
+
+  // JAR (v1) + APK Signature Scheme v2 — sideload parse/install on more devices.
+  if (!contents.includes('minarForceApkV1V2Signing')) {
+    contents += `
+
+// minarForceApkV1V2Signing — keep sideloaded APKs installable (parse-safe).
+android.signingConfigs.configureEach { signingConfig ->
+    signingConfig.enableV1Signing = true
+    signingConfig.enableV2Signing = true
+}
+`;
   }
 
   return contents;
@@ -104,5 +122,5 @@ const withAndroidAbiSplits = (config) => {
 module.exports = createRunOncePlugin(
   withAndroidAbiSplits,
   'with-android-abi-splits',
-  '1.1.0'
+  '1.2.0'
 );

@@ -76,6 +76,9 @@ export function useLessonWatch({
   const invalidateLearningQueries = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ["learning-report"] });
     void queryClient.invalidateQueries({ queryKey: ["learning-report-api"] });
+    if (sourceRef.current === "free_lesson") {
+      void queryClient.invalidateQueries({ queryKey: ["my-free-lessons"] });
+    }
   }, [queryClient]);
 
   const flushDailyWatch = useCallback(() => {

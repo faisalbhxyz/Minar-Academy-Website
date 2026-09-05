@@ -224,7 +224,7 @@ export const bn: TranslationTree = {
     quickAccess: {
       myCourses: "আমার কোর্স",
       academicNotes: "একাডেমিক নোট",
-      freeClass: "Free class",
+      freeClass: "ফ্রি ক্লাস",
       learningReport: "লার্নিং রিপোর্ট",
       certificates: "সার্টিফিকেট",
       helpCenter: "Help Center",
@@ -283,6 +283,14 @@ export const bn: TranslationTree = {
       watchStarted: "দেখা শুরু হয়েছে",
       notWatched: "এখনো দেখা হয়নি",
       saveFailed: "লেসন সেভ করা যায়নি। আবার চেষ্টা করুন।",
+      loadFailed: "ফ্রি লেসন লোড করা যায়নি",
+      loadingCatalog: "ফ্রি লেসন লোড হচ্ছে…",
+      libraryFull: "লাইব্রেরিতে সর্বোচ্চ {{max}}টি ফ্রি লেসন রাখা যায়।",
+      removeConfirmTitle: "লেসন সরাতে চান?",
+      removeConfirmMessage: "“{{title}}” ফ্রি লাইব্রেরি থেকে সরাবেন?",
+      removeFailed: "লেসন সরানো যায়নি। আবার চেষ্টা করুন।",
+      goToHub: "আমার ফ্রি লেসনে যান",
+      inLibrary: "ইতিমধ্যে লাইব্রেরিতে আছে",
     },
     empty: {
       coursesNotFound: "কোর্স পাওয়া যায়নি",
