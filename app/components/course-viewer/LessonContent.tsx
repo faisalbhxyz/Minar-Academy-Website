@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Lesson } from './types'; // Import Lesson type for description/resources
+import { normalizeMediaUrl } from '@/lib/mediaUrl';
 
 interface LessonContentProps {
   activeLesson: Lesson | null;
@@ -34,7 +35,7 @@ const LessonContent: React.FC<LessonContentProps> = ({ activeLesson }) => {
           <ul className="list-disc list-inside text-gray-700 mt-2">
             {Object.entries(activeLesson.resources).map(([filename, url]) => (
               <li key={filename}>
-                <a href={url} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                <a href={normalizeMediaUrl(String(url)) ?? String(url)} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
                   {filename}
                 </a>
               </li>

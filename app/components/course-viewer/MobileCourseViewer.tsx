@@ -31,6 +31,7 @@ import {
   getQuizStatusClasses,
   getQuizStatusLabel,
 } from "@/lib/quizHelpers";
+import { normalizeMediaUrl } from "@/lib/mediaUrl";
 
 const MobileCourseViewer: React.FC<CourseViewerProps> = ({
   courseDetails,
@@ -148,7 +149,8 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({
     title: string;
   }) => {
     try {
-      const res = await fetch(resource.file_path, {
+      const fileUrl = normalizeMediaUrl(resource.file_path) ?? resource.file_path;
+      const res = await fetch(fileUrl, {
         method: "GET",
       });
 
@@ -394,7 +396,13 @@ const MobileCourseViewer: React.FC<CourseViewerProps> = ({
                   <div className="flex gap-2 flex-shrink-0">
                     {/* View Button */}
                     <button
-                      onClick={() => window.open(resource.file_path, "_blank")}
+                      onClick={() =>
+                        window.open(
+                          normalizeMediaUrl(resource.file_path) ??
+                            resource.file_path,
+                          "_blank"
+                        )
+                      }
                       className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white hover:bg-blue-600"
                     >
                       <Eye className="w-4 h-4" />

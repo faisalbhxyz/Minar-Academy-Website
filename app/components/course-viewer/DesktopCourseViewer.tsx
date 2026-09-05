@@ -19,6 +19,7 @@ import {
   getQuizStatusClasses,
   getQuizStatusLabel,
 } from "@/lib/quizHelpers";
+import { normalizeMediaUrl } from "@/lib/mediaUrl";
 
 export default function DesktopCourseViewer({
   courseDetails,
@@ -110,7 +111,8 @@ export default function DesktopCourseViewer({
     title: string;
   }) => {
     try {
-      const res = await fetch(resource.file_path, {
+      const fileUrl = normalizeMediaUrl(resource.file_path) ?? resource.file_path;
+      const res = await fetch(fileUrl, {
         method: "GET",
       });
 
@@ -213,7 +215,11 @@ export default function DesktopCourseViewer({
                       {/* View Button */}
                       <button
                         onClick={() =>
-                          window.open(resource.file_path, "_blank")
+                          window.open(
+                            normalizeMediaUrl(resource.file_path) ??
+                              resource.file_path,
+                            "_blank"
+                          )
                         }
                         className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white hover:bg-blue-600"
                       >
